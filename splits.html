@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Splits</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-board="splits">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">MLB</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a class="active" href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="index.html#leaders">Leaders</a>
+          <a href="index.html#clubs">Clubs</a>
+          <a href="index.html#parks">Parks</a>
+        </nav>
+      </aside>
+
+      <main id="splits-dashboard">
+        <header class="topbar splits-hero">
+          <div>
+            <p class="eyebrow">Player Splits</p>
+            <h1>One player, every matchup angle.</h1>
+          </div>
+          <div class="season-control split-search-card" aria-label="Player split search">
+            <label for="player-query">Player</label>
+            <form id="split-search-form" class="split-search-form">
+              <input id="player-query" type="search" value="Shohei Ohtani" placeholder="Search a player" aria-label="Search player" />
+              <button type="submit">Search</button>
+            </form>
+            <select id="player-select" aria-label="Choose player"></select>
+          </div>
+        </header>
+
+        <section class="score-strip split-summary" aria-label="Selected player summary">
+          <article>
+            <span>Selected Player</span>
+            <strong id="selected-player">Shohei Ohtani</strong>
+            <small id="selected-player-note">Search by name, then choose a player.</small>
+          </article>
+          <article>
+            <span>Scope</span>
+            <strong id="selected-season">2023</strong>
+            <small>Use any year from 1901 through 2026.</small>
+          </article>
+          <article>
+            <span>Split Set</span>
+            <strong id="selected-splits">Common</strong>
+            <small>Home, away, handedness, day, and night.</small>
+          </article>
+          <article>
+            <span>Baseball Reference</span>
+            <strong><a id="player-reference-link" class="summary-link" href="https://www.baseball-reference.com/search/search.fcgi?search=Shohei%20Ohtani" target="_blank" rel="noopener noreferrer">Open</a></strong>
+            <small>Player lookup opens in a new tab.</small>
+          </article>
+        </section>
+
+        <section class="panel split-controls-panel" aria-label="Split controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Split Controls</p>
+              <h2>Season and stat type</h2>
+            </div>
+          </div>
+          <div class="mode-toggle split-mode-toggle" role="group" aria-label="Split scope">
+            <button class="active" data-split-mode="single">Single year</button>
+            <button data-split-mode="range">Year range</button>
+          </div>
+          <div class="split-controls">
+            <label>
+              <span>Season</span>
+              <select id="split-season" aria-label="Split season"></select>
+            </label>
+            <label>
+              <span>Stat Type</span>
+              <select id="split-group" aria-label="Split stat type">
+                <option value="hitting">Batting</option>
+                <option value="pitching">Pitching</option>
+              </select>
+            </label>
+            <label>
+              <span>Splits</span>
+              <select id="split-set" aria-label="Split set">
+                <option value="common">Common splits</option>
+                <option value="location">Home and away</option>
+                <option value="handedness">Vs left and vs right</option>
+                <option value="time">Day and night</option>
+              </select>
+            </label>
+          </div>
+          <div class="range-fields split-range-fields">
+            <label>
+              <span>From <strong id="split-range-start-value">2021</strong></span>
+              <input id="split-range-start" type="range" min="1901" max="2026" value="2021" aria-label="Split range start year" />
+            </label>
+            <label>
+              <span>To <strong id="split-range-end-value">2023</strong></span>
+              <input id="split-range-end" type="range" min="1901" max="2026" value="2023" aria-label="Split range end year" />
+            </label>
+          </div>
+          <div class="quick-ranges split-quick-ranges" role="group" aria-label="Quick split ranges">
+            <button data-split-range-start="1990" data-split-range-end="1999">1990s</button>
+            <button data-split-range-start="2000" data-split-range-end="2009">2000s</button>
+            <button data-split-range-start="2010" data-split-range-end="2019">2010s</button>
+            <button data-split-range-start="2020" data-split-range-end="2026">2020s</button>
+          </div>
+        </section>
+
+        <section class="panel leaderboard split-table-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Split Board</p>
+              <h2 id="split-table-title">Batting splits</h2>
+            </div>
+            <div class="split-status" id="split-status">Loading MLB splits...</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="split-head"></thead>
+              <tbody id="split-table"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="splits.js"></script>
+  </body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Pitching</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-board="pitching">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">MLB</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a class="active" href="pitching.html">Pitching</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="#leaders">Leaders</a>
+          <a href="#clubs">Clubs</a>
+          <a href="#parks">Parks</a>
+        </nav>
+      </aside>
+
+      <main id="dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">MLB Statline</p>
+            <h1>Pitching intelligence across every era.</h1>
+          </div>
+          <div class="season-control" aria-label="Historical season">
+            <label for="season-select">Season</label>
+            <select id="season-select" aria-label="Select historical season"></select>
+            <div class="quick-years" role="group" aria-label="Famous seasons">
+              <button class="active" data-season="2026">2026</button>
+              <button data-season="2024">2024</button>
+              <button data-season="2001">2001</button>
+              <button data-season="1998">1998</button>
+            </div>
+          </div>
+        </header>
+
+        <section class="score-strip" aria-label="League summary">
+          <article>
+            <span>Run Environment</span>
+            <strong id="run-environment">4.52</strong>
+            <small id="run-context">runs per team game</small>
+          </article>
+          <article>
+            <span>League OPS</span>
+            <strong id="league-ops">.724</strong>
+            <small id="ops-context">weighted by plate appearances</small>
+          </article>
+          <article>
+            <span>Strikeout Rate</span>
+            <strong id="k-rate">22.1%</strong>
+            <small id="k-context">of all plate appearances</small>
+          </article>
+          <article>
+            <span>Save Conversion</span>
+            <strong id="save-rate">66%</strong>
+            <small id="save-context">late-game pressure index</small>
+          </article>
+        </section>
+
+        <section class="panel range-panel" aria-label="Year range tools">
+          <div class="range-toolbar">
+            <div>
+              <p class="eyebrow">Historical Scope</p>
+              <h2 id="scope-title">Single-season leaders</h2>
+              <small class="data-note" id="data-note">Pitching leaders load from MLB Stats API for the selected season.</small>
+            </div>
+            <div class="mode-toggle" role="group" aria-label="Leader scope">
+              <button class="active" data-mode="single">Single year</button>
+              <button data-mode="range">Year range</button>
+            </div>
+            <div class="range-fields">
+              <label>
+                <span>From <strong id="range-start-value">1990</strong></span>
+                <input id="range-start" type="range" min="1901" max="2026" value="1990" aria-label="Range start year" />
+              </label>
+              <label>
+                <span>To <strong id="range-end-value">1999</strong></span>
+                <input id="range-end" type="range" min="1901" max="2026" value="1999" aria-label="Range end year" />
+              </label>
+            </div>
+            <div class="quick-ranges" role="group" aria-label="Quick ranges">
+              <button data-range-start="1990" data-range-end="1999">1990s</button>
+              <button data-range-start="2000" data-range-end="2009">2000s</button>
+              <button data-range-start="2010" data-range-end="2019">2010s</button>
+              <button data-range-start="2020" data-range-end="2026">2020s</button>
+            </div>
+            <div class="league-toggle" role="group" aria-label="League filter">
+              <button class="active" data-league="all">All MLB</button>
+              <button data-league="al">American League</button>
+              <button data-league="nl">National League</button>
+            </div>
+            <div class="team-filter">
+              <label for="team-filter">Team</label>
+              <select id="team-filter" aria-label="Team filter">
+                <option value="all">All teams</option>
+              </select>
+            </div>
+            <div class="position-filter">
+              <label for="position-filter">Position</label>
+              <select id="position-filter" aria-label="Position filter"></select>
+            </div>
+          </div>
+        </section>
+
+        <section class="workbench">
+          <div class="panel feature-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow" id="leader-eyebrow">Run Prevention</p>
+                <h2 id="chart-title">Top pitching leaders</h2>
+              </div>
+              <select id="metric-select" aria-label="Metric"></select>
+            </div>
+            <div class="bar-chart" id="bar-chart" aria-label="Leaderboard bar chart"></div>
+          </div>
+
+          <div class="panel snapshot-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Matchup Lens</p>
+                <h2 id="compare-title">Club comparison</h2>
+              </div>
+            </div>
+            <div class="team-pickers">
+              <select id="team-a" aria-label="First team"></select>
+              <select id="team-b" aria-label="Second team"></select>
+            </div>
+            <div class="compare-grid" id="compare-grid"></div>
+          </div>
+        </section>
+
+        <section class="data-grid">
+          <div class="panel leaderboard" id="leaders">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Player Board</p>
+                <h2 id="table-title">Sortable league leaders</h2>
+              </div>
+              <input id="player-search" type="search" placeholder="Search player or club" aria-label="Search players" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead id="player-head"></thead>
+                <tbody id="player-table"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel division-panel" id="clubs">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Club Pulse</p>
+                <h2 id="team-list-title">Team stats</h2>
+              </div>
+              <select id="team-metric-select" aria-label="Team metric"></select>
+            </div>
+            <div class="club-list" id="club-list"></div>
+          </div>
+        </section>
+
+        <section class="panel park-panel" id="parks">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Ballpark Effects</p>
+              <h2>Where outcomes tilt</h2>
+            </div>
+          </div>
+          <div class="park-grid" id="park-grid"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
