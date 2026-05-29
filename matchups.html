@@ -68,36 +68,41 @@
             </div>
             <div class="split-status" id="matchup-status">Loading matchup...</div>
           </div>
-          <div class="matchup-form-grid">
-            <label>
-              <span>Batting Team</span>
-              <select id="matchup-batting-team" aria-label="Batting team"></select>
-            </label>
-            <label>
-              <span>Pitching Team</span>
-              <select id="matchup-pitching-team" aria-label="Pitching team"></select>
-            </label>
-            <label>
-              <span>Ballpark</span>
-              <select id="matchup-park" aria-label="Ballpark context"></select>
-            </label>
-            <label>
-              <span>Roster Pool</span>
-              <select id="matchup-roster-pool" aria-label="Roster pool">
-                <option value="active">Active roster</option>
-                <option value="40Man">40-man roster</option>
-              </select>
-            </label>
-            <label>
-              <span>Choose Batter</span>
-              <select id="batter-select" aria-label="Choose batter"></select>
-            </label>
-            <label>
-              <span>Choose Pitcher</span>
-              <select id="pitcher-select" aria-label="Choose pitcher"></select>
-            </label>
-          </div>
-          <div class="advanced-search-wrap">
+          <div class="matchup-setup-grid">
+            <div class="matchup-setup-column">
+              <label>
+                <span>Batting Team</span>
+                <select id="matchup-batting-team" aria-label="Batting team"></select>
+              </label>
+              <label>
+                <span>Choose Batter</span>
+                <select id="batter-select" aria-label="Choose batter"></select>
+              </label>
+            </div>
+            <div class="matchup-setup-column">
+              <label>
+                <span>Pitching Team</span>
+                <select id="matchup-pitching-team" aria-label="Pitching team"></select>
+              </label>
+              <label>
+                <span>Choose Pitcher</span>
+                <select id="pitcher-select" aria-label="Choose pitcher"></select>
+              </label>
+            </div>
+            <div class="matchup-setup-column">
+              <label>
+                <span>Ballpark</span>
+                <select id="matchup-park" aria-label="Ballpark context"></select>
+              </label>
+              <label>
+                <span>Roster Pool</span>
+                <select id="matchup-roster-pool" aria-label="Roster pool">
+                  <option value="active">Active roster</option>
+                  <option value="40Man">40-man roster</option>
+                </select>
+              </label>
+            </div>
+            <div class="advanced-search-wrap">
             <button id="advanced-search-toggle" type="button" aria-expanded="false">Advanced search</button>
             <div class="matchup-advanced-search" id="matchup-advanced-search" hidden>
               <form id="batter-search-form" class="matchup-search">
@@ -114,6 +119,7 @@
                 </label>
                 <button type="submit">Search</button>
               </form>
+            </div>
             </div>
           </div>
         </section>
