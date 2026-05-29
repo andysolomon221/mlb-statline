@@ -81,20 +81,6 @@
               <span>Ballpark</span>
               <select id="matchup-park" aria-label="Ballpark context"></select>
             </label>
-            <form id="batter-search-form" class="matchup-search">
-              <label>
-                <span>Search Batter</span>
-                <input id="batter-query" type="search" placeholder="Optional player search" aria-label="Search batter" />
-              </label>
-              <button type="submit">Search</button>
-            </form>
-            <form id="pitcher-search-form" class="matchup-search">
-              <label>
-                <span>Search Pitcher</span>
-                <input id="pitcher-query" type="search" placeholder="Optional player search" aria-label="Search pitcher" />
-              </label>
-              <button type="submit">Search</button>
-            </form>
             <label>
               <span>Choose Batter</span>
               <select id="batter-select" aria-label="Choose batter"></select>
@@ -103,6 +89,25 @@
               <span>Choose Pitcher</span>
               <select id="pitcher-select" aria-label="Choose pitcher"></select>
             </label>
+          </div>
+          <div class="advanced-search-wrap">
+            <button id="advanced-search-toggle" type="button" aria-expanded="false">Advanced search</button>
+            <div class="matchup-advanced-search" id="matchup-advanced-search" hidden>
+              <form id="batter-search-form" class="matchup-search">
+                <label>
+                  <span>Search Batter</span>
+                  <input id="batter-query" type="search" placeholder="Optional player search" aria-label="Search batter" />
+                </label>
+                <button type="submit">Search</button>
+              </form>
+              <form id="pitcher-search-form" class="matchup-search">
+                <label>
+                  <span>Search Pitcher</span>
+                  <input id="pitcher-query" type="search" placeholder="Optional player search" aria-label="Search pitcher" />
+                </label>
+                <button type="submit">Search</button>
+              </form>
+            </div>
           </div>
         </section>
 
@@ -162,6 +167,6 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260529-empty-search"></script>
+    <script src="matchups.js?v=20260529-advanced-search"></script>
   </body>
 </html>

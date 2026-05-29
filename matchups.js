@@ -492,6 +492,12 @@ function bindEvents() {
   document.querySelector("#matchup-pitching-team").addEventListener("change", () => {
     populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
   });
+  document.querySelector("#advanced-search-toggle").addEventListener("click", (event) => {
+    const panel = document.querySelector("#matchup-advanced-search");
+    const isOpen = !panel.hidden;
+    panel.hidden = isOpen;
+    event.currentTarget.setAttribute("aria-expanded", String(!isOpen));
+  });
   document.querySelector("#batter-search-form").addEventListener("submit", (event) => handleSearch(event, "hitting"));
   document.querySelector("#pitcher-search-form").addEventListener("submit", (event) => handleSearch(event, "pitching"));
   document.querySelector("#batter-select").addEventListener("change", (event) => {
