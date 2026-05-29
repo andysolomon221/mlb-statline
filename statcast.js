@@ -113,8 +113,8 @@ function renderSummary() {
   document.querySelector("#statcast-scope-card").textContent = activeSeason;
   document.querySelector("#statcast-scope-note").textContent = teamLabel;
   document.querySelector("#statcast-count").textContent = data.length;
-  document.querySelector("#statcast-chart-title").textContent = `${metricLabel()} ${activeType === "batter" ? "leaders" : "allowed leaders"}`;
-  document.querySelector("#statcast-table-title").textContent = `${teamLabel} Statcast ${activeType === "batter" ? "hitters" : "pitchers"}`;
+  document.querySelector("#statcast-chart-title").textContent = `${metricLabel()} ${activeType === "batter" ? "hitter" : "pitcher"} leaders`;
+  document.querySelector("#statcast-table-title").textContent = `${teamLabel} ${metricLabel()} Statcast ${activeType === "batter" ? "hitters" : "pitchers"}`;
 }
 
 function renderChart() {
@@ -138,6 +138,11 @@ function renderTableHead() {
   document.querySelectorAll("#statcast-head th[data-sort]").forEach((header) => {
     header.addEventListener("click", () => {
       const key = header.dataset.sort;
+      const metricKeys = metrics[activeType].map(([metric]) => metric);
+      if (metricKeys.includes(key)) {
+        activeMetric = key;
+        document.querySelector("#statcast-metric").value = activeMetric;
+      }
       activeSort = activeSort.key === key ? { key, dir: activeSort.dir * -1 } : { key, dir: sortDirection(key) };
       renderAll();
     });
