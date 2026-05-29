@@ -943,6 +943,44 @@ td {
   font-weight: 900;
 }
 
+.trust-hero {
+  min-height: 300px;
+}
+
+.trust-panel {
+  display: grid;
+  gap: 14px;
+  max-width: 880px;
+  margin-top: 18px;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.trust-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 18px 0 2px;
+}
+
+.site-footer a {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--navy);
+}
+
 .matchup-form-grid,
 .matchup-setup-grid {
   display: grid;
