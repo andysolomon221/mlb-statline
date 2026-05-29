@@ -830,6 +830,16 @@ th {
   cursor: pointer;
 }
 
+th button {
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
 td {
   font-weight: 700;
 }

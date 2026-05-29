@@ -76,6 +76,8 @@ let activeSeason = "2026";
 let activeRosterType = "active";
 let batter = { id: 605141, fullName: "Mookie Betts", position: "SS" };
 let pitcher = { id: 694973, fullName: "Paul Skenes", position: "P" };
+let teamOffenseRows = [];
+let activeTeamOffenseSort = { key: "pa", dir: -1 };
 
 function fmt(value, digits = 3) {
   const number = Number(value);
@@ -306,10 +308,41 @@ function headToHeadBreakdown(rows) {
     .join(" | ");
 }
 
+function teamOffenseValue(row, key) {
+  const total = aggregateHeadToHead(row.headToHead);
+  if (key === "name") return row.fullName;
+  if (key === "position") return row.position || "";
+  if (key === "seasons") return row.headToHead.map((split) => split.season).join(", ");
+  return total[key] || 0;
+}
+
+function sortedTeamOffenseRows(rows) {
+  const { key, dir } = activeTeamOffenseSort;
+  return rows.slice().sort((a, b) => {
+    const aValue = teamOffenseValue(a, key);
+    const bValue = teamOffenseValue(b, key);
+    if (typeof aValue === "string" || typeof bValue === "string") {
+      return String(aValue).localeCompare(String(bValue)) * dir;
+    }
+    return (aValue - bValue) * dir || a.fullName.localeCompare(b.fullName);
+  });
+}
+
+function updateTeamOffenseHeaders() {
+  document.querySelectorAll("[data-team-sort]").forEach((button) => {
+    const isActive = button.dataset.teamSort === activeTeamOffenseSort.key;
+    const arrow = activeTeamOffenseSort.dir === 1 ? " ↑" : " ↓";
+    button.textContent = `${button.dataset.label}${isActive ? arrow : ""}`;
+    button.setAttribute("aria-sort", isActive ? (activeTeamOffenseSort.dir === 1 ? "ascending" : "descending") : "none");
+  });
+}
+
 function renderTeamOffense(rows, teamName, pitcherName) {
+  teamOffenseRows = rows;
   document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcherName}`;
   document.querySelector("#team-offense-status").textContent = `${rows.length} ${activeRosterType === "40Man" ? "40-man" : "active"} hitters loaded`;
-  document.querySelector("#team-offense-table").innerHTML = rows.map((row) => {
+  updateTeamOffenseHeaders();
+  document.querySelector("#team-offense-table").innerHTML = sortedTeamOffenseRows(rows).map((row) => {
     const total = aggregateHeadToHead(row.headToHead);
     const seasons = row.headToHead.length ? row.headToHead.map((split) => split.season).join(", ") : "None";
     return `
@@ -320,6 +353,7 @@ function renderTeamOffense(rows, teamName, pitcherName) {
         <td>${total.ab}</td>
         <td>${total.h}</td>
         <td>${total.hr}</td>
+        <td>${total.rbi}</td>
         <td>${total.bb}</td>
         <td>${total.so}</td>
         <td>${row.headToHead.length ? fmt(total.avg) : "-"}</td>
@@ -327,29 +361,24 @@ function renderTeamOffense(rows, teamName, pitcherName) {
         <td>${seasons}</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="11" class="empty-row">No active hitters found for this team.</td></tr>`;
+  }).join("") || `<tr><td colspan="12" class="empty-row">No active hitters found for this team.</td></tr>`;
 }
 
 async function updateTeamOffense() {
   const [teamAbbr, teamName] = selectedBattingTeam();
   document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcher.fullName}`;
   document.querySelector("#team-offense-status").textContent = "Loading offense...";
-  document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="11" class="empty-row">Loading team offense...</td></tr>`;
+  document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="12" class="empty-row">Loading team offense...</td></tr>`;
   try {
     const hitters = await teamRosterHitters(teamAbbr);
     const rows = await Promise.all(hitters.map(async (hitter) => ({
       ...hitter,
       headToHead: await headToHeadStats(hitter, pitcher)
     })));
-    rows.sort((a, b) => {
-      const aTotal = aggregateHeadToHead(a.headToHead);
-      const bTotal = aggregateHeadToHead(b.headToHead);
-      return bTotal.pa - aTotal.pa || a.fullName.localeCompare(b.fullName);
-    });
     renderTeamOffense(rows, teamName, pitcher.fullName);
   } catch (error) {
     document.querySelector("#team-offense-status").textContent = "Could not load offense";
-    document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="11" class="empty-row">Could not load this team's head-to-head history.</td></tr>`;
+    document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="12" class="empty-row">Could not load this team's head-to-head history.</td></tr>`;
   }
 }
 
@@ -489,6 +518,15 @@ function bindEvents() {
   document.querySelector("#matchup-roster-pool").addEventListener("change", (event) => {
     activeRosterType = event.target.value;
     populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
+  });
+  document.querySelectorAll("[data-team-sort]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const key = button.dataset.teamSort;
+      activeTeamOffenseSort = activeTeamOffenseSort.key === key
+        ? { key, dir: activeTeamOffenseSort.dir * -1 }
+        : { key, dir: ["name", "position", "seasons"].includes(key) ? 1 : -1 };
+      renderTeamOffense(teamOffenseRows, selectedBattingTeam()[1], pitcher.fullName);
+    });
   });
   document.querySelector("#advanced-search-toggle").addEventListener("click", (event) => {
     const panel = document.querySelector("#matchup-advanced-search");
