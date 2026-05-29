@@ -78,12 +78,33 @@ let activeTeamName = "All MLB";
 let activePosition = "all";
 let activePool = "regular";
 let activeCategory = "hr";
-let activeSort = { key: "hr", dir: -1 };
+let activeNeed = "power";
+let activeSort = { key: "fantasyScore", dir: -1 };
 let activeRequestId = 0;
 let rows = [];
 let teams = [];
 
 const numberFormat = new Intl.NumberFormat("en-US");
+const needConfig = {
+  hitting: {
+    defaultNeed: "power",
+    needs: [
+      ["power", "Need power", "hr"],
+      ["speed", "Need speed", "sb"],
+      ["average", "Protect AVG", "avg"],
+      ["production", "Runs/RBI", "rbi"]
+    ]
+  },
+  pitching: {
+    defaultNeed: "strikeouts",
+    needs: [
+      ["strikeouts", "Need strikeouts", "strikeouts"],
+      ["saves", "Need saves", "saves"],
+      ["ratios", "Ratio help", "era"],
+      ["wins", "Wins volume", "wins"]
+    ]
+  }
+};
 const categoryConfig = {
   hitting: {
     defaultCategory: "hr",
@@ -149,12 +170,17 @@ function config() {
   return categoryConfig[activeType];
 }
 
+function needs() {
+  return needConfig[activeType];
+}
+
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
 function fmtStat(key, value) {
   if (value === undefined || value === null || value === "") return "-";
+  if (key === "fantasyScore") return Number(value).toFixed(1);
   if (["avg", "ops"].includes(key)) return Number(value).toFixed(3).replace(/^0/, "");
   if (["era", "whip"].includes(key)) return Number(value).toFixed(2);
   if (key === "innings") return value;
@@ -376,11 +402,40 @@ function qualifiedRows() {
 }
 
 function sortDirection(key = activeCategory) {
+  if (key === "fantasyScore") return -1;
   return config().lowerBetter.includes(key) ? 1 : -1;
 }
 
+function needLabel(key = activeNeed) {
+  return needs().needs.find(([need]) => need === key)?.[1] || "Fantasy need";
+}
+
+function needCategory(key = activeNeed) {
+  return needs().needs.find(([need]) => need === key)?.[2] || config().defaultCategory;
+}
+
+function fantasyScore(player) {
+  if (activeType === "hitting") {
+    if (activeNeed === "power") return (player.hr * 4) + (player.rbi * 1.2) + (player.ops * 120);
+    if (activeNeed === "speed") return (player.sb * 5) + player.runs + (player.avg * 120);
+    if (activeNeed === "average") return (player.avg * 300) + (player.hits * 0.65) + Math.min(player.atBats || 0, 650) / 12;
+    return player.runs + player.rbi + (player.hr * 2) + (player.ops * 80);
+  }
+  if (activeNeed === "saves") return (player.saves * 6) + Math.max(0, 1.45 - player.whip) * 80 + Math.max(0, 4.75 - player.era) * 12;
+  if (activeNeed === "ratios") return Math.max(0, 5 - player.era) * 22 + Math.max(0, 1.6 - player.whip) * 90 + (player.strikeouts / 8);
+  if (activeNeed === "wins") return (player.wins * 6) + (player.outs / 18) + Math.max(0, 4.5 - player.era) * 10;
+  return player.strikeouts + (player.outs / 12) + Math.max(0, 4.5 - player.era) * 8;
+}
+
+function scoredRows() {
+  return qualifiedRows().map((player) => ({
+    ...player,
+    fantasyScore: fantasyScore(player)
+  }));
+}
+
 function sortedRows() {
-  return qualifiedRows().slice().sort((a, b) => {
+  return scoredRows().sort((a, b) => {
     const av = a[activeSort.key];
     const bv = b[activeSort.key];
     if (typeof av === "string") return av.localeCompare(bv) * activeSort.dir;
@@ -394,6 +449,10 @@ function categoryLabel(key = activeCategory) {
 
 function draftNote(player) {
   if (activeType === "hitting") {
+    if (activeNeed === "power") return `Power target: ${fmtStat("hr", player.hr)} HR, ${fmtStat("rbi", player.rbi)} RBI, ${fmtStat("ops", player.ops)} OPS.`;
+    if (activeNeed === "speed") return `Speed source: ${fmtStat("sb", player.sb)} SB with ${fmtStat("runs", player.runs)} runs.`;
+    if (activeNeed === "average") return `AVG stabilizer: ${fmtStat("avg", player.avg)} over ${fmtStat("atBats", player.atBats)} AB.`;
+    if (activeNeed === "production") return `Run producer: ${fmtStat("runs", player.runs)} R and ${fmtStat("rbi", player.rbi)} RBI.`;
     if (activeCategory === "hr") return `${fmtStat("hr", player.hr)} HR power with ${fmtStat("rbi", player.rbi)} RBI.`;
     if (activeCategory === "rbi") return `${fmtStat("rbi", player.rbi)} RBI profile with ${fmtStat("hr", player.hr)} HR support.`;
     if (activeCategory === "runs") return `${fmtStat("runs", player.runs)} runs with ${fmtStat("ops", player.ops)} OPS context.`;
@@ -401,6 +460,10 @@ function draftNote(player) {
     if (activeCategory === "avg") return `${fmtStat("avg", player.avg)} average over ${fmtStat("atBats", player.atBats)} AB.`;
     return `${fmtStat("ops", player.ops)} OPS with ${fmtStat("hr", player.hr)} HR.`;
   }
+  if (activeNeed === "saves") return `Saves target: ${fmtStat("saves", player.saves)} SV with ${fmtStat("whip", player.whip)} WHIP.`;
+  if (activeNeed === "ratios") return `Ratio helper: ${fmtStat("era", player.era)} ERA, ${fmtStat("whip", player.whip)} WHIP.`;
+  if (activeNeed === "wins") return `Volume arm: ${fmtStat("wins", player.wins)} W over ${fmtStat("innings", player.innings)} IP.`;
+  if (activeNeed === "strikeouts") return `Strikeout target: ${fmtStat("strikeouts", player.strikeouts)} SO over ${fmtStat("innings", player.innings)} IP.`;
   if (activeCategory === "era") return `${fmtStat("era", player.era)} ERA over ${fmtStat("innings", player.innings)} IP.`;
   if (activeCategory === "whip") return `${fmtStat("whip", player.whip)} WHIP with ${fmtStat("strikeouts", player.strikeouts)} SO.`;
   if (activeCategory === "saves") return `${fmtStat("saves", player.saves)} saves with ${fmtStat("whip", player.whip)} WHIP.`;
@@ -435,6 +498,8 @@ function renderControls() {
   document.querySelector("#fantasy-range-end-value").textContent = activeRange.end;
   document.querySelector("#fantasy-category").innerHTML = config().categories.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelector("#fantasy-category").value = activeCategory;
+  document.querySelector("#fantasy-need").innerHTML = needs().needs.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
+  document.querySelector("#fantasy-need").value = activeNeed;
   document.querySelector("#fantasy-position").innerHTML = config().positions.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelector("#fantasy-position").value = config().positions.some(([key]) => key === activePosition) ? activePosition : "all";
   document.querySelector("#fantasy-pool").value = activePool;
@@ -470,9 +535,9 @@ function renderSummary() {
   const data = sortedRows();
   const leader = data[0];
   document.querySelector("#fantasy-top-player").textContent = leader ? leader.name : "No players";
-  document.querySelector("#fantasy-top-note").textContent = leader ? `${leader.team} | ${categoryLabel()} ${fmtStat(activeCategory, leader[activeCategory])}` : "Try another filter";
-  document.querySelector("#fantasy-category-card").textContent = categoryLabel();
-  document.querySelector("#fantasy-category-note").textContent = activeType === "hitting" ? "Hitter category" : "Pitcher category";
+  document.querySelector("#fantasy-top-note").textContent = leader ? `${leader.team} | Score ${fmtStat("fantasyScore", leader.fantasyScore)}` : "Try another filter";
+  document.querySelector("#fantasy-category-card").textContent = needLabel();
+  document.querySelector("#fantasy-category-note").textContent = `${categoryLabel()} category context`;
   document.querySelector("#fantasy-scope-card").textContent = currentScopeLabel();
   const positionLabel = config().positions.find(([key]) => key === activePosition)?.[1] || "All positions";
   document.querySelector("#fantasy-scope-note").textContent = `${activeTeamId === "all" ? (activeLeague === "all" ? "All MLB" : activeLeague.toUpperCase()) : activeTeamName} | ${positionLabel}`;
@@ -482,13 +547,14 @@ function renderSummary() {
 
 function renderChart() {
   const data = sortedRows().slice(0, 7);
-  const values = data.map((player) => Number(player[activeCategory]) || 0);
+  const chartKey = activeSort.key === "fantasyScore" ? "fantasyScore" : activeCategory;
+  const values = data.map((player) => Number(player[chartKey]) || 0);
   const max = Math.max(...values, 1);
   const min = Math.min(...values, 0);
-  const lowerBetter = config().lowerBetter.includes(activeCategory);
-  document.querySelector("#fantasy-chart-title").textContent = `${currentScopeLabel()} ${categoryLabel()} targets`;
+  const lowerBetter = config().lowerBetter.includes(chartKey);
+  document.querySelector("#fantasy-chart-title").textContent = `${currentScopeLabel()} ${needLabel()} targets`;
   document.querySelector("#fantasy-chart").innerHTML = data.map((player) => {
-    const score = lowerBetter ? max + min - player[activeCategory] : player[activeCategory];
+    const score = lowerBetter ? max + min - player[chartKey] : player[chartKey];
     const width = Math.max(8, (score / Math.max(...values.map((value) => lowerBetter ? max + min - value : value), 1)) * 100);
     return `
       <div class="bar-row">
@@ -499,7 +565,7 @@ function renderChart() {
           <span>${player.team}</span>
         </div>
         <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
-        <div class="bar-value">${fmtStat(activeCategory, player[activeCategory])}</div>
+        <div class="bar-value">${fmtStat(chartKey, player[chartKey])}</div>
       </div>
     `;
   }).join("") || `<div class="empty-state">No players match this fantasy filter.</div>`;
@@ -510,6 +576,7 @@ function renderTableHead() {
     <tr>
       <th data-fantasy-sort="name">Player</th>
       <th data-fantasy-sort="team">Club</th>
+      <th data-fantasy-sort="fantasyScore">Score</th>
       ${config().columns.map(([key, label]) => `<th data-fantasy-sort="${key}">${label}</th>`).join("")}
       <th>Draft Note</th>
     </tr>
@@ -518,6 +585,7 @@ function renderTableHead() {
     heading.addEventListener("click", () => {
       const key = heading.dataset.fantasySort;
       activeSort = { key, dir: activeSort.key === key ? activeSort.dir * -1 : (config().lowerBetter.includes(key) ? 1 : -1) };
+      if (config().categories.some(([category]) => category === key)) activeCategory = key;
       renderAll();
     });
   });
@@ -526,7 +594,7 @@ function renderTableHead() {
 function renderTable() {
   const query = document.querySelector("#fantasy-search").value.trim().toLowerCase();
   const data = sortedRows().filter((player) => `${player.name} ${player.team} ${player.teamName}`.toLowerCase().includes(query));
-  document.querySelector("#fantasy-table-title").textContent = `${activeTeamId === "all" ? currentScopeLabel() : `${activeTeamName}, ${currentScopeLabel()}`} fantasy targets`;
+  document.querySelector("#fantasy-table-title").textContent = `${activeTeamId === "all" ? currentScopeLabel() : `${activeTeamName}, ${currentScopeLabel()}`} ${needLabel()} targets`;
   document.querySelector("#fantasy-table").innerHTML = data.map((player) => `
     <tr>
       <td>
@@ -536,6 +604,7 @@ function renderTable() {
         </a>
       </td>
       <td>${player.team}</td>
+      <td>${fmtStat("fantasyScore", player.fantasyScore)}</td>
       ${config().columns.map(([key]) => `<td>${fmtStat(key, player[key])}</td>`).join("")}
       <td class="fantasy-note-cell">${draftNote(player)}</td>
     </tr>
@@ -567,7 +636,7 @@ async function updatePlayers() {
   try {
     rows = await currentPlayers();
     if (requestId !== activeRequestId) return;
-    activeSort = { key: activeCategory, dir: sortDirection(activeCategory) };
+    activeSort = { key: "fantasyScore", dir: -1 };
     renderAll();
   } catch (error) {
     if (requestId !== activeRequestId) return;
@@ -628,9 +697,11 @@ function bindEvents() {
   document.querySelectorAll("[data-fantasy-type]").forEach((button) => {
     button.addEventListener("click", () => {
       activeType = button.dataset.fantasyType;
+      activeNeed = needs().defaultNeed;
       activeCategory = config().defaultCategory;
+      activeCategory = needCategory();
       activePosition = "all";
-      activeSort = { key: activeCategory, dir: sortDirection(activeCategory) };
+      activeSort = { key: "fantasyScore", dir: -1 };
       renderControls();
       updatePlayers();
     });
@@ -676,7 +747,13 @@ function bindEvents() {
   document.querySelector("#fantasy-category").addEventListener("change", (event) => {
     activeCategory = event.target.value;
     activeSort = { key: activeCategory, dir: sortDirection(activeCategory) };
-    updatePlayers();
+    renderAll();
+  });
+  document.querySelector("#fantasy-need").addEventListener("change", (event) => {
+    activeNeed = event.target.value;
+    activeCategory = needCategory();
+    activeSort = { key: "fantasyScore", dir: -1 };
+    renderAll();
   });
   document.querySelector("#fantasy-position").addEventListener("change", (event) => {
     activePosition = event.target.value;
