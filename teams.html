@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Teams</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-board="teams">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">MLB</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a class="active" href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="teams-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Team Hub</p>
+            <h1>Every club, one starting point.</h1>
+          </div>
+          <div class="season-control" aria-label="Team finder">
+            <label for="team-search">Find a team</label>
+            <input id="team-search" type="search" placeholder="Search club, league, division" aria-label="Search teams" />
+            <select id="team-select" aria-label="Choose team"></select>
+          </div>
+        </header>
+
+        <section class="score-strip news-summary" aria-label="Team hub summary">
+          <article>
+            <span>Clubs</span>
+            <strong>30</strong>
+            <small>American and National League.</small>
+          </article>
+          <article>
+            <span>Communities</span>
+            <strong id="team-community-count">30</strong>
+            <small>Public fan links by team.</small>
+          </article>
+          <article>
+            <span>Current Team</span>
+            <strong id="current-team-card">Boston Red Sox</strong>
+            <small id="current-team-meta">AL East</small>
+          </article>
+          <article>
+            <span>News Route</span>
+            <strong>Filtered</strong>
+            <small>Team links open the News page narrowed down.</small>
+          </article>
+        </section>
+
+        <section class="panel team-hub-panel" id="team-hub">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Selected Club</p>
+              <h2 id="team-hub-title">Boston Red Sox</h2>
+            </div>
+            <div class="split-status" id="team-hub-status">AL East</div>
+          </div>
+          <div class="team-hub-grid">
+            <article class="team-profile-card">
+              <div class="club-badge" id="team-badge">BOS</div>
+              <div>
+                <span id="team-league">American League</span>
+                <strong id="team-name">Boston Red Sox</strong>
+                <small id="team-division">AL East</small>
+              </div>
+            </article>
+            <div>
+              <h3>Team links</h3>
+              <div class="news-source-list" id="team-primary-links"></div>
+            </div>
+            <div>
+              <h3>Fan communities</h3>
+              <div class="news-source-list" id="team-community-links"></div>
+            </div>
+            <div>
+              <h3>Stat tools</h3>
+              <div class="news-source-list" id="team-tool-links"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="team-directory">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Directory</p>
+              <h2>Browse every MLB team</h2>
+            </div>
+          </div>
+          <div class="team-directory-grid" id="team-directory-grid"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="teams.js?v=20260528-team-hub"></script>
+  </body>
+</html>

@@ -3,12 +3,76 @@ const lastSeason = 2026;
 const leagueIds = { al: "103", nl: "104" };
 const playerCache = new Map();
 const standingsCache = new Map();
+const teamAbbr = {
+  "Arizona Diamondbacks": "ARI",
+  "D-backs": "ARI",
+  "Diamondbacks": "ARI",
+  "Atlanta Braves": "ATL",
+  "Braves": "ATL",
+  "Baltimore Orioles": "BAL",
+  "Orioles": "BAL",
+  "Boston Red Sox": "BOS",
+  "Red Sox": "BOS",
+  "Chicago Cubs": "CHC",
+  "Cubs": "CHC",
+  "Chicago White Sox": "CWS",
+  "White Sox": "CWS",
+  "Cincinnati Reds": "CIN",
+  "Reds": "CIN",
+  "Cleveland Guardians": "CLE",
+  "Guardians": "CLE",
+  "Colorado Rockies": "COL",
+  "Rockies": "COL",
+  "Detroit Tigers": "DET",
+  "Tigers": "DET",
+  "Houston Astros": "HOU",
+  "Astros": "HOU",
+  "Kansas City Royals": "KC",
+  "Royals": "KC",
+  "Los Angeles Angels": "LAA",
+  "Angels": "LAA",
+  "Los Angeles Dodgers": "LAD",
+  "Dodgers": "LAD",
+  "Miami Marlins": "MIA",
+  "Marlins": "MIA",
+  "Milwaukee Brewers": "MIL",
+  "Brewers": "MIL",
+  "Minnesota Twins": "MIN",
+  "Twins": "MIN",
+  "New York Mets": "NYM",
+  "Mets": "NYM",
+  "New York Yankees": "NYY",
+  "Yankees": "NYY",
+  "Athletics": "ATH",
+  "Oakland Athletics": "ATH",
+  "Philadelphia Phillies": "PHI",
+  "Phillies": "PHI",
+  "Pittsburgh Pirates": "PIT",
+  "Pirates": "PIT",
+  "San Diego Padres": "SD",
+  "Padres": "SD",
+  "San Francisco Giants": "SF",
+  "Giants": "SF",
+  "Seattle Mariners": "SEA",
+  "Mariners": "SEA",
+  "St. Louis Cardinals": "STL",
+  "Cardinals": "STL",
+  "Tampa Bay Rays": "TB",
+  "Rays": "TB",
+  "Texas Rangers": "TEX",
+  "Rangers": "TEX",
+  "Toronto Blue Jays": "TOR",
+  "Blue Jays": "TOR",
+  "Washington Nationals": "WSH",
+  "Nationals": "WSH"
+};
 
 let activeType = "hitting";
 let activeSeason = "2026";
 let activeMode = "single";
 let activeRange = { start: 2023, end: 2026 };
 let activeLeague = "all";
+let pendingTeamAbbr = new URLSearchParams(window.location.search).get("team") || "";
 let activeTeamId = "all";
 let activeTeamName = "All MLB";
 let activePosition = "all";
@@ -380,6 +444,14 @@ function renderControls() {
 
 function renderTeamOptions() {
   const select = document.querySelector("#fantasy-team");
+  if (pendingTeamAbbr) {
+    const requestedTeam = teams.find((team) => team.abbr === pendingTeamAbbr.toUpperCase());
+    if (requestedTeam) {
+      activeTeamId = String(requestedTeam.id);
+      activeTeamName = requestedTeam.name;
+    }
+    pendingTeamAbbr = "";
+  }
   const options = teams
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -525,7 +597,8 @@ async function updateTeams() {
   const data = await fetchJson(standingsUrl(year));
   teams = (data.records || []).flatMap((division) => division.teamRecords || []).map((record) => ({
     id: record.team?.id || record.team?.name,
-    name: record.team?.name || "Unknown"
+    name: record.team?.name || "Unknown",
+    abbr: record.team?.abbreviation || teamAbbr[record.team?.name] || record.team?.teamCode?.toUpperCase() || ""
   }));
   standingsCache.set(cacheKey, teams);
   renderTeamOptions();

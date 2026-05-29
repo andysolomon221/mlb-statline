@@ -1,5 +1,5 @@
 const teams = [
-  ["all", "All teams", []],
+  ["all", "All MLB", []],
   ["ARI", "Arizona Diamondbacks", ["diamondbacks", "d-backs", "ari", "arizona"]],
   ["ATL", "Atlanta Braves", ["braves", "atl", "atlanta"]],
   ["BAL", "Baltimore Orioles", ["orioles", "bal", "baltimore"]],
@@ -33,15 +33,113 @@ const teams = [
 ];
 
 let stories = [];
-let activeTeam = "all";
+let activeTeam = new URLSearchParams(window.location.search).get("team") || "all";
 let activeSource = "all";
 let activeTopic = "all";
+
+if (!teams.some(([key]) => key === activeTeam)) {
+  activeTeam = "all";
+}
 
 const fallbackSources = [
   ["MLB.com News", "https://www.mlb.com/news"],
   ["CBS Sports MLB", "https://www.cbssports.com/mlb/"],
   ["Associated Press MLB", "https://apnews.com/hub/mlb"]
 ];
+
+const teamForums = {
+  ARI: [
+    ["Diamondbacks Reddit", "https://www.reddit.com/r/azdiamondbacks/"]
+  ],
+  ATL: [
+    ["Braves Reddit", "https://www.reddit.com/r/Braves/"]
+  ],
+  BAL: [
+    ["Orioles Reddit", "https://www.reddit.com/r/orioles/"]
+  ],
+  BOS: [
+    ["Red Sox Reddit", "https://www.reddit.com/r/redsox/"],
+    ["Sons of Sam Horn", "https://sonsofsamhorn.net/"]
+  ],
+  CHC: [
+    ["Cubs Reddit", "https://www.reddit.com/r/CHICubs/"]
+  ],
+  CWS: [
+    ["White Sox Reddit", "https://www.reddit.com/r/whitesox/"]
+  ],
+  CIN: [
+    ["Reds Reddit", "https://www.reddit.com/r/Reds/"]
+  ],
+  CLE: [
+    ["Guardians Reddit", "https://www.reddit.com/r/ClevelandGuardians/"]
+  ],
+  COL: [
+    ["Rockies Reddit", "https://www.reddit.com/r/ColoradoRockies/"]
+  ],
+  DET: [
+    ["Tigers Reddit", "https://www.reddit.com/r/motorcitykitties/"]
+  ],
+  HOU: [
+    ["Astros Reddit", "https://www.reddit.com/r/Astros/"]
+  ],
+  KC: [
+    ["Royals Reddit", "https://www.reddit.com/r/KCRoyals/"]
+  ],
+  LAA: [
+    ["Angels Reddit", "https://www.reddit.com/r/angelsbaseball/"]
+  ],
+  LAD: [
+    ["Dodgers Reddit", "https://www.reddit.com/r/Dodgers/"]
+  ],
+  MIA: [
+    ["Marlins Reddit", "https://www.reddit.com/r/letsgofish/"]
+  ],
+  MIL: [
+    ["Brewers Reddit", "https://www.reddit.com/r/Brewers/"]
+  ],
+  MIN: [
+    ["Twins Reddit", "https://www.reddit.com/r/minnesotatwins/"]
+  ],
+  NYM: [
+    ["Mets Reddit", "https://www.reddit.com/r/NewYorkMets/"]
+  ],
+  NYY: [
+    ["Yankees Reddit", "https://www.reddit.com/r/NYYankees/"]
+  ],
+  ATH: [
+    ["Athletics Reddit", "https://www.reddit.com/r/OaklandAthletics/"]
+  ],
+  PHI: [
+    ["Phillies Reddit", "https://www.reddit.com/r/phillies/"]
+  ],
+  PIT: [
+    ["Pirates Reddit", "https://www.reddit.com/r/buccos/"]
+  ],
+  SD: [
+    ["Padres Reddit", "https://www.reddit.com/r/Padres/"]
+  ],
+  SF: [
+    ["Giants Reddit", "https://www.reddit.com/r/SFGiants/"]
+  ],
+  SEA: [
+    ["Mariners Reddit", "https://www.reddit.com/r/Mariners/"]
+  ],
+  STL: [
+    ["Cardinals Reddit", "https://www.reddit.com/r/Cardinals/"]
+  ],
+  TB: [
+    ["Rays Reddit", "https://www.reddit.com/r/tampabayrays/"]
+  ],
+  TEX: [
+    ["Rangers Reddit", "https://www.reddit.com/r/TexasRangers/"]
+  ],
+  TOR: [
+    ["Blue Jays Reddit", "https://www.reddit.com/r/Torontobluejays/"]
+  ],
+  WSH: [
+    ["Nationals Reddit", "https://www.reddit.com/r/Nationals/"]
+  ]
+};
 
 function teamRecord() {
   return teams.find(([key]) => key === activeTeam) || teams[0];
@@ -123,6 +221,15 @@ function renderSourceLinks() {
   `).join("");
 }
 
+function renderForumLinks() {
+  const [teamKey, teamName] = teamRecord();
+  const forums = teamForums[teamKey] || [];
+  document.querySelector("#forum-title").textContent = activeTeam === "all" ? "Team community links" : `${teamName} fan communities`;
+  document.querySelector("#forum-link-list").innerHTML = forums.length
+    ? forums.map(([name, url]) => `<a class="news-source-link" href="${url}" target="_blank" rel="noopener noreferrer">${name}</a>`).join("")
+    : `<div class="empty-state">Select a team to see public fan community links.</div>`;
+}
+
 async function loadNews() {
   document.querySelector("#news-status").textContent = "Loading news...";
   renderSourceLinks();
@@ -148,6 +255,7 @@ function bindEvents() {
   document.querySelector("#news-team").addEventListener("change", (event) => {
     activeTeam = event.target.value;
     renderStories();
+    renderForumLinks();
   });
   document.querySelector("#news-source").addEventListener("change", (event) => {
     activeSource = event.target.value;
@@ -163,4 +271,5 @@ function bindEvents() {
 }
 
 bindEvents();
+renderForumLinks();
 loadNews();

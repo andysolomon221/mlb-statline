@@ -111,9 +111,11 @@ let activeSeason = "2026";
 let activeMode = "single";
 let activeRange = { start: 1990, end: 1999 };
 let activeLeague = "all";
+let pendingTeamAbbr = new URLSearchParams(window.location.search).get("team") || "";
 let activeTeamId = "all";
 let activeTeamName = "All teams";
 let activePosition = "all";
+let activeBoardSize = "leaders";
 let activeTeamMetric = "wins";
 let leaderRows = [];
 let leaderError = "";
@@ -990,6 +992,9 @@ function updateModeControls() {
   document.querySelectorAll("[data-league]").forEach((button) => {
     button.classList.toggle("active", button.dataset.league === activeLeague);
   });
+  document.querySelectorAll("[data-board-size]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.boardSize === activeBoardSize);
+  });
   document.querySelector("#scope-title").textContent = activeMode === "single" ? "Single-season leaders" : "Multi-year cumulative leaders";
   document.querySelector("#data-note").textContent = activeMode === "single"
     ? `${config.label[0].toUpperCase()}${config.label.slice(1)} ${activeTeamId === "all" ? "leaders" : "players"} load from MLB Stats API for the selected season${activeTeamId === "all" ? "" : " and team"}.`
@@ -1052,8 +1057,9 @@ function renderTable() {
   const rows = sortedRows(qualifiedRows(leaderRows, activeSort.key)
     .filter((player) => `${player.name} ${player.team} ${player.teamName || ""} ${scope}`.toLowerCase().includes(query))
   );
+  const visibleRows = activeBoardSize === "leaders" ? rows.slice(0, 20) : rows;
 
-  document.querySelector("#player-table").innerHTML = rows.map((player) => `
+  document.querySelector("#player-table").innerHTML = visibleRows.map((player) => `
     <tr>
       <td>
         <a class="player-link" href="${baseballReferenceSearchUrl(player.name)}" target="_blank" rel="noopener noreferrer">
@@ -1064,7 +1070,7 @@ function renderTable() {
       <td>${player.team}</td>
       ${config.columns.map(([key]) => `<td>${fmtStat(key, player[key])}</td>`).join("")}
     </tr>
-  `).join("");
+  `).join("") || `<tr><td colspan="9" class="empty-row">No players match this filter.</td></tr>`;
 }
 
 function renderBoardControls() {
@@ -1115,6 +1121,15 @@ function teamOptions() {
 function teamFilterOptions() {
   const select = document.querySelector("#team-filter");
   if (!select || !teamRows.length) return;
+  let appliedPendingTeam = false;
+  if (pendingTeamAbbr) {
+    const requestedTeam = teamRows.find((team) => team.abbr === pendingTeamAbbr.toUpperCase());
+    if (requestedTeam) {
+      activeTeamId = String(requestedTeam.id);
+      appliedPendingTeam = true;
+    }
+    pendingTeamAbbr = "";
+  }
   const previous = String(activeTeamId);
   const options = teamRows
     .slice()
@@ -1127,6 +1142,7 @@ function teamFilterOptions() {
   select.value = activeTeamId;
   activeTeamName = activeTeamId === "all" ? "All teams" : teamRows.find((team) => String(team.id) === activeTeamId)?.name || "Selected team";
   updateModeControls();
+  if (appliedPendingTeam) updateLeaders();
 }
 
 function renderComparison() {
@@ -1234,6 +1250,14 @@ function bindEvents() {
     renderSummary();
     renderChart();
     renderTable();
+  });
+
+  document.querySelectorAll("[data-board-size]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeBoardSize = button.dataset.boardSize;
+      updateModeControls();
+      renderTable();
+    });
   });
 
   document.querySelectorAll("th[data-sort]").forEach((heading) => {

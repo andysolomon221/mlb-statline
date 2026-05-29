@@ -13,12 +13,12 @@
         <nav class="rail-nav">
           <a class="active" href="index.html">Batting</a>
           <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
           <a href="splits.html">Splits</a>
           <a href="fantasy.html">Fantasy</a>
           <a href="news.html">News</a>
-          <a href="#leaders">Leaders</a>
-          <a href="#clubs">Clubs</a>
-          <a href="#parks">Parks</a>
+          <a href="teams.html">Teams</a>
         </nav>
       </aside>
 
@@ -105,6 +105,10 @@
               <label for="position-filter">Position</label>
               <select id="position-filter" aria-label="Position filter"></select>
             </div>
+            <div class="league-toggle board-size-toggle" role="group" aria-label="Player board size">
+              <button class="active" data-board-size="leaders">Top 20</button>
+              <button data-board-size="all">All players</button>
+            </div>
           </div>
         </section>
 
@@ -177,6 +181,6 @@
       </main>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20260528-deploy-check"></script>
   </body>
 </html>

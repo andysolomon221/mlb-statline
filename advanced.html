@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Advanced</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-board="advanced">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">MLB</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a class="active" href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="advanced-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Advanced Stats</p>
+            <h1>Skill signals behind the box score.</h1>
+          </div>
+          <div class="season-control" aria-label="Advanced filters">
+            <label for="advanced-season">Season</label>
+            <select id="advanced-season" aria-label="Select season"></select>
+            <select id="advanced-team" aria-label="Filter by team">
+              <option value="all">All teams</option>
+            </select>
+          </div>
+        </header>
+
+        <section class="score-strip news-summary" aria-label="Advanced summary">
+          <article>
+            <span>Leader</span>
+            <strong id="advanced-leader">Loading</strong>
+            <small id="advanced-leader-note">MLB advanced fields</small>
+          </article>
+          <article>
+            <span>Metric</span>
+            <strong id="advanced-metric-card">ISO</strong>
+            <small id="advanced-metric-note">Selected stat</small>
+          </article>
+          <article>
+            <span>Scope</span>
+            <strong id="advanced-scope-card">2026</strong>
+            <small id="advanced-scope-note">All MLB</small>
+          </article>
+          <article>
+            <span>Players</span>
+            <strong id="advanced-count">0</strong>
+            <small id="advanced-count-note">Qualified pool</small>
+          </article>
+        </section>
+
+        <section class="panel news-controls-panel" aria-label="Advanced controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Board Controls</p>
+              <h2>Choose player type and metric</h2>
+            </div>
+            <select id="advanced-metric" aria-label="Advanced metric"></select>
+          </div>
+          <div class="league-toggle news-topic-toggle" role="group" aria-label="Player type">
+            <button class="active" data-advanced-type="hitting">Hitters</button>
+            <button data-advanced-type="pitching">Pitchers</button>
+          </div>
+          <div class="league-toggle news-topic-toggle" role="group" aria-label="League">
+            <button class="active" data-advanced-league="all">All MLB</button>
+            <button data-advanced-league="al">AL</button>
+            <button data-advanced-league="nl">NL</button>
+          </div>
+        </section>
+
+        <section class="data-grid advanced-grid" id="advanced-board">
+          <section class="panel leaderboard">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Leaderboard</p>
+                <h2 id="advanced-chart-title">Advanced leaders</h2>
+              </div>
+              <div class="split-status" id="advanced-status">Loading...</div>
+            </div>
+            <div class="bar-chart" id="advanced-chart"></div>
+          </section>
+
+          <section class="panel leaderboard" id="advanced-table-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Player Board</p>
+                <h2 id="advanced-table-title">Advanced players</h2>
+              </div>
+              <input id="advanced-search" type="search" placeholder="Search player or team" aria-label="Search advanced board" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead id="advanced-head"></thead>
+                <tbody id="advanced-table"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Source Note</p>
+              <h2>MLB advanced fields</h2>
+            </div>
+          </div>
+          <p class="data-note">WAR is not available from MLB's public Stats API, so this page uses live MLB advanced fields instead.</p>
+        </section>
+      </main>
+    </div>
+
+    <script src="advanced.js?v=20260528-advanced-sync"></script>
+  </body>
+</html>
