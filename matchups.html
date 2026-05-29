@@ -127,9 +127,41 @@
             <div class="matchup-card-grid" id="matchup-card-grid"></div>
           </section>
         </section>
+
+        <section class="panel matchup-offense-panel" aria-label="Team offense against selected pitcher">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Team Offense</p>
+              <h2 id="team-offense-title">Selected offense vs pitcher</h2>
+            </div>
+            <div class="split-status" id="team-offense-status">Loading offense...</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Hitter</th>
+                  <th>Pos</th>
+                  <th>PA</th>
+                  <th>AB</th>
+                  <th>H</th>
+                  <th>HR</th>
+                  <th>BB</th>
+                  <th>SO</th>
+                  <th>AVG</th>
+                  <th>OPS</th>
+                  <th>Seasons</th>
+                </tr>
+              </thead>
+              <tbody id="team-offense-table">
+                <tr><td colspan="11" class="empty-row">Loading team offense...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </main>
     </div>
 
-    <script src="matchups.js?v=20260529-lab"></script>
+    <script src="matchups.js?v=20260529-team-offense"></script>
   </body>
 </html>

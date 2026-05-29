@@ -2,38 +2,40 @@ const firstSeason = 1901;
 const lastSeason = 2026;
 const peopleCache = new Map();
 const statsCache = new Map();
+const headToHeadCache = new Map();
+const rosterCache = new Map();
 
 const teams = [
-  ["ARI", "Arizona Diamondbacks"],
-  ["ATL", "Atlanta Braves"],
-  ["BAL", "Baltimore Orioles"],
-  ["BOS", "Boston Red Sox"],
-  ["CHC", "Chicago Cubs"],
-  ["CWS", "Chicago White Sox"],
-  ["CIN", "Cincinnati Reds"],
-  ["CLE", "Cleveland Guardians"],
-  ["COL", "Colorado Rockies"],
-  ["DET", "Detroit Tigers"],
-  ["HOU", "Houston Astros"],
-  ["KC", "Kansas City Royals"],
-  ["LAA", "Los Angeles Angels"],
-  ["LAD", "Los Angeles Dodgers"],
-  ["MIA", "Miami Marlins"],
-  ["MIL", "Milwaukee Brewers"],
-  ["MIN", "Minnesota Twins"],
-  ["NYM", "New York Mets"],
-  ["NYY", "New York Yankees"],
-  ["ATH", "Athletics"],
-  ["PHI", "Philadelphia Phillies"],
-  ["PIT", "Pittsburgh Pirates"],
-  ["SD", "San Diego Padres"],
-  ["SF", "San Francisco Giants"],
-  ["SEA", "Seattle Mariners"],
-  ["STL", "St. Louis Cardinals"],
-  ["TB", "Tampa Bay Rays"],
-  ["TEX", "Texas Rangers"],
-  ["TOR", "Toronto Blue Jays"],
-  ["WSH", "Washington Nationals"]
+  ["ARI", "Arizona Diamondbacks", 109],
+  ["ATL", "Atlanta Braves", 144],
+  ["BAL", "Baltimore Orioles", 110],
+  ["BOS", "Boston Red Sox", 111],
+  ["CHC", "Chicago Cubs", 112],
+  ["CWS", "Chicago White Sox", 145],
+  ["CIN", "Cincinnati Reds", 113],
+  ["CLE", "Cleveland Guardians", 114],
+  ["COL", "Colorado Rockies", 115],
+  ["DET", "Detroit Tigers", 116],
+  ["HOU", "Houston Astros", 117],
+  ["KC", "Kansas City Royals", 118],
+  ["LAA", "Los Angeles Angels", 108],
+  ["LAD", "Los Angeles Dodgers", 119],
+  ["MIA", "Miami Marlins", 146],
+  ["MIL", "Milwaukee Brewers", 158],
+  ["MIN", "Minnesota Twins", 142],
+  ["NYM", "New York Mets", 121],
+  ["NYY", "New York Yankees", 147],
+  ["ATH", "Athletics", 133],
+  ["PHI", "Philadelphia Phillies", 143],
+  ["PIT", "Pittsburgh Pirates", 134],
+  ["SD", "San Diego Padres", 135],
+  ["SF", "San Francisco Giants", 137],
+  ["SEA", "Seattle Mariners", 136],
+  ["STL", "St. Louis Cardinals", 138],
+  ["TB", "Tampa Bay Rays", 139],
+  ["TEX", "Texas Rangers", 140],
+  ["TOR", "Toronto Blue Jays", 141],
+  ["WSH", "Washington Nationals", 120]
 ];
 
 const parks = [
@@ -83,11 +85,6 @@ function fmt(value, digits = 3) {
 function num(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
-}
-
-function inningsToOuts(value) {
-  const [whole, fraction = "0"] = String(value || "0").split(".");
-  return (Number(whole) || 0) * 3 + (Number(fraction) || 0);
 }
 
 function baseballReferenceSearchUrl(name) {
@@ -151,6 +148,49 @@ async function playerStats(player, group) {
   return payload;
 }
 
+async function headToHeadStats(batterPlayer, pitcherPlayer) {
+  const cacheKey = `${batterPlayer.id}:${pitcherPlayer.id}`;
+  if (headToHeadCache.has(cacheKey)) return headToHeadCache.get(cacheKey);
+  const params = new URLSearchParams({
+    stats: "vsPlayer",
+    group: "hitting",
+    opposingPlayerId: pitcherPlayer.id,
+    sportId: 1
+  });
+  const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${batterPlayer.id}/stats?${params.toString()}`);
+  const rows = (data.stats?.[0]?.splits || []).map((split) => ({
+    season: split.season || "Career",
+    team: split.team?.name || "",
+    opponent: split.opponent?.name || "",
+    stat: split.stat || {}
+  }));
+  headToHeadCache.set(cacheKey, rows);
+  return rows;
+}
+
+function selectedBattingTeam() {
+  const abbr = document.querySelector("#matchup-batting-team")?.value || "LAD";
+  return teams.find(([teamAbbr]) => teamAbbr === abbr) || teams.find(([teamAbbr]) => teamAbbr === "LAD");
+}
+
+async function teamRosterHitters(teamAbbr) {
+  const [, , teamId] = teams.find(([abbr]) => abbr === teamAbbr) || [];
+  if (!teamId) return [];
+  const cacheKey = `${teamId}:${activeSeason}`;
+  if (rosterCache.has(cacheKey)) return rosterCache.get(cacheKey);
+  const params = new URLSearchParams({ rosterType: "active", season: activeSeason });
+  const data = await fetchJson(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?${params.toString()}`);
+  const hitters = (data.roster || [])
+    .map((row) => ({
+      id: row.person?.id,
+      fullName: row.person?.fullName || "Unknown player",
+      position: row.position?.abbreviation || "MLB"
+    }))
+    .filter((player) => player.id && player.position !== "P" && player.position !== "TWP");
+  rosterCache.set(cacheKey, hitters);
+  return hitters;
+}
+
 function renderPeopleOptions(selectId, people, selected) {
   const options = people.length ? people : [selected];
   document.querySelector(selectId).innerHTML = options.map((person) => `<option value="${person.id}">${person.fullName} (${person.position || "MLB"})</option>`).join("");
@@ -202,11 +242,103 @@ function edgeLabel(hitter, pitcherProfile) {
   return ["Balanced", "The handedness split reads close, so recent form and game context matter more."];
 }
 
+function aggregateHeadToHead(rows) {
+  const totals = rows.reduce((acc, row) => {
+    const stat = row.stat || {};
+    acc.pa += num(stat.plateAppearances);
+    acc.ab += num(stat.atBats);
+    acc.h += num(stat.hits);
+    acc.hr += num(stat.homeRuns);
+    acc.rbi += num(stat.rbi);
+    acc.bb += num(stat.baseOnBalls);
+    acc.so += num(stat.strikeOuts);
+    acc.tb += num(stat.totalBases);
+    return acc;
+  }, { pa: 0, ab: 0, h: 0, hr: 0, rbi: 0, bb: 0, so: 0, tb: 0 });
+  const avg = totals.ab ? totals.h / totals.ab : 0;
+  const obpDenominator = totals.ab + totals.bb;
+  const obp = obpDenominator ? (totals.h + totals.bb) / obpDenominator : 0;
+  const slg = totals.ab ? totals.tb / totals.ab : 0;
+  return {
+    ...totals,
+    avg,
+    obp,
+    slg,
+    ops: obp + slg
+  };
+}
+
+function formatHeadToHeadLine(rows, batterName, pitcherName) {
+  if (!rows.length) return `${batterName} has no recorded MLB plate appearances against ${pitcherName} in the data returned by MLB.`;
+  const total = aggregateHeadToHead(rows);
+  return `${batterName} is ${total.h}-for-${total.ab} with ${total.hr} HR, ${total.bb} BB, and ${total.so} SO against ${pitcherName} across ${total.pa} recorded plate appearances.`;
+}
+
+function headToHeadBreakdown(rows) {
+  if (!rows.length) return "No recorded head-to-head history.";
+  return rows
+    .slice()
+    .sort((a, b) => Number(a.season) - Number(b.season))
+    .map((row) => {
+      const stat = row.stat || {};
+      return `${row.season}: ${stat.hits || 0}-${stat.atBats || 0}, ${stat.homeRuns || 0} HR, ${stat.baseOnBalls || 0} BB, ${stat.strikeOuts || 0} SO`;
+    })
+    .join(" | ");
+}
+
+function renderTeamOffense(rows, teamName, pitcherName) {
+  document.querySelector("#team-offense-title").textContent = `${teamName} offense vs ${pitcherName}`;
+  document.querySelector("#team-offense-status").textContent = `${rows.length} hitters loaded`;
+  document.querySelector("#team-offense-table").innerHTML = rows.map((row) => {
+    const total = aggregateHeadToHead(row.headToHead);
+    const seasons = row.headToHead.length ? row.headToHead.map((split) => split.season).join(", ") : "None";
+    return `
+      <tr>
+        <td><a class="summary-link" href="${baseballReferenceSearchUrl(row.fullName)}" target="_blank" rel="noopener noreferrer">${row.fullName}</a></td>
+        <td>${row.position || "-"}</td>
+        <td>${total.pa}</td>
+        <td>${total.ab}</td>
+        <td>${total.h}</td>
+        <td>${total.hr}</td>
+        <td>${total.bb}</td>
+        <td>${total.so}</td>
+        <td>${row.headToHead.length ? fmt(total.avg) : "-"}</td>
+        <td>${row.headToHead.length ? fmt(total.ops) : "-"}</td>
+        <td>${seasons}</td>
+      </tr>
+    `;
+  }).join("") || `<tr><td colspan="11" class="empty-row">No active hitters found for this team.</td></tr>`;
+}
+
+async function updateTeamOffense() {
+  const [teamAbbr, teamName] = selectedBattingTeam();
+  document.querySelector("#team-offense-title").textContent = `${teamName} offense vs ${pitcher.fullName}`;
+  document.querySelector("#team-offense-status").textContent = "Loading offense...";
+  document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="11" class="empty-row">Loading team offense...</td></tr>`;
+  try {
+    const hitters = await teamRosterHitters(teamAbbr);
+    const rows = await Promise.all(hitters.map(async (hitter) => ({
+      ...hitter,
+      headToHead: await headToHeadStats(hitter, pitcher)
+    })));
+    rows.sort((a, b) => {
+      const aTotal = aggregateHeadToHead(a.headToHead);
+      const bTotal = aggregateHeadToHead(b.headToHead);
+      return bTotal.pa - aTotal.pa || a.fullName.localeCompare(b.fullName);
+    });
+    renderTeamOffense(rows, teamName, pitcher.fullName);
+  } catch (error) {
+    document.querySelector("#team-offense-status").textContent = "Could not load offense";
+    document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="11" class="empty-row">Could not load this team's head-to-head history.</td></tr>`;
+  }
+}
+
 function renderMatchup(payload) {
   const hitter = hitterSummary(payload.batter, payload.pitcher.pitchHand);
   const pitcherProfile = pitcherSummary(payload.pitcher, payload.batter.batSide);
   const [edge, edgeNote] = edgeLabel(hitter, pitcherProfile);
   const [, parkName, parkFactor, parkNote] = parkContext();
+  const h2h = aggregateHeadToHead(payload.headToHead || []);
   const battingTeam = document.querySelector("#matchup-batting-team").selectedOptions[0]?.textContent || "Batting team";
   const pitchingTeam = document.querySelector("#matchup-pitching-team").selectedOptions[0]?.textContent || "Pitching team";
 
@@ -222,6 +354,7 @@ function renderMatchup(payload) {
 
   document.querySelector("#matchup-read").innerHTML = `
     <p><strong>${edge}.</strong> ${edgeNote}</p>
+    <p><strong>Head-to-head:</strong> ${formatHeadToHeadLine(payload.headToHead || [], payload.batter.fullName, payload.pitcher.fullName)}</p>
     <p>${payload.batter.fullName} is carrying a ${fmt(payload.batter.season.ops)} season OPS, with a ${fmt(hitter.splitOps)} OPS in the relevant handedness split.</p>
     <p>${payload.pitcher.fullName} owns a ${fmt(payload.pitcher.season.era, 2)} ERA and ${fmt(payload.pitcher.season.whip, 2)} WHIP, with a ${fmt(pitcherProfile.splitOps)} OPS allowed in the matching split.</p>
     <p>${parkName} checks in around a ${parkFactor} park factor. ${parkNote}.</p>
@@ -244,6 +377,11 @@ function renderMatchup(payload) {
       <span>Park factor ${parkFactor}, where 100 is neutral.</span>
       <span>${parkNote}.</span>
     </article>
+    <article class="fantasy-note-card">
+      <strong>Head-to-head</strong>
+      <span>${payload.headToHead?.length ? `${h2h.h}-${h2h.ab} | AVG ${fmt(h2h.avg)} | OPS ${fmt(h2h.ops)}` : "No recorded matchups"}</span>
+      <span>${headToHeadBreakdown(payload.headToHead || [])}</span>
+    </article>
   `;
 }
 
@@ -251,11 +389,13 @@ async function analyzeMatchup() {
   document.querySelector("#matchup-status").textContent = "Loading matchup...";
   document.querySelector("#matchup-read").innerHTML = `<div class="empty-state">Loading MLB matchup data...</div>`;
   try {
-    const [batterStats, pitcherStats] = await Promise.all([
+    const [batterStats, pitcherStats, headToHead] = await Promise.all([
       playerStats(batter, "hitting"),
-      playerStats(pitcher, "pitching")
+      playerStats(pitcher, "pitching"),
+      headToHeadStats(batter, pitcher)
     ]);
-    renderMatchup({ batter: batterStats, pitcher: pitcherStats });
+    renderMatchup({ batter: batterStats, pitcher: pitcherStats, headToHead });
+    updateTeamOffense();
     document.querySelector("#matchup-status").textContent = "Matchup loaded";
   } catch (error) {
     document.querySelector("#matchup-status").textContent = "Could not load matchup";
@@ -303,6 +443,8 @@ function bindEvents() {
   });
   document.querySelector("#run-matchup").addEventListener("click", analyzeMatchup);
   document.querySelector("#matchup-park").addEventListener("change", analyzeMatchup);
+  document.querySelector("#matchup-batting-team").addEventListener("change", analyzeMatchup);
+  document.querySelector("#matchup-pitching-team").addEventListener("change", analyzeMatchup);
   document.querySelector("#batter-search-form").addEventListener("submit", (event) => handleSearch(event, "hitting"));
   document.querySelector("#pitcher-search-form").addEventListener("submit", (event) => handleSearch(event, "pitching"));
   document.querySelector("#batter-select").addEventListener("change", (event) => {
