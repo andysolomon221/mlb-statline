@@ -17,7 +17,7 @@
   <body data-board="matchups">
     <div class="app-shell">
       <aside class="rail" aria-label="Primary">
-        <div class="brand-mark" aria-hidden="true">MLB</div>
+        <div class="brand-mark" aria-hidden="true">Statline</div>
         <nav class="rail-nav">
           <a href="index.html">Batting</a>
           <a href="pitching.html">Pitching</a>
@@ -82,8 +82,9 @@
                 <select id="matchup-batting-team" aria-label="Batting team"></select>
               </label>
               <label>
-                <span>Choose Batter</span>
-                <select id="batter-select" aria-label="Choose batter"></select>
+                <span>Batter</span>
+                <input id="batter-autocomplete" type="search" list="batter-options" autocomplete="off" placeholder="Type player or team" aria-label="Search or choose batter" />
+                <datalist id="batter-options"></datalist>
               </label>
             </div>
             <div class="matchup-setup-column">
@@ -92,8 +93,9 @@
                 <select id="matchup-pitching-team" aria-label="Pitching team"></select>
               </label>
               <label>
-                <span>Choose Pitcher</span>
-                <select id="pitcher-select" aria-label="Choose pitcher"></select>
+                <span>Pitcher</span>
+                <input id="pitcher-autocomplete" type="search" list="pitcher-options" autocomplete="off" placeholder="Type player or team" aria-label="Search or choose pitcher" />
+                <datalist id="pitcher-options"></datalist>
               </label>
             </div>
             <div class="matchup-setup-column">
@@ -108,25 +110,6 @@
                   <option value="40Man">40-man roster</option>
                 </select>
               </label>
-            </div>
-            <div class="advanced-search-wrap">
-            <button id="advanced-search-toggle" type="button" aria-expanded="false">Advanced search</button>
-            <div class="matchup-advanced-search" id="matchup-advanced-search" hidden>
-              <form id="batter-search-form" class="matchup-search">
-                <label>
-                  <span>Search Batter</span>
-                  <input id="batter-query" type="search" placeholder="Optional player search" aria-label="Search batter" />
-                </label>
-                <button type="submit">Search</button>
-              </form>
-              <form id="pitcher-search-form" class="matchup-search">
-                <label>
-                  <span>Search Pitcher</span>
-                  <input id="pitcher-query" type="search" placeholder="Optional player search" aria-label="Search pitcher" />
-                </label>
-                <button type="submit">Search</button>
-              </form>
-            </div>
             </div>
           </div>
           <small class="data-note">Season controls roster dropdowns and current-season player stats. Head-to-head tables use career batter-vs-pitcher history.</small>
@@ -195,6 +178,6 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260529-sortable-offense"></script>
+    <script src="matchups.js?v=20260529-autocomplete-brand"></script>
   </body>
 </html>

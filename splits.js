@@ -41,6 +41,8 @@ let activeRange = { start: 2021, end: 2023 };
 let activeGroup = "hitting";
 let activeSplitSet = "common";
 let activeRequestId = 0;
+let playerCandidates = [{ ...selectedPlayer, position: "DH" }];
+let splitSearchTimer;
 
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
@@ -96,10 +98,28 @@ async function searchPeople(query) {
   const people = (data.people || []).map((person) => ({
     id: person.id,
     fullName: person.fullName,
-    position: person.primaryPosition?.abbreviation || "MLB"
+    position: person.primaryPosition?.abbreviation || "MLB",
+    team: person.currentTeam?.abbreviation || "",
+    teamName: person.currentTeam?.name || ""
   }));
   peopleCache.set(cacheKey, people);
   return people;
+}
+
+function renderPlayerAutocomplete(people) {
+  playerCandidates = Array.from(new Map(people.map((person) => [Number(person.id), person])).values());
+  document.querySelector("#split-player-options").innerHTML = playerCandidates.map((person) => `
+    <option value="${escapeHtml(displayPlayerOption(person))}" label="${escapeHtml(person.fullName)}"></option>
+  `).join("");
+}
+
+function displayPlayerOption(person) {
+  const teamText = person.teamName || person.team ? ` - ${person.teamName || person.team}` : "";
+  return `${person.fullName}${teamText}${person.position ? ` (${person.position})` : ""}`;
+}
+
+function cleanPlayerInput(value) {
+  return value.replace(/\s+-\s+[^()]+(?:\s+\([^)]+\))?$/, "").replace(/\s+\([^)]+\)$/, "").trim();
 }
 
 async function loadSplits() {
@@ -322,13 +342,6 @@ function updateSummary() {
   document.querySelector("#player-reference-link").href = baseballReferenceSearchUrl(selectedPlayer.fullName);
 }
 
-function renderPeopleOptions(people) {
-  const select = document.querySelector("#player-select");
-  select.innerHTML = people.map((person) => `
-    <option value="${person.id}">${escapeHtml(person.fullName)} (${escapeHtml(person.position)})</option>
-  `).join("");
-}
-
 async function handleSearch(event) {
   event.preventDefault();
   setStatus("Searching players...");
@@ -336,13 +349,13 @@ async function handleSearch(event) {
   try {
     const people = await searchPeople(query);
     if (!people.length) {
-      renderPeopleOptions([]);
+      renderPlayerAutocomplete([]);
       setStatus("No players found");
       return;
     }
-    renderPeopleOptions(people);
+    renderPlayerAutocomplete(people);
     selectedPlayer = people[0];
-    document.querySelector("#player-select").value = String(selectedPlayer.id);
+    document.querySelector("#player-query").value = selectedPlayer.fullName;
     loadSplits();
   } catch (error) {
     setStatus("Could not search players");
@@ -350,14 +363,26 @@ async function handleSearch(event) {
 }
 
 function bindEvents() {
-  document.querySelector("#split-search-form").addEventListener("submit", handleSearch);
-  document.querySelector("#player-select").addEventListener("change", (event) => {
-    const option = event.target.selectedOptions[0];
-    selectedPlayer = {
-      id: Number(event.target.value),
-      fullName: option.textContent.replace(/\s+\([^)]+\)$/, "")
-    };
-    document.querySelector("#player-query").value = selectedPlayer.fullName;
+  document.querySelector("#player-query").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") handleSearch(event);
+  });
+  document.querySelector("#player-query").addEventListener("input", () => {
+    clearTimeout(splitSearchTimer);
+    splitSearchTimer = setTimeout(async () => {
+      const query = document.querySelector("#player-query").value;
+      if (query.trim().length < 2) return;
+      try {
+        renderPlayerAutocomplete(await searchPeople(query));
+      } catch (error) {
+        setStatus("Could not search players");
+      }
+    }, 180);
+  });
+  document.querySelector("#player-query").addEventListener("change", () => {
+    const query = cleanPlayerInput(document.querySelector("#player-query").value).toLowerCase();
+    const match = playerCandidates.find((person) => person.fullName.toLowerCase() === query || displayPlayerOption(person).toLowerCase() === document.querySelector("#player-query").value.trim().toLowerCase());
+    if (!match) return;
+    selectedPlayer = match;
     loadSplits();
   });
   document.querySelectorAll("[data-split-mode]").forEach((button) => {
@@ -423,6 +448,6 @@ function updateSplitModeControls() {
 
 populateSeasonSelect();
 updateSplitModeControls();
-renderPeopleOptions([{ ...selectedPlayer, position: "DH" }]);
+renderPlayerAutocomplete([{ ...selectedPlayer, position: "DH" }]);
 bindEvents();
 loadSplits();

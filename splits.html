@@ -17,7 +17,7 @@
   <body data-board="splits">
     <div class="app-shell">
       <aside class="rail" aria-label="Primary">
-        <div class="brand-mark" aria-hidden="true">MLB</div>
+        <div class="brand-mark" aria-hidden="true">Statline</div>
         <nav class="rail-nav">
           <a href="index.html">Batting</a>
           <a href="pitching.html">Pitching</a>
@@ -39,11 +39,8 @@
           </div>
           <div class="season-control split-search-card" aria-label="Player split search">
             <label for="player-query">Player</label>
-            <form id="split-search-form" class="split-search-form">
-              <input id="player-query" type="search" value="Shohei Ohtani" placeholder="Search a player" aria-label="Search player" />
-              <button type="submit">Search</button>
-            </form>
-            <select id="player-select" aria-label="Choose player"></select>
+            <input id="player-query" type="search" value="Shohei Ohtani" list="split-player-options" autocomplete="off" placeholder="Search a player" aria-label="Search player" />
+            <datalist id="split-player-options"></datalist>
           </div>
         </header>
 
@@ -145,6 +142,6 @@
       </main>
     </div>
 
-    <script src="splits.js?v=20260528-year-selects"></script>
+    <script src="splits.js?v=20260529-autocomplete"></script>
   </body>
 </html>

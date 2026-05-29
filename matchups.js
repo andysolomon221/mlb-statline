@@ -38,6 +38,8 @@ const teams = [
   ["WSH", "Washington Nationals", 120]
 ];
 
+const teamNameByAbbr = new Map(teams.map(([abbr, name]) => [abbr, name]));
+
 const parks = [
   ["neutral", "Neutral park", 100, "Baseline run environment"],
   ["ARI", "Chase Field", 101, "Slightly hitter-friendly"],
@@ -78,6 +80,9 @@ let batter = { id: 605141, fullName: "Mookie Betts", position: "SS" };
 let pitcher = { id: 694973, fullName: "Paul Skenes", position: "P" };
 let teamOffenseRows = [];
 let activeTeamOffenseSort = { key: "pa", dir: -1 };
+let batterCandidates = [];
+let pitcherCandidates = [];
+let matchupSearchTimer;
 
 function fmt(value, digits = 3) {
   const number = Number(value);
@@ -100,6 +105,16 @@ async function fetchJson(url) {
   return response.json();
 }
 
+function displayPlayerOption(person) {
+  const teamName = person.teamName || teamNameByAbbr.get(person.team) || "";
+  const teamText = teamName || person.team ? ` - ${teamName || person.team}` : "";
+  return `${person.fullName}${teamText}${person.position ? ` (${person.position})` : ""}`;
+}
+
+function cleanPlayerInput(value) {
+  return value.replace(/\s+-\s+[^()]+(?:\s+\([^)]+\))?$/, "").replace(/\s+\([^)]+\)$/, "").trim();
+}
+
 async function searchPeople(query, group) {
   const clean = query.trim();
   if (!clean) return [];
@@ -111,10 +126,14 @@ async function searchPeople(query, group) {
       id: person.id,
       fullName: person.fullName,
       position: person.primaryPosition?.abbreviation || "MLB",
+      team: person.currentTeam?.abbreviation || "",
+      teamName: person.currentTeam?.name || "",
       batSide: person.batSide?.code || "",
       pitchHand: person.pitchHand?.code || ""
     }))
-    .filter((person) => group === "pitching" ? person.position === "P" : person.position !== "P");
+    .filter((person) => group === "pitching"
+      ? ["P", "TWP"].includes(person.position) || person.id === 660271
+      : person.position !== "P" || person.id === 660271);
   peopleCache.set(cacheKey, people);
   return people;
 }
@@ -187,7 +206,9 @@ async function teamRosterPlayers(teamAbbr) {
     .map((row) => ({
       id: row.person?.id,
       fullName: row.person?.fullName || "Unknown player",
-      position: row.position?.abbreviation || "MLB"
+      position: row.position?.abbreviation || "MLB",
+      team: teamAbbr,
+      teamName: teamNameByAbbr.get(teamAbbr) || ""
     }))
     .filter((player) => player.id);
   rosterCache.set(cacheKey, players);
@@ -196,20 +217,63 @@ async function teamRosterPlayers(teamAbbr) {
 
 async function teamRosterHitters(teamAbbr) {
   const players = await teamRosterPlayers(teamAbbr);
-  return players.filter((player) => player.position !== "P" && player.position !== "TWP");
+  return players.filter((player) => player.position !== "P" || player.id === 660271);
 }
 
 async function teamRosterPitchers(teamAbbr) {
   const players = await teamRosterPlayers(teamAbbr);
-  return players.filter((player) => player.position === "P" || player.position === "TWP");
+  return players.filter((player) => player.position === "P" || player.position === "TWP" || player.id === 660271);
 }
 
-function renderPeopleOptions(selectId, people, selected) {
-  const options = people.length ? people : [selected];
-  const hasSelected = options.some((person) => Number(person.id) === Number(selected.id));
-  const merged = hasSelected ? options : [selected, ...options];
-  document.querySelector(selectId).innerHTML = merged.map((person) => `<option value="${person.id}">${person.fullName} (${person.position || "MLB"})</option>`).join("");
-  document.querySelector(selectId).value = String(selected.id);
+function uniquePeople(people) {
+  return Array.from(new Map(people.filter((person) => person.id).map((person) => [Number(person.id), person])).values());
+}
+
+function teamMatches(query) {
+  const clean = query.trim().toLowerCase();
+  if (!clean) return [];
+  return teams.filter(([abbr, name]) => abbr.toLowerCase().includes(clean) || name.toLowerCase().includes(clean)).slice(0, 3);
+}
+
+function renderAutocompleteOptions(listId, people) {
+  document.querySelector(listId).innerHTML = uniquePeople(people).map((person) => `
+    <option value="${displayPlayerOption(person)}" label="${person.fullName}"></option>
+  `).join("");
+}
+
+function setPlayerInput(role, player) {
+  const input = document.querySelector(role === "batter" ? "#batter-autocomplete" : "#pitcher-autocomplete");
+  input.value = displayPlayerOption(player);
+}
+
+async function autocompleteCandidates(query, role) {
+  const group = role === "pitcher" ? "pitching" : "hitting";
+  const currentTeam = role === "pitcher" ? document.querySelector("#matchup-pitching-team").value : document.querySelector("#matchup-batting-team").value;
+  const currentRoster = role === "pitcher" ? await teamRosterPitchers(currentTeam) : await teamRosterHitters(currentTeam);
+  const matchedTeamRosters = await Promise.all(teamMatches(query).map(([abbr]) => role === "pitcher" ? teamRosterPitchers(abbr) : teamRosterHitters(abbr)));
+  const searched = query.trim().length >= 2 ? await searchPeople(query, group) : [];
+  return uniquePeople([...currentRoster, ...matchedTeamRosters.flat(), ...searched]);
+}
+
+async function handleAutocompleteInput(role) {
+  const input = document.querySelector(role === "batter" ? "#batter-autocomplete" : "#pitcher-autocomplete");
+  const listId = role === "batter" ? "#batter-options" : "#pitcher-options";
+  const candidates = await autocompleteCandidates(input.value, role);
+  if (role === "batter") batterCandidates = candidates;
+  else pitcherCandidates = candidates;
+  renderAutocompleteOptions(listId, candidates);
+}
+
+function chooseAutocompletePlayer(role) {
+  const input = document.querySelector(role === "batter" ? "#batter-autocomplete" : "#pitcher-autocomplete");
+  const candidates = role === "batter" ? batterCandidates : pitcherCandidates;
+  const cleanValue = cleanPlayerInput(input.value).toLowerCase();
+  const selected = candidates.find((person) => person.fullName.toLowerCase() === cleanValue || displayPlayerOption(person).toLowerCase() === input.value.trim().toLowerCase());
+  if (!selected) return;
+  if (role === "batter") batter = selected;
+  else pitcher = selected;
+  setPlayerInput(role, selected);
+  analyzeMatchup();
 }
 
 function splitForHand(stats, hand) {
@@ -391,8 +455,12 @@ async function populateTeamPlayerDropdowns({ selectFirst = false } = {}) {
   ]);
   if (selectFirst && hitters.length) batter = hitters[0];
   if (selectFirst && pitchers.length) pitcher = pitchers[0];
-  renderPeopleOptions("#batter-select", hitters, batter);
-  renderPeopleOptions("#pitcher-select", pitchers, pitcher);
+  batterCandidates = uniquePeople([batter, ...hitters]);
+  pitcherCandidates = uniquePeople([pitcher, ...pitchers]);
+  renderAutocompleteOptions("#batter-options", batterCandidates);
+  renderAutocompleteOptions("#pitcher-options", pitcherCandidates);
+  setPlayerInput("batter", batter);
+  setPlayerInput("pitcher", pitcher);
 }
 
 function renderMatchup(payload) {
@@ -481,25 +549,8 @@ function populateControls() {
   document.querySelector("#matchup-roster-pool").value = activeRosterType;
   document.querySelector("#matchup-park").innerHTML = parks.map(([abbr, name, factor]) => `<option value="${abbr}">${name} (${factor})</option>`).join("");
   document.querySelector("#matchup-park").value = "LAD";
-  renderPeopleOptions("#batter-select", [batter], batter);
-  renderPeopleOptions("#pitcher-select", [pitcher], pitcher);
-}
-
-async function handleSearch(event, group) {
-  event.preventDefault();
-  const input = document.querySelector(group === "hitting" ? "#batter-query" : "#pitcher-query");
-  const query = input.value;
-  const people = await searchPeople(query, group);
-  if (!people.length) return;
-  if (group === "hitting") {
-    batter = people[0];
-    renderPeopleOptions("#batter-select", people, batter);
-  } else {
-    pitcher = people[0];
-    renderPeopleOptions("#pitcher-select", people, pitcher);
-  }
-  input.value = "";
-  analyzeMatchup();
+  setPlayerInput("batter", batter);
+  setPlayerInput("pitcher", pitcher);
 }
 
 function bindEvents() {
@@ -528,22 +579,16 @@ function bindEvents() {
       renderTeamOffense(teamOffenseRows, selectedBattingTeam()[1], pitcher.fullName);
     });
   });
-  document.querySelector("#advanced-search-toggle").addEventListener("click", (event) => {
-    const panel = document.querySelector("#matchup-advanced-search");
-    const isOpen = !panel.hidden;
-    panel.hidden = isOpen;
-    event.currentTarget.setAttribute("aria-expanded", String(!isOpen));
+  document.querySelector("#batter-autocomplete").addEventListener("input", () => {
+    clearTimeout(matchupSearchTimer);
+    matchupSearchTimer = setTimeout(() => handleAutocompleteInput("batter"), 180);
   });
-  document.querySelector("#batter-search-form").addEventListener("submit", (event) => handleSearch(event, "hitting"));
-  document.querySelector("#pitcher-search-form").addEventListener("submit", (event) => handleSearch(event, "pitching"));
-  document.querySelector("#batter-select").addEventListener("change", (event) => {
-    batter = { id: Number(event.target.value), fullName: event.target.selectedOptions[0].textContent.replace(/\s+\([^)]+\)$/, "") };
-    analyzeMatchup();
+  document.querySelector("#pitcher-autocomplete").addEventListener("input", () => {
+    clearTimeout(matchupSearchTimer);
+    matchupSearchTimer = setTimeout(() => handleAutocompleteInput("pitcher"), 180);
   });
-  document.querySelector("#pitcher-select").addEventListener("change", (event) => {
-    pitcher = { id: Number(event.target.value), fullName: event.target.selectedOptions[0].textContent.replace(/\s+\([^)]+\)$/, "") };
-    analyzeMatchup();
-  });
+  document.querySelector("#batter-autocomplete").addEventListener("change", () => chooseAutocompletePlayer("batter"));
+  document.querySelector("#pitcher-autocomplete").addEventListener("change", () => chooseAutocompletePlayer("pitcher"));
 }
 
 populateControls();
