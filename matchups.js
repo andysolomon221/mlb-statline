@@ -464,7 +464,8 @@ function populateControls() {
 
 async function handleSearch(event, group) {
   event.preventDefault();
-  const query = document.querySelector(group === "hitting" ? "#batter-query" : "#pitcher-query").value;
+  const input = document.querySelector(group === "hitting" ? "#batter-query" : "#pitcher-query");
+  const query = input.value;
   const people = await searchPeople(query, group);
   if (!people.length) return;
   if (group === "hitting") {
@@ -474,6 +475,7 @@ async function handleSearch(event, group) {
     pitcher = people[0];
     renderPeopleOptions("#pitcher-select", people, pitcher);
   }
+  input.value = "";
   analyzeMatchup();
 }
 
