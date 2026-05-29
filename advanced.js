@@ -91,6 +91,7 @@ const metricConfig = {
       ["homeRunsPerPlateAppearance", "HR/PA"]
     ],
     columns: [
+      ["atBats", "AB"],
       ["iso", "ISO"],
       ["babip", "BABIP"],
       ["strikeoutsPerPlateAppearance", "K%"],
@@ -114,6 +115,7 @@ const metricConfig = {
       ["babip", "BABIP"]
     ],
     columns: [
+      ["inningsPitched", "IP"],
       ["strikeoutsPer9", "K/9"],
       ["baseOnBallsPer9", "BB/9"],
       ["homeRunsPer9", "HR/9"],
@@ -148,7 +150,8 @@ function fmtStat(key, value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return value;
   const percentKeys = ["strikeoutsPerPlateAppearance", "walksPerPlateAppearance", "homeRunsPerPlateAppearance", "strikeoutsMinusWalksPercentage", "whiffPercentage", "flyBallPercentage", "strikePercentage"];
-  if (["plateAppearances", "battersFaced"].includes(key)) return Math.round(number).toLocaleString("en-US");
+  if (["plateAppearances", "battersFaced", "atBats"].includes(key)) return Math.round(number).toLocaleString("en-US");
+  if (key === "inningsPitched") return String(value);
   if (percentKeys.includes(key)) return `${(number * 100).toFixed(1)}%`;
   if (["iso", "babip", "ops"].includes(key)) return number.toFixed(3).replace(/^0/, "");
   return number.toFixed(2);
@@ -171,6 +174,20 @@ async function fetchJson(url) {
 function statsUrl() {
   const params = new URLSearchParams({
     stats: "seasonAdvanced",
+    group: activeType,
+    playerPool: activeTeamId === "all" ? "qualified" : "all",
+    season: activeSeason,
+    sportIds: "1",
+    limit: "500"
+  });
+  if (activeLeague !== "all") params.set("leagueIds", leagueIds[activeLeague]);
+  if (activeTeamId !== "all") params.set("teamIds", activeTeamId);
+  return `https://statsapi.mlb.com/api/v1/stats?${params.toString()}`;
+}
+
+function basicStatsUrl() {
+  const params = new URLSearchParams({
+    stats: "season",
     group: activeType,
     playerPool: activeTeamId === "all" ? "qualified" : "all",
     season: activeSeason,
@@ -205,6 +222,15 @@ function mapRow(split) {
     position: normalizePosition(split.position?.abbreviation || ""),
     ...stat
   };
+}
+
+function mapBasicStats(data) {
+  return new Map((data.stats?.[0]?.splits || []).map((split) => [
+    String(split.player?.id),
+    activeType === "hitting"
+      ? { atBats: split.stat?.atBats || 0 }
+      : { inningsPitched: split.stat?.inningsPitched || "0.0" }
+  ]));
 }
 
 async function updateTeams() {
@@ -253,8 +279,12 @@ async function updatePlayers() {
     if (playerCache.has(cacheKey)) {
       rows = playerCache.get(cacheKey);
     } else {
-      const data = await fetchJson(statsUrl());
-      rows = (data.stats?.[0]?.splits || []).map(mapRow);
+      const [data, basicData] = await Promise.all([fetchJson(statsUrl()), fetchJson(basicStatsUrl())]);
+      const basicByPlayer = mapBasicStats(basicData);
+      rows = (data.stats?.[0]?.splits || []).map((split) => ({
+        ...mapRow(split),
+        ...(basicByPlayer.get(String(split.player?.id)) || {})
+      }));
       playerCache.set(cacheKey, rows);
     }
     renderAll();

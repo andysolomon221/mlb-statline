@@ -228,6 +228,7 @@ const boardConfig = {
     eyebrow: "Run Creation",
     defaultMetric: "ops",
     columns: [
+      ["ab", "AB"],
       ["avg", "AVG"],
       ["ops", "OPS"],
       ["hits", "H"],
@@ -268,6 +269,7 @@ const boardConfig = {
     eyebrow: "Run Prevention",
     defaultMetric: "era",
     columns: [
+      ["ipOuts", "IP"],
       ["era", "ERA"],
       ["wins", "W"],
       ["hits", "H"],
@@ -327,6 +329,7 @@ const generatedParks = [
 ];
 
 function fmtStat(key, value) {
+  if (key === "ipOuts") return `${Math.floor(value / 3)}.${value % 3}`;
   if (["avg", "ops", "slg"].includes(key)) return value.toFixed(3).replace(/^0/, "");
   if (["era", "whip"].includes(key)) return value.toFixed(2);
   if (key === "pct") return value.toFixed(3).replace(/^0/, "");
@@ -441,6 +444,7 @@ function mapApiPlayer(split) {
     hits: toNumber(stat.hits),
     hr: toNumber(stat.homeRuns),
     rbi: toNumber(stat.rbi),
+    ab: toNumber(stat.atBats),
     pa: toNumber(stat.plateAppearances)
   };
 }
