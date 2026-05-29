@@ -246,6 +246,13 @@ function pitcherSummary(stats, batterSide) {
   };
 }
 
+function battingSideLabel(side) {
+  if (side === "L") return "left-handed hitters";
+  if (side === "R") return "right-handed hitters";
+  if (side === "S") return "switch-hitters";
+  return "hitters from this side";
+}
+
 function edgeLabel(hitter, pitcherProfile) {
   const hitterScore = hitter.splitOps * 100;
   const pitcherScore = (1 - Math.min(pitcherProfile.splitOps || 0.7, 1)) * 100;
@@ -281,14 +288,6 @@ function aggregateHeadToHead(rows) {
   };
 }
 
-function hasSeasonBreakdown(rows) {
-  return rows.some((row) => /^\d{4}$/.test(String(row.season)));
-}
-
-function activeSeasonRows(rows) {
-  return rows.filter((row) => row.season === activeSeason);
-}
-
 function formatHeadToHeadLine(rows, batterName, pitcherName, scopeLabel) {
   if (!rows.length) return `${batterName} has no recorded MLB plate appearances against ${pitcherName} ${scopeLabel}.`;
   const total = aggregateHeadToHead(rows);
@@ -308,27 +307,24 @@ function headToHeadBreakdown(rows) {
 }
 
 function renderTeamOffense(rows, teamName, pitcherName) {
-  document.querySelector("#team-offense-title").textContent = `${teamName} offense vs ${pitcherName} in ${activeSeason}`;
+  document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcherName}`;
   document.querySelector("#team-offense-status").textContent = `${rows.length} ${activeRosterType === "40Man" ? "40-man" : "active"} hitters loaded`;
   document.querySelector("#team-offense-table").innerHTML = rows.map((row) => {
-    const canUseSeason = hasSeasonBreakdown(row.headToHead);
-    const seasonRows = canUseSeason ? activeSeasonRows(row.headToHead) : [];
-    const total = aggregateHeadToHead(seasonRows);
-    const career = aggregateHeadToHead(row.headToHead);
-    const careerLabel = row.headToHead.length ? `${career.pa} PA, ${career.h}-${career.ab}` : "None";
+    const total = aggregateHeadToHead(row.headToHead);
+    const seasons = row.headToHead.length ? row.headToHead.map((split) => split.season).join(", ") : "None";
     return `
       <tr>
         <td><a class="summary-link" href="${baseballReferenceSearchUrl(row.fullName)}" target="_blank" rel="noopener noreferrer">${row.fullName}</a></td>
         <td>${row.position || "-"}</td>
-        <td>${canUseSeason ? total.pa : "-"}</td>
-        <td>${canUseSeason ? total.ab : "-"}</td>
-        <td>${canUseSeason ? total.h : "-"}</td>
-        <td>${canUseSeason ? total.hr : "-"}</td>
-        <td>${canUseSeason ? total.bb : "-"}</td>
-        <td>${canUseSeason ? total.so : "-"}</td>
-        <td>${canUseSeason && seasonRows.length ? fmt(total.avg) : "-"}</td>
-        <td>${canUseSeason && seasonRows.length ? fmt(total.ops) : "-"}</td>
-        <td>${careerLabel}</td>
+        <td>${total.pa}</td>
+        <td>${total.ab}</td>
+        <td>${total.h}</td>
+        <td>${total.hr}</td>
+        <td>${total.bb}</td>
+        <td>${total.so}</td>
+        <td>${row.headToHead.length ? fmt(total.avg) : "-"}</td>
+        <td>${row.headToHead.length ? fmt(total.ops) : "-"}</td>
+        <td>${seasons}</td>
       </tr>
     `;
   }).join("") || `<tr><td colspan="11" class="empty-row">No active hitters found for this team.</td></tr>`;
@@ -336,7 +332,7 @@ function renderTeamOffense(rows, teamName, pitcherName) {
 
 async function updateTeamOffense() {
   const [teamAbbr, teamName] = selectedBattingTeam();
-  document.querySelector("#team-offense-title").textContent = `${teamName} offense vs ${pitcher.fullName} in ${activeSeason}`;
+  document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcher.fullName}`;
   document.querySelector("#team-offense-status").textContent = "Loading offense...";
   document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="11" class="empty-row">Loading team offense...</td></tr>`;
   try {
@@ -375,10 +371,8 @@ function renderMatchup(payload) {
   const pitcherProfile = pitcherSummary(payload.pitcher, payload.batter.batSide);
   const [edge, edgeNote] = edgeLabel(hitter, pitcherProfile);
   const [, parkName, parkFactor, parkNote] = parkContext();
-  const seasonH2hRows = activeSeasonRows(payload.headToHead || []);
-  const seasonH2h = aggregateHeadToHead(seasonH2hRows);
   const careerH2h = aggregateHeadToHead(payload.headToHead || []);
-  const hasSeasonH2h = hasSeasonBreakdown(payload.headToHead || []);
+  const sideLabel = battingSideLabel(payload.batter.batSide);
   const battingTeam = document.querySelector("#matchup-batting-team").selectedOptions[0]?.textContent || "Batting team";
   const pitchingTeam = document.querySelector("#matchup-pitching-team").selectedOptions[0]?.textContent || "Pitching team";
 
@@ -394,10 +388,9 @@ function renderMatchup(payload) {
 
   document.querySelector("#matchup-read").innerHTML = `
     <p><strong>${edge}.</strong> ${edgeNote}</p>
-    <p><strong>${activeSeason} head-to-head:</strong> ${hasSeasonH2h ? formatHeadToHeadLine(seasonH2hRows, payload.batter.fullName, payload.pitcher.fullName, `in ${activeSeason}`) : "MLB is only returning a career head-to-head line for this matchup."}</p>
     <p><strong>Career head-to-head:</strong> ${formatHeadToHeadLine(payload.headToHead || [], payload.batter.fullName, payload.pitcher.fullName, "for his career")}</p>
     <p>${payload.batter.fullName} is carrying a ${fmt(payload.batter.season.ops)} season OPS, with a ${fmt(hitter.splitOps)} OPS in the relevant handedness split.</p>
-    <p>${payload.pitcher.fullName} owns a ${fmt(payload.pitcher.season.era, 2)} ERA and ${fmt(payload.pitcher.season.whip, 2)} WHIP, with a ${fmt(pitcherProfile.splitOps)} OPS allowed in the matching split.</p>
+    <p>${payload.pitcher.fullName} owns a ${fmt(payload.pitcher.season.era, 2)} ERA and ${fmt(payload.pitcher.season.whip, 2)} WHIP this season, and ${sideLabel} have a ${fmt(pitcherProfile.splitOps)} OPS against him.</p>
     <p>${parkName} checks in around a ${parkFactor} park factor. ${parkNote}.</p>
     <p class="data-note">This is a matchup read, not an official projection or betting recommendation.</p>
   `;
@@ -419,9 +412,8 @@ function renderMatchup(payload) {
       <span>${parkNote}.</span>
     </article>
     <article class="fantasy-note-card">
-      <strong>${activeSeason} head-to-head</strong>
-      <span>${hasSeasonH2h ? (seasonH2hRows.length ? `${seasonH2h.h}-${seasonH2h.ab} | AVG ${fmt(seasonH2h.avg)} | OPS ${fmt(seasonH2h.ops)}` : "No recorded matchups this season") : "Season split unavailable"}</span>
-      <span>Career: ${payload.headToHead?.length ? `${careerH2h.h}-${careerH2h.ab} | AVG ${fmt(careerH2h.avg)} | OPS ${fmt(careerH2h.ops)}` : "No recorded matchups"}</span>
+      <strong>Career head-to-head</strong>
+      <span>${payload.headToHead?.length ? `${careerH2h.h}-${careerH2h.ab} | AVG ${fmt(careerH2h.avg)} | OPS ${fmt(careerH2h.ops)}` : "No recorded matchups"}</span>
       <span>${headToHeadBreakdown(payload.headToHead || [])}</span>
     </article>
   `;
