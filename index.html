@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MLB Statline</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body data-board="hitting">
@@ -77,11 +78,11 @@
             <div class="range-fields">
               <label>
                 <span>From <strong id="range-start-value">1990</strong></span>
-                <input id="range-start" type="range" min="1901" max="2026" value="1990" aria-label="Range start year" />
+                <select id="range-start" aria-label="Range start year"></select>
               </label>
               <label>
                 <span>To <strong id="range-end-value">1999</strong></span>
-                <input id="range-end" type="range" min="1901" max="2026" value="1999" aria-label="Range end year" />
+                <select id="range-end" aria-label="Range end year"></select>
               </label>
             </div>
             <div class="quick-ranges" role="group" aria-label="Quick ranges">
@@ -181,6 +182,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260528-ab-ip"></script>
+    <script src="script.js?v=20260528-year-selects"></script>
   </body>
 </html>

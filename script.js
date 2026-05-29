@@ -942,10 +942,8 @@ function populateSeasonSelect() {
   }).join("");
   select.innerHTML = options;
   select.value = activeSeason;
-  document.querySelector("#range-start").min = firstSeason;
-  document.querySelector("#range-start").max = lastSeason;
-  document.querySelector("#range-end").min = firstSeason;
-  document.querySelector("#range-end").max = lastSeason;
+  document.querySelector("#range-start").innerHTML = options;
+  document.querySelector("#range-end").innerHTML = options;
   document.querySelector("#range-start").value = activeRange.start;
   document.querySelector("#range-end").value = activeRange.end;
   updateRangeLabels();
@@ -999,7 +997,8 @@ function updateModeControls() {
   document.querySelectorAll("[data-board-size]").forEach((button) => {
     button.classList.toggle("active", button.dataset.boardSize === activeBoardSize);
   });
-  document.querySelector("#scope-title").textContent = activeMode === "single" ? "Single-season leaders" : "Multi-year cumulative leaders";
+  document.querySelector(".range-panel")?.setAttribute("data-active-mode", activeMode);
+  document.querySelector("#scope-title").textContent = activeMode === "single" ? `${activeSeason} single-season leaders` : `${activeRange.start}-${activeRange.end} cumulative leaders`;
   document.querySelector("#data-note").textContent = activeMode === "single"
     ? `${config.label[0].toUpperCase()}${config.label.slice(1)} ${activeTeamId === "all" ? "leaders" : "players"} load from MLB Stats API for the selected season${activeTeamId === "all" ? "" : " and team"}.`
     : `Range mode aggregates ${config.label} seasons from MLB Stats API across the selected years${activeTeamId === "all" ? "" : " for every selected-team player"}.`;
@@ -1292,11 +1291,11 @@ function bindEvents() {
     });
   });
 
-  document.querySelector("#range-start").addEventListener("input", (event) => {
+  document.querySelector("#range-start").addEventListener("change", (event) => {
     setActiveRange(event.target.value, activeRange.end);
   });
 
-  document.querySelector("#range-end").addEventListener("input", (event) => {
+  document.querySelector("#range-end").addEventListener("change", (event) => {
     setActiveRange(activeRange.start, event.target.value);
   });
 

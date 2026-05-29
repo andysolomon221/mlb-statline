@@ -503,7 +503,8 @@ function renderControls() {
   document.querySelector("#fantasy-position").innerHTML = config().positions.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelector("#fantasy-position").value = config().positions.some(([key]) => key === activePosition) ? activePosition : "all";
   document.querySelector("#fantasy-pool").value = activePool;
-  document.querySelector("#fantasy-scope-title").textContent = activeMode === "single" ? "Single-season fantasy board" : "Multi-year fantasy board";
+  document.querySelector(".range-panel")?.setAttribute("data-active-mode", activeMode);
+  document.querySelector("#fantasy-scope-title").textContent = activeMode === "single" ? `${activeSeason} fantasy board` : `${activeRange.start}-${activeRange.end} fantasy board`;
   document.querySelector("#fantasy-data-note").textContent = `${activeType === "hitting" ? "Hitter" : "Pitcher"} categories load from MLB Stats API for ${currentScopeLabel()}.`;
 }
 
@@ -691,6 +692,10 @@ function populateSeasonSelect() {
   }).join("");
   select.innerHTML = options;
   select.value = activeSeason;
+  document.querySelector("#fantasy-range-start").innerHTML = options;
+  document.querySelector("#fantasy-range-end").innerHTML = options;
+  document.querySelector("#fantasy-range-start").value = activeRange.start;
+  document.querySelector("#fantasy-range-end").value = activeRange.end;
 }
 
 function bindEvents() {
@@ -719,10 +724,10 @@ function bindEvents() {
       updateTeams().then(updatePlayers);
     });
   });
-  document.querySelector("#fantasy-range-start").addEventListener("input", (event) => {
+  document.querySelector("#fantasy-range-start").addEventListener("change", (event) => {
     setActiveRange(event.target.value, activeRange.end);
   });
-  document.querySelector("#fantasy-range-end").addEventListener("input", (event) => {
+  document.querySelector("#fantasy-range-end").addEventListener("change", (event) => {
     setActiveRange(activeRange.start, event.target.value);
   });
   document.querySelectorAll("[data-fantasy-range-start]").forEach((button) => {

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MLB Statline Fantasy</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body data-board="fantasy">
@@ -75,11 +76,11 @@
             <div class="range-fields">
               <label>
                 <span>From <strong id="fantasy-range-start-value">2023</strong></span>
-                <input id="fantasy-range-start" type="range" min="1901" max="2026" value="2023" aria-label="Fantasy range start year" />
+                <select id="fantasy-range-start" aria-label="Fantasy range start year"></select>
               </label>
               <label>
                 <span>To <strong id="fantasy-range-end-value">2026</strong></span>
-                <input id="fantasy-range-end" type="range" min="1901" max="2026" value="2026" aria-label="Fantasy range end year" />
+                <select id="fantasy-range-end" aria-label="Fantasy range end year"></select>
               </label>
             </div>
             <div class="quick-ranges" role="group" aria-label="Quick fantasy ranges">
@@ -164,6 +165,6 @@
       </main>
     </div>
 
-    <script src="fantasy.js?v=20260528-decision-board"></script>
+    <script src="fantasy.js?v=20260528-year-selects"></script>
   </body>
 </html>

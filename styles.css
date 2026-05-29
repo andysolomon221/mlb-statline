@@ -264,6 +264,11 @@ h2 {
   grid-column: 1 / -1;
 }
 
+.range-panel[data-active-mode="single"] .range-fields,
+.range-panel[data-active-mode="single"] .quick-ranges {
+  display: none;
+}
+
 .quick-ranges {
   grid-column: 1 / -1;
   width: fit-content;
