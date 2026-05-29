@@ -73,6 +73,7 @@ const parks = [
 ];
 
 let activeSeason = "2026";
+let activeRosterType = "active";
 let batter = { id: 605141, fullName: "Mookie Betts", position: "SS" };
 let pitcher = { id: 694973, fullName: "Paul Skenes", position: "P" };
 
@@ -176,9 +177,9 @@ function selectedBattingTeam() {
 async function teamRosterPlayers(teamAbbr) {
   const [, , teamId] = teams.find(([abbr]) => abbr === teamAbbr) || [];
   if (!teamId) return [];
-  const cacheKey = `${teamId}:${activeSeason}`;
+  const cacheKey = `${teamId}:${activeSeason}:${activeRosterType}`;
   if (rosterCache.has(cacheKey)) return rosterCache.get(cacheKey);
-  const params = new URLSearchParams({ rosterType: "active", season: activeSeason });
+  const params = new URLSearchParams({ rosterType: activeRosterType, season: activeSeason });
   const data = await fetchJson(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?${params.toString()}`);
   const players = (data.roster || [])
     .map((row) => ({
@@ -308,7 +309,7 @@ function headToHeadBreakdown(rows) {
 
 function renderTeamOffense(rows, teamName, pitcherName) {
   document.querySelector("#team-offense-title").textContent = `${teamName} offense vs ${pitcherName} in ${activeSeason}`;
-  document.querySelector("#team-offense-status").textContent = `${rows.length} hitters loaded`;
+  document.querySelector("#team-offense-status").textContent = `${rows.length} ${activeRosterType === "40Man" ? "40-man" : "active"} hitters loaded`;
   document.querySelector("#team-offense-table").innerHTML = rows.map((row) => {
     const canUseSeason = hasSeasonBreakdown(row.headToHead);
     const seasonRows = canUseSeason ? activeSeasonRows(row.headToHead) : [];
@@ -456,6 +457,7 @@ function populateControls() {
   document.querySelector("#matchup-pitching-team").innerHTML = teamOptions;
   document.querySelector("#matchup-batting-team").value = "LAD";
   document.querySelector("#matchup-pitching-team").value = "PIT";
+  document.querySelector("#matchup-roster-pool").value = activeRosterType;
   document.querySelector("#matchup-park").innerHTML = parks.map(([abbr, name, factor]) => `<option value="${abbr}">${name} (${factor})</option>`).join("");
   document.querySelector("#matchup-park").value = "LAD";
   renderPeopleOptions("#batter-select", [batter], batter);
@@ -490,6 +492,10 @@ function bindEvents() {
     populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
   });
   document.querySelector("#matchup-pitching-team").addEventListener("change", () => {
+    populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
+  });
+  document.querySelector("#matchup-roster-pool").addEventListener("change", (event) => {
+    activeRosterType = event.target.value;
     populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
   });
   document.querySelector("#advanced-search-toggle").addEventListener("click", (event) => {
