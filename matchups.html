@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Matchups</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-board="matchups">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">MLB</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a class="active" href="matchups.html">Matchups</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="matchups-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Matchup Lab</p>
+            <h1>Turn a batter-pitcher matchup into a quick read.</h1>
+          </div>
+          <div class="season-control" aria-label="Matchup season">
+            <label for="matchup-season">Season</label>
+            <select id="matchup-season" aria-label="Matchup season"></select>
+            <button id="run-matchup" type="button">Analyze</button>
+          </div>
+        </header>
+
+        <section class="score-strip matchup-summary" aria-label="Matchup summary">
+          <article>
+            <span>Batter</span>
+            <strong id="matchup-batter-card">Mookie Betts</strong>
+            <small id="matchup-batter-note">Season and handedness split.</small>
+          </article>
+          <article>
+            <span>Pitcher</span>
+            <strong id="matchup-pitcher-card">Paul Skenes</strong>
+            <small id="matchup-pitcher-note">Season and handedness split.</small>
+          </article>
+          <article>
+            <span>Edge</span>
+            <strong id="matchup-edge-card">Loading</strong>
+            <small id="matchup-edge-note">Data-driven read, not a betting line.</small>
+          </article>
+          <article>
+            <span>Context</span>
+            <strong id="matchup-context-card">2026</strong>
+            <small id="matchup-context-note">Manual matchup setup.</small>
+          </article>
+        </section>
+
+        <section class="panel matchup-controls-panel" aria-label="Matchup controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Setup</p>
+              <h2>Choose teams, batter, and pitcher</h2>
+            </div>
+            <div class="split-status" id="matchup-status">Loading matchup...</div>
+          </div>
+          <div class="matchup-form-grid">
+            <label>
+              <span>Batting Team</span>
+              <select id="matchup-batting-team" aria-label="Batting team"></select>
+            </label>
+            <label>
+              <span>Pitching Team</span>
+              <select id="matchup-pitching-team" aria-label="Pitching team"></select>
+            </label>
+            <label>
+              <span>Ballpark</span>
+              <select id="matchup-park" aria-label="Ballpark context"></select>
+            </label>
+            <form id="batter-search-form" class="matchup-search">
+              <label>
+                <span>Batter</span>
+                <input id="batter-query" type="search" value="Mookie Betts" aria-label="Search batter" />
+              </label>
+              <button type="submit">Search</button>
+            </form>
+            <form id="pitcher-search-form" class="matchup-search">
+              <label>
+                <span>Pitcher</span>
+                <input id="pitcher-query" type="search" value="Paul Skenes" aria-label="Search pitcher" />
+              </label>
+              <button type="submit">Search</button>
+            </form>
+            <label>
+              <span>Choose Batter</span>
+              <select id="batter-select" aria-label="Choose batter"></select>
+            </label>
+            <label>
+              <span>Choose Pitcher</span>
+              <select id="pitcher-select" aria-label="Choose pitcher"></select>
+            </label>
+          </div>
+        </section>
+
+        <section class="data-grid advanced-grid">
+          <section class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Matchup Read</p>
+                <h2 id="matchup-title">Batter vs pitcher context</h2>
+              </div>
+            </div>
+            <div class="matchup-read" id="matchup-read"></div>
+          </section>
+
+          <section class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Side By Side</p>
+                <h2>Season and split profile</h2>
+              </div>
+            </div>
+            <div class="matchup-card-grid" id="matchup-card-grid"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="matchups.js?v=20260529-lab"></script>
+  </body>
+</html>

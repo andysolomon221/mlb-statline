@@ -63,6 +63,7 @@ function renderSelectedTeam() {
     linkButton("Pitching leaders", `pitching.html?team=${club.id}`),
     linkButton("Advanced board", `advanced.html?team=${club.id}`),
     linkButton("Statcast board", `statcast.html?team=${club.id}`),
+    linkButton("Matchup Lab", "matchups.html"),
     linkButton("Fantasy board", `fantasy.html?team=${club.id}`),
     linkButton("Player splits", "splits.html")
   ].join("");

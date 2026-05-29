@@ -933,6 +933,45 @@ td {
   font-weight: 900;
 }
 
+.matchup-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.matchup-form-grid label,
+.matchup-search {
+  display: grid;
+  gap: 8px;
+}
+
+.matchup-search {
+  grid-template-columns: minmax(180px, 1fr) auto;
+  align-items: end;
+}
+
+.matchup-read {
+  display: grid;
+  gap: 10px;
+  line-height: 1.55;
+}
+
+.matchup-read p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.matchup-read strong {
+  color: var(--ink);
+}
+
+.matchup-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
 @media (max-width: 980px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -967,6 +1006,8 @@ td {
   .workbench,
   .data-grid,
   .park-grid,
+  .matchup-form-grid,
+  .matchup-card-grid,
   .news-grid,
   .team-hub-grid,
   .team-directory-grid {
@@ -1008,6 +1049,9 @@ td {
   .workbench,
   .data-grid,
   .park-grid,
+  .matchup-form-grid,
+  .matchup-search,
+  .matchup-card-grid,
   .team-hub-grid,
   .team-directory-grid,
   .team-pickers {
