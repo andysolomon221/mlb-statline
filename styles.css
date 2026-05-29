@@ -269,6 +269,11 @@ h2 {
   display: none;
 }
 
+.split-controls-panel[data-active-mode="single"] .split-range-fields,
+.split-controls-panel[data-active-mode="single"] .split-quick-ranges {
+  display: none;
+}
+
 .quick-ranges {
   grid-column: 1 / -1;
   width: fit-content;

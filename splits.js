@@ -63,6 +63,10 @@ function populateSeasonSelect() {
   }
   select.innerHTML = years.join("");
   select.value = activeSeason;
+  document.querySelector("#split-range-start").innerHTML = years.join("");
+  document.querySelector("#split-range-end").innerHTML = years.join("");
+  document.querySelector("#split-range-start").value = activeRange.start;
+  document.querySelector("#split-range-end").value = activeRange.end;
 }
 
 function yearList(start, end) {
@@ -369,10 +373,10 @@ function bindEvents() {
     updateSplitModeControls();
     loadSplits();
   });
-  document.querySelector("#split-range-start").addEventListener("input", (event) => {
+  document.querySelector("#split-range-start").addEventListener("change", (event) => {
     setActiveRange(event.target.value, activeRange.end);
   });
-  document.querySelector("#split-range-end").addEventListener("input", (event) => {
+  document.querySelector("#split-range-end").addEventListener("change", (event) => {
     setActiveRange(activeRange.start, event.target.value);
   });
   document.querySelectorAll("[data-split-range-start]").forEach((button) => {
@@ -406,6 +410,7 @@ function updateSplitModeControls() {
   document.querySelectorAll("[data-split-mode]").forEach((button) => {
     button.classList.toggle("active", button.dataset.splitMode === activeMode);
   });
+  document.querySelector(".split-controls-panel")?.setAttribute("data-active-mode", activeMode);
   document.querySelectorAll("[data-split-range-start]").forEach((button) => {
     const matches = Number(button.dataset.splitRangeStart) === activeRange.start && Number(button.dataset.splitRangeEnd) === activeRange.end;
     button.classList.toggle("active", activeMode === "range" && matches);
