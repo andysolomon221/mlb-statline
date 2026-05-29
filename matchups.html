@@ -113,6 +113,19 @@
             </div>
           </div>
           <small class="data-note">Season controls roster dropdowns and current-season player stats. Head-to-head tables use career batter-vs-pitcher history.</small>
+          <div class="browse-players-wrap">
+            <button id="browse-players-toggle" type="button" aria-expanded="false">Browse players</button>
+            <div class="browse-players-grid" id="browse-players-panel" hidden>
+              <label>
+                <span>Batters From Selected Team</span>
+                <select id="browse-batter-select" aria-label="Browse batters"></select>
+              </label>
+              <label>
+                <span>Pitchers From Selected Team</span>
+                <select id="browse-pitcher-select" aria-label="Browse pitchers"></select>
+              </label>
+            </div>
+          </div>
         </section>
 
         <section class="data-grid advanced-grid">
@@ -178,6 +191,6 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260529-autocomplete-brand"></script>
+    <script src="matchups.js?v=20260529-browse-players"></script>
   </body>
 </html>

@@ -241,6 +241,14 @@ function renderAutocompleteOptions(listId, people) {
   `).join("");
 }
 
+function renderBrowseSelect(selectId, people, selected) {
+  const rows = uniquePeople(people.length ? people : [selected]);
+  document.querySelector(selectId).innerHTML = rows.map((person) => `
+    <option value="${person.id}">${displayPlayerOption(person)}</option>
+  `).join("");
+  document.querySelector(selectId).value = String(selected.id);
+}
+
 function setPlayerInput(role, player) {
   const input = document.querySelector(role === "batter" ? "#batter-autocomplete" : "#pitcher-autocomplete");
   input.value = displayPlayerOption(player);
@@ -459,6 +467,8 @@ async function populateTeamPlayerDropdowns({ selectFirst = false } = {}) {
   pitcherCandidates = uniquePeople([pitcher, ...pitchers]);
   renderAutocompleteOptions("#batter-options", batterCandidates);
   renderAutocompleteOptions("#pitcher-options", pitcherCandidates);
+  renderBrowseSelect("#browse-batter-select", hitters, batter);
+  renderBrowseSelect("#browse-pitcher-select", pitchers, pitcher);
   setPlayerInput("batter", batter);
   setPlayerInput("pitcher", pitcher);
 }
@@ -569,6 +579,26 @@ function bindEvents() {
   document.querySelector("#matchup-roster-pool").addEventListener("change", (event) => {
     activeRosterType = event.target.value;
     populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
+  });
+  document.querySelector("#browse-players-toggle").addEventListener("click", (event) => {
+    const panel = document.querySelector("#browse-players-panel");
+    const isOpen = !panel.hidden;
+    panel.hidden = isOpen;
+    event.currentTarget.setAttribute("aria-expanded", String(!isOpen));
+  });
+  document.querySelector("#browse-batter-select").addEventListener("change", (event) => {
+    const selected = batterCandidates.find((person) => Number(person.id) === Number(event.target.value));
+    if (!selected) return;
+    batter = selected;
+    setPlayerInput("batter", batter);
+    analyzeMatchup();
+  });
+  document.querySelector("#browse-pitcher-select").addEventListener("change", (event) => {
+    const selected = pitcherCandidates.find((person) => Number(person.id) === Number(event.target.value));
+    if (!selected) return;
+    pitcher = selected;
+    setPlayerInput("pitcher", pitcher);
+    analyzeMatchup();
   });
   document.querySelectorAll("[data-team-sort]").forEach((button) => {
     button.addEventListener("click", () => {
