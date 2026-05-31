@@ -51,12 +51,12 @@
 
         <section class="score-strip" aria-label="League summary">
           <article>
-            <span>Run Environment</span>
+            <span id="run-summary-label">Run Environment</span>
             <strong id="run-environment">4.52</strong>
             <small id="run-context">runs per team game</small>
           </article>
           <article>
-            <span>League OPS</span>
+            <span id="ops-summary-label">League OPS</span>
             <strong id="league-ops">.724</strong>
             <small id="ops-context">weighted by plate appearances</small>
           </article>
@@ -70,47 +70,6 @@
             <strong id="save-rate">66%</strong>
             <small id="save-context">late-game pressure index</small>
           </article>
-        </section>
-
-        <section class="panel start-panel" aria-label="Start here">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Start Here</p>
-              <h2>Pick a baseball question</h2>
-            </div>
-          </div>
-          <div class="start-grid">
-            <a class="start-card" href="matchups.html">
-              <span>Today</span>
-              <strong>Roster vs Pitcher</strong>
-              <small>Choose a team and pitcher to see career head-to-head lines for the whole offense.</small>
-            </a>
-            <a class="start-card" href="index.html?mode=range&start=1990&end=1999&metric=hr#leaders">
-              <span>Historical</span>
-              <strong>HR Leaders In The 1990s</strong>
-              <small>Jump straight into a decade-wide leaderboard and change the stat from there.</small>
-            </a>
-            <a class="start-card" href="teams.html">
-              <span>Teams</span>
-              <strong>Pick A Club</strong>
-              <small>Start from a team hub, then jump to batting, pitching, news, fantasy, or Statcast.</small>
-            </a>
-            <a class="start-card" href="splits.html">
-              <span>Players</span>
-              <strong>Search Splits</strong>
-              <small>Look up one player across seasons, handedness, home/away, day/night, and more.</small>
-            </a>
-            <a class="start-card" href="statcast.html">
-              <span>Skills</span>
-              <strong>Statcast Board</strong>
-              <small>Sort players by quality-of-contact stats like exit velocity and barrel rate.</small>
-            </a>
-            <a class="start-card" href="fantasy.html">
-              <span>Fantasy</span>
-              <strong>Decision Board</strong>
-              <small>Filter by need, position, team, and player type for practical fantasy context.</small>
-            </a>
-          </div>
         </section>
 
         <section class="panel range-panel" id="history-tools" aria-label="Year range tools">
@@ -227,6 +186,62 @@
             </div>
           </div>
           <div class="park-grid" id="park-grid"></div>
+        </section>
+
+        <section class="panel start-panel" aria-label="Start here">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Explore The Archive</p>
+              <h2>Today's matchups, historical ranges, and team/player rabbit holes</h2>
+            </div>
+          </div>
+          <div class="start-grid">
+            <a class="start-card" href="index.html?mode=range&start=1990&end=1999&metric=hr#leaders">
+              <span>Batting</span>
+              <strong>Batting Leaders By Any Era</strong>
+              <small>Compare hitters by single season, decade, custom year range, league, team, position, and stat.</small>
+            </a>
+            <a class="start-card" href="pitching.html?mode=range&start=1990&end=1999&metric=strikeouts#leaders">
+              <span>Pitching</span>
+              <strong>Pitching Leaders By Any Era</strong>
+              <small>Search starters and relievers across years for strikeouts, ERA, WHIP, wins, saves, and team pitching.</small>
+            </a>
+            <a class="start-card" href="advanced.html">
+              <span>Advanced</span>
+              <strong>Rate Stats And Deeper Boards</strong>
+              <small>Sort by advanced offensive and pitching metrics when traditional totals are not enough.</small>
+            </a>
+            <a class="start-card" href="statcast.html">
+              <span>Statcast</span>
+              <strong>Quality Of Contact</strong>
+              <small>Use public Statcast-style boards for exit velocity, barrels, hard-hit rate, and related skill indicators.</small>
+            </a>
+            <a class="start-card" href="matchups.html">
+              <span>Matchups</span>
+              <strong>Roster vs Pitcher Matchups</strong>
+              <small>Pick teams, players, roster pool, and ballpark to see career head-to-head context for a whole offense.</small>
+            </a>
+            <a class="start-card" href="splits.html">
+              <span>Splits</span>
+              <strong>One Player Across Seasons</strong>
+              <small>Use splits to inspect home/away, handedness, day/night, single years, or multi-year ranges.</small>
+            </a>
+            <a class="start-card" href="fantasy.html">
+              <span>Fantasy</span>
+              <strong>Decision Board</strong>
+              <small>Filter by category need, position, team, player pool, and current or historical range.</small>
+            </a>
+            <a class="start-card" href="news.html">
+              <span>News</span>
+              <strong>Headlines And Communities</strong>
+              <small>Filter free baseball stories by team and jump into official, media, and fan-community sources.</small>
+            </a>
+            <a class="start-card" href="teams.html">
+              <span>Teams</span>
+              <strong>Club Hubs And Team Filters</strong>
+              <small>Start with any club, then jump into its batting, pitching, advanced, Statcast, fantasy, news, and community links.</small>
+            </a>
+          </div>
         </section>
         <footer class="site-footer">
           <a href="about.html">About</a>

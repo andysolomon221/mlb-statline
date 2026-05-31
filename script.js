@@ -666,6 +666,8 @@ function mapTeamStat(split) {
       era: toNumber(stat.era),
       ops: toNumber(stat.ops),
       hits: toNumber(stat.hits),
+      earnedRuns: toNumber(stat.earnedRuns),
+      walks: toNumber(stat.baseOnBalls),
       strikeouts: toNumber(stat.strikeOuts),
       whip: toNumber(stat.whip),
       saves: toNumber(stat.saves),
@@ -745,6 +747,8 @@ async function currentTeams() {
       runsAllowed: 0,
       runDifferential: 0,
       hits: 0,
+      earnedRuns: 0,
+      walks: 0,
       hr: 0,
       rbi: 0,
       strikeouts: 0,
@@ -763,6 +767,8 @@ async function currentTeams() {
     existing.runsAllowed += team.runsAllowed;
     existing.runDifferential += team.runDifferential;
     existing.hits += team.hits || 0;
+    existing.earnedRuns += team.earnedRuns || 0;
+    existing.walks += team.walks || 0;
     existing.hr += team.hr || 0;
     existing.rbi += team.rbi || 0;
     existing.strikeouts += team.strikeouts || 0;
@@ -859,6 +865,10 @@ function currentTeamSummary() {
     const kDenominator = boardType === "pitching" ? Number(team.battersFaced) || Number(team.ipOuts) || 0 : Number(team.pa) || 0;
     acc.games += games;
     acc.runs += Number(team.runs) || 0;
+    acc.earnedRuns += Number(team.earnedRuns) || 0;
+    acc.walks += Number(team.walks) || 0;
+    acc.hits += Number(team.hits) || 0;
+    acc.ipOuts += Number(team.ipOuts) || 0;
     acc.opsTotal += (Number(team.ops) || 0) * Math.max(1, opsWeight);
     acc.opsWeight += Math.max(1, opsWeight);
     acc.strikeouts += Number(team.strikeouts) || 0;
@@ -866,9 +876,17 @@ function currentTeamSummary() {
     acc.saves += Number(team.saves) || 0;
     acc.saveOpportunities += Number(team.saveOpportunities) || 0;
     return acc;
-  }, { games: 0, runs: 0, opsTotal: 0, opsWeight: 0, strikeouts: 0, kDenominator: 0, saves: 0, saveOpportunities: 0 });
+  }, { games: 0, runs: 0, earnedRuns: 0, walks: 0, hits: 0, ipOuts: 0, opsTotal: 0, opsWeight: 0, strikeouts: 0, kDenominator: 0, saves: 0, saveOpportunities: 0 });
 
   const fallback = estimatedSummary();
+  if (boardType === "pitching") {
+    return {
+      runs: totals.ipOuts ? (totals.earnedRuns * 27) / totals.ipOuts : fallback?.era || fallback?.runs || 0,
+      ops: totals.ipOuts ? ((totals.walks + totals.hits) * 3) / totals.ipOuts : fallback?.whip || fallback?.ops || 0,
+      k: totals.kDenominator ? (totals.strikeouts / totals.kDenominator) * 100 : fallback?.k || 0,
+      saves: totals.saveOpportunities ? Math.round((totals.saves / totals.saveOpportunities) * 100) : fallback?.saves || 0
+    };
+  }
   return {
     runs: totals.games ? totals.runs / totals.games : fallback?.runs || 0,
     ops: totals.opsWeight ? totals.opsTotal / totals.opsWeight : fallback?.ops || 0,
@@ -1023,16 +1041,27 @@ function updateModeControls() {
 function renderSummary() {
   const summary = currentSummary();
   const label = leaderScopeLabel();
-  document.querySelector("#run-environment").textContent = summary.runs.toFixed(2);
-  document.querySelector("#league-ops").textContent = summary.ops.toFixed(3).replace(/^0/, "");
+  if (boardType === "pitching") {
+    document.querySelector("#run-summary-label").textContent = "League ERA";
+    document.querySelector("#ops-summary-label").textContent = "League WHIP";
+    document.querySelector("#run-environment").textContent = summary.runs.toFixed(2);
+    document.querySelector("#league-ops").textContent = summary.ops.toFixed(2);
+    document.querySelector("#run-context").textContent = activeMode === "single" ? "earned runs per nine innings" : "average ERA across selected years";
+    document.querySelector("#ops-context").textContent = activeMode === "single" ? "walks plus hits per inning" : "average WHIP across selected years";
+  } else {
+    document.querySelector("#run-summary-label").textContent = "Run Environment";
+    document.querySelector("#ops-summary-label").textContent = "League OPS";
+    document.querySelector("#run-environment").textContent = summary.runs.toFixed(2);
+    document.querySelector("#league-ops").textContent = summary.ops.toFixed(3).replace(/^0/, "");
+    document.querySelector("#run-context").textContent = activeMode === "single" ? "runs per team game" : "average runs per team game";
+    document.querySelector("#ops-context").textContent = activeMode === "single" ? "weighted by plate appearances" : "average league OPS";
+  }
   document.querySelector("#k-rate").textContent = `${summary.k.toFixed(1)}%`;
   document.querySelector("#save-rate").textContent = `${summary.saves}%`;
   document.querySelector("#chart-title").textContent = `${label} ${config.chartNoun} leaders`;
   document.querySelector("#compare-title").textContent = `${label} club comparison`;
   const tableNoun = activeTeamId === "all" ? "leaders" : "players";
   document.querySelector("#table-title").textContent = activeMode === "single" ? `${label} ${config.label} ${tableNoun}` : `${label} cumulative ${config.label} ${tableNoun}`;
-  document.querySelector("#run-context").textContent = activeMode === "single" ? "runs per team game" : "average runs per team game";
-  document.querySelector("#ops-context").textContent = activeMode === "single" ? "weighted by plate appearances" : "average league OPS";
   document.querySelector("#save-context").textContent = activeMode === "single" ? "late-game pressure index" : "average conversion rate";
 }
 
