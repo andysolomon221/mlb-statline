@@ -586,7 +586,8 @@ function qualifiedRows(rows, metric = activeMetric) {
   const seasonThreshold = boardType === "pitching"
     ? (isCurrentSeason ? 120 : 486)
     : (isCurrentSeason ? 100 : 400);
-  const rangeThreshold = years * (boardType === "pitching" ? 360 : 300);
+  const maxRangeThreshold = 3000;
+  const rangeThreshold = Math.min(years * (boardType === "pitching" ? 360 : 300), maxRangeThreshold);
   const threshold = activeMode === "single" ? seasonThreshold : rangeThreshold;
   const filtered = positionRows.filter((player) => playerWeight(player) >= threshold);
   return filtered.length >= 5 ? filtered : positionRows.filter((player) => playerWeight(player) >= Math.max(50, threshold * .5));
