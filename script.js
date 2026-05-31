@@ -345,11 +345,13 @@ const generatedParks = [
 ];
 
 function fmtStat(key, value) {
-  if (key === "ipOuts") return `${Math.floor(value / 3)}.${value % 3}`;
-  if (["avg", "ops", "slg"].includes(key)) return value.toFixed(3).replace(/^0/, "");
-  if (["era", "whip"].includes(key)) return value.toFixed(2);
-  if (key === "pct") return value.toFixed(3).replace(/^0/, "");
-  return numberFormat.format(Math.round(value));
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "-";
+  if (key === "ipOuts") return `${Math.floor(numeric / 3)}.${numeric % 3}`;
+  if (["avg", "ops", "slg"].includes(key)) return numeric.toFixed(3).replace(/^0/, "");
+  if (["era", "whip"].includes(key)) return numeric.toFixed(2);
+  if (key === "pct") return numeric.toFixed(3).replace(/^0/, "");
+  return numberFormat.format(Math.round(numeric));
 }
 
 function initials(name) {
@@ -404,6 +406,12 @@ function toNumber(value) {
   return Number.isFinite(number) ? number : 0;
 }
 
+function safeRate(numerator, denominator) {
+  const top = Number(numerator);
+  const bottom = Number(denominator);
+  return Number.isFinite(top) && Number.isFinite(bottom) && bottom > 0 ? top / bottom : 0;
+}
+
 function inningsToOuts(value) {
   const text = String(value || "0");
   const [whole, fraction = "0"] = text.split(".");
@@ -455,13 +463,18 @@ function mapApiPlayer(split) {
   return {
     ...common,
     avg: toNumber(stat.avg),
+    obp: toNumber(stat.obp),
     ops: toNumber(stat.ops),
     slg: toNumber(stat.slg),
     hits: toNumber(stat.hits),
     hr: toNumber(stat.homeRuns),
     rbi: toNumber(stat.rbi),
     ab: toNumber(stat.atBats),
-    pa: toNumber(stat.plateAppearances)
+    pa: toNumber(stat.plateAppearances),
+    walks: toNumber(stat.baseOnBalls),
+    hbp: toNumber(stat.hitByPitch),
+    sacFlies: toNumber(stat.sacFlies),
+    totalBases: toNumber(stat.totalBases) || Math.round(toNumber(stat.slg) * toNumber(stat.atBats))
   };
 }
 
@@ -494,6 +507,7 @@ async function currentPlayers() {
         positions: new Map(),
         weightedTotals: {},
         totals: {},
+        componentTotals: { hits: 0, ab: 0, walks: 0, hbp: 0, sacFlies: 0, totalBases: 0 },
         weight: 0,
         qualifier: 0,
         seasons: 0,
@@ -506,6 +520,14 @@ async function currentPlayers() {
           existing.totals[metric] = (existing.totals[metric] || 0) + player[metric];
         }
       });
+      if (boardType === "hitting") {
+        existing.componentTotals.hits += toNumber(player.hits);
+        existing.componentTotals.ab += toNumber(player.ab);
+        existing.componentTotals.walks += toNumber(player.walks);
+        existing.componentTotals.hbp += toNumber(player.hbp);
+        existing.componentTotals.sacFlies += toNumber(player.sacFlies);
+        existing.componentTotals.totalBases += toNumber(player.totalBases);
+      }
       existing.weight += weight;
       existing.qualifier += weight;
       existing.seasons += 1;
@@ -533,6 +555,13 @@ async function currentPlayers() {
         ? player.weightedTotals[metric] / player.weight
         : player.totals[metric];
     });
+    if (boardType === "hitting") {
+      const components = player.componentTotals;
+      const obpDenominator = components.ab + components.walks + components.hbp + components.sacFlies;
+      row.avg = safeRate(components.hits, components.ab);
+      row.slg = safeRate(components.totalBases, components.ab);
+      row.ops = safeRate(components.hits + components.walks + components.hbp, obpDenominator) + row.slg;
+    }
     row[config.weightKey] = player.qualifier;
     return row;
   });
