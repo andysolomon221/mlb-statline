@@ -125,6 +125,7 @@ let teamRows = [];
 let teamsLoading = true;
 let teamError = "";
 let teamRequestId = 0;
+const initialParams = new URLSearchParams(window.location.search);
 
 const numberFormat = new Intl.NumberFormat("en-US");
 const firstSeason = 1901;
@@ -307,6 +308,21 @@ const boardConfig = {
 const config = boardConfig[boardType];
 activeMetric = config.defaultMetric;
 activeSort = { key: activeMetric, dir: defaultSortDir(activeMetric) };
+if (config.metrics.some(([key]) => key === initialParams.get("metric"))) {
+  activeMetric = initialParams.get("metric");
+  activeSort = { key: activeMetric, dir: defaultSortDir(activeMetric) };
+}
+if (initialParams.get("mode") === "range") {
+  activeMode = "range";
+  activeRange = {
+    start: Math.max(firstSeason, Math.min(lastSeason, Number(initialParams.get("start")) || activeRange.start)),
+    end: Math.max(firstSeason, Math.min(lastSeason, Number(initialParams.get("end")) || activeRange.end))
+  };
+}
+if (initialParams.get("season")) {
+  activeSeason = String(Math.max(firstSeason, Math.min(lastSeason, Number(initialParams.get("season")) || Number(activeSeason))));
+  activeMode = "single";
+}
 const generatedPlayersByEra = {
   deadball: ["Ty Cobb", "Honus Wagner", "Nap Lajoie", "Tris Speaker", "Eddie Collins", "Sam Crawford", "Home Run Baker", "Shoeless Joe Jackson"],
   liveball: ["Babe Ruth", "Lou Gehrig", "Jimmie Foxx", "Mel Ott", "Hank Greenberg", "Joe DiMaggio", "Ted Williams", "Stan Musial"],

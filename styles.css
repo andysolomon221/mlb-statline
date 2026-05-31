@@ -359,6 +359,54 @@ input[type="range"] {
   line-height: 1;
 }
 
+.start-panel {
+  margin-bottom: 18px;
+}
+
+.start-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.start-card {
+  display: grid;
+  min-height: 154px;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  color: inherit;
+  background: #fff;
+  text-decoration: none;
+}
+
+.start-card:hover {
+  border-color: rgba(18, 53, 91, 0.42);
+  box-shadow: 0 12px 26px rgba(24, 32, 43, 0.09);
+}
+
+.start-card span {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.start-card strong {
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.start-card small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
 .workbench,
 .data-grid {
   display: grid;
@@ -1108,6 +1156,7 @@ td {
 
   .score-strip,
   .range-toolbar,
+  .start-grid,
   .workbench,
   .data-grid,
   .park-grid,
@@ -1148,6 +1197,7 @@ td {
 
   .season-control,
   .score-strip,
+  .start-grid,
   .range-toolbar,
   .mode-toggle,
   .quick-ranges,
