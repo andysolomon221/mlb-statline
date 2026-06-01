@@ -1018,9 +1018,6 @@ function setActiveSeason(year) {
   activeMode = "single";
   updateModeControls();
   document.querySelector("#season-select").value = activeSeason;
-  document.querySelectorAll("[data-season]").forEach((item) => {
-    item.classList.toggle("active", item.dataset.season === activeSeason);
-  });
   renderSummary();
   updateLeaders();
   updateTeams();
@@ -1343,12 +1340,6 @@ function bindEvents() {
       const key = heading.dataset.sort;
       activeSort = { key, dir: activeSort.key === key ? activeSort.dir * -1 : defaultSortDir(key) };
       renderTable();
-    });
-  });
-
-  document.querySelectorAll("[data-season]").forEach((button) => {
-    button.addEventListener("click", () => {
-      setActiveSeason(button.dataset.season);
     });
   });
 

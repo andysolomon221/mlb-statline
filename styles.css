@@ -246,28 +246,6 @@ h2 {
   border-color: rgba(255, 255, 255, 0.28);
 }
 
-.quick-years {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-}
-
-.quick-years button {
-  min-width: 0;
-  border: 0;
-  border-radius: 6px;
-  padding: 10px 12px;
-  color: #fff;
-  background: transparent;
-  cursor: pointer;
-}
-
-.quick-years button.active {
-  color: var(--navy);
-  background: #fff;
-  font-weight: 800;
-}
-
 .score-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1305,10 +1283,6 @@ td {
 
   .season-control {
     width: 100%;
-  }
-
-  .quick-years {
-    grid-template-columns: 1fr 1fr;
   }
 
   .bar-row {
