@@ -362,6 +362,16 @@ function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[character]));
+}
+
 function currentSeason() {
   return seasons[activeSeason] || generateSeason(Number(activeSeason));
 }
@@ -633,6 +643,7 @@ async function updateLeaders() {
     leadersLoading = false;
     renderChart();
     renderTable();
+    renderSearchOptions();
   } catch (error) {
     if (requestId !== leaderRequestId) return;
     leadersLoading = false;
@@ -862,6 +873,7 @@ async function updateTeams() {
     teamOptions();
     renderComparison();
     renderClubs();
+    renderSearchOptions();
   } catch (error) {
     if (requestId !== teamRequestId) return;
     teamsLoading = false;
@@ -1160,6 +1172,22 @@ function renderTable() {
       ${config.columns.map(([key]) => `<td>${fmtStat(key, player[key])}</td>`).join("")}
     </tr>
   `).join("") || `<tr><td colspan="9" class="empty-row">No players match this filter.</td></tr>`;
+}
+
+function renderSearchOptions() {
+  const datalist = document.querySelector("#player-search-options");
+  if (!datalist) return;
+  const options = new Map();
+  leaderRows.slice().sort((a, b) => playerWeight(b) - playerWeight(a)).slice(0, 450).forEach((player) => {
+    options.set(player.name, `${player.teamName || player.team} ${player.position || ""}`.trim());
+  });
+  teamRows.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach((team) => {
+    options.set(team.name, team.abbr);
+    options.set(team.abbr, team.name);
+  });
+  datalist.innerHTML = Array.from(options.entries()).slice(0, 520).map(([value, label]) => (
+    `<option value="${escapeHtml(value)}" label="${escapeHtml(label)}"></option>`
+  )).join("");
 }
 
 function renderBoardControls() {
