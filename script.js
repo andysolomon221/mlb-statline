@@ -372,6 +372,20 @@ function yearList(start = firstSeason, end = lastSeason) {
   return Array.from({ length: high - low + 1 }, (_, index) => low + index);
 }
 
+function waitForBrowserTurn() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function fetchInBatches(items, mapper, batchSize = 6) {
+  const results = [];
+  for (let index = 0; index < items.length; index += batchSize) {
+    const batch = items.slice(index, index + batchSize);
+    results.push(...await Promise.all(batch.map(mapper)));
+    await waitForBrowserTurn();
+  }
+  return results;
+}
+
 function currentScopeLabel() {
   if (activeMode === "single") return activeSeason;
   return activeRange.start === activeRange.end ? String(activeRange.start) : `${activeRange.start}-${activeRange.end}`;
@@ -495,7 +509,7 @@ async function currentPlayers() {
   }
 
   const byPlayer = new Map();
-  const seasonsInRange = await Promise.all(yearList(activeRange.start, activeRange.end).map((year) => fetchSeasonLeaders(year)));
+  const seasonsInRange = await fetchInBatches(yearList(activeRange.start, activeRange.end), fetchSeasonLeaders);
   seasonsInRange.forEach((players) => {
     players.forEach((player) => {
       const key = player.id || player.name;
@@ -767,7 +781,7 @@ async function currentTeams() {
   if (activeMode === "single") return (await teamRowsForYear(Number(activeSeason))).slice();
 
   const byTeam = new Map();
-  const years = await Promise.all(yearList(activeRange.start, activeRange.end).map((year) => teamRowsForYear(year)));
+  const years = await fetchInBatches(yearList(activeRange.start, activeRange.end), teamRowsForYear, 4);
   years.flat().forEach((team) => {
     const existing = byTeam.get(team.id) || {
       ...team,
@@ -1305,7 +1319,16 @@ function bindEvents() {
     updateLeaders();
   });
 
-  document.querySelector("#player-search").addEventListener("input", renderTable);
+  const playerSearch = document.querySelector("#player-search");
+  const heroPlayerSearch = document.querySelector("#hero-player-search");
+  playerSearch.addEventListener("input", () => {
+    if (heroPlayerSearch && heroPlayerSearch.value !== playerSearch.value) heroPlayerSearch.value = playerSearch.value;
+    renderTable();
+  });
+  heroPlayerSearch?.addEventListener("input", () => {
+    playerSearch.value = heroPlayerSearch.value;
+    renderTable();
+  });
 
   document.querySelector("#team-metric-select").addEventListener("change", (event) => {
     activeTeamMetric = event.target.value;

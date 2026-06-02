@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MLB Statline</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260601-home-hook" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -20,8 +20,10 @@
         gtag("config", "G-W9CSMTE5W1");
       }
       window.addEventListener("load", () => {
-        if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 2500 });
-        else setTimeout(loadAnalytics, 1200);
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
       });
     </script>
   </head>
@@ -47,84 +49,16 @@
           <div>
             <p class="eyebrow">MLB Statline</p>
             <h1>League intelligence for every inning.</h1>
+            <div class="hero-search">
+              <label for="hero-player-search">Search Player Or Club</label>
+              <input id="hero-player-search" type="search" placeholder="Try Aaron Judge, Red Sox, Dodgers..." aria-label="Search player or club" />
+            </div>
           </div>
           <div class="season-control" aria-label="Historical season">
             <label for="season-select">Choose Season</label>
             <select id="season-select" aria-label="Select historical season"></select>
           </div>
         </header>
-
-        <section class="score-strip" aria-label="League summary">
-          <article>
-            <span id="run-summary-label">Run Environment</span>
-            <strong id="run-environment">4.52</strong>
-            <small id="run-context">runs per team game</small>
-          </article>
-          <article>
-            <span id="ops-summary-label">League OPS</span>
-            <strong id="league-ops">.724</strong>
-            <small id="ops-context">weighted by plate appearances</small>
-          </article>
-          <article>
-            <span>Strikeout Rate</span>
-            <strong id="k-rate">22.1%</strong>
-            <small id="k-context">of all plate appearances</small>
-          </article>
-          <article>
-            <span>Save Conversion</span>
-            <strong id="save-rate">66%</strong>
-            <small id="save-context">late-game pressure index</small>
-          </article>
-        </section>
-
-        <section class="panel range-panel" data-active-mode="single" id="history-tools" aria-label="Year range tools">
-          <div class="range-toolbar">
-            <div>
-              <p class="eyebrow">Historical Scope</p>
-              <h2 id="scope-title">Single-season leaders</h2>
-              <small class="data-note" id="data-note">Player leaders load from MLB Stats API for the selected season.</small>
-            </div>
-            <div class="mode-toggle" role="group" aria-label="Leader scope">
-              <button class="active" data-mode="single">Single year</button>
-              <button data-mode="range">Year range</button>
-            </div>
-            <div class="range-fields">
-              <label>
-                <span>From <strong id="range-start-value">1990</strong></span>
-                <select id="range-start" aria-label="Range start year"></select>
-              </label>
-              <label>
-                <span>To <strong id="range-end-value">1999</strong></span>
-                <select id="range-end" aria-label="Range end year"></select>
-              </label>
-            </div>
-            <div class="quick-ranges" role="group" aria-label="Quick ranges">
-              <button data-range-start="1990" data-range-end="1999">1990s</button>
-              <button data-range-start="2000" data-range-end="2009">2000s</button>
-              <button data-range-start="2010" data-range-end="2019">2010s</button>
-              <button data-range-start="2020" data-range-end="2026">2020s</button>
-            </div>
-            <div class="league-toggle" role="group" aria-label="League filter">
-              <button class="active" data-league="all">All MLB</button>
-              <button data-league="al">American League</button>
-              <button data-league="nl">National League</button>
-            </div>
-            <div class="team-filter">
-              <label for="team-filter">Team</label>
-              <select id="team-filter" aria-label="Team filter">
-                <option value="all">All teams</option>
-              </select>
-            </div>
-            <div class="position-filter">
-              <label for="position-filter">Position</label>
-              <select id="position-filter" aria-label="Position filter"></select>
-            </div>
-            <div class="league-toggle board-size-toggle" role="group" aria-label="Player board size">
-              <button class="active" data-board-size="leaders">Top 20</button>
-              <button data-board-size="all">All players</button>
-            </div>
-          </div>
-        </section>
 
         <section class="workbench">
           <div class="panel feature-panel">
@@ -181,6 +115,78 @@
             </div>
             <div class="club-list" id="club-list"></div>
           </div>
+        </section>
+
+        <section class="panel range-panel" data-active-mode="single" id="history-tools" aria-label="Year range tools">
+          <div class="range-toolbar">
+            <div>
+              <p class="eyebrow">Refine Stats</p>
+              <h2 id="scope-title">Single-season leaders</h2>
+              <small class="data-note" id="data-note">Player leaders load from MLB Stats API for the selected season.</small>
+            </div>
+            <div class="mode-toggle" role="group" aria-label="Leader scope">
+              <button class="active" data-mode="single">Single year</button>
+              <button data-mode="range">Year range</button>
+            </div>
+            <div class="range-fields">
+              <label>
+                <span>From <strong id="range-start-value">1990</strong></span>
+                <select id="range-start" aria-label="Range start year"></select>
+              </label>
+              <label>
+                <span>To <strong id="range-end-value">1999</strong></span>
+                <select id="range-end" aria-label="Range end year"></select>
+              </label>
+            </div>
+            <div class="quick-ranges" role="group" aria-label="Quick ranges">
+              <button data-range-start="1990" data-range-end="1999">1990s</button>
+              <button data-range-start="2000" data-range-end="2009">2000s</button>
+              <button data-range-start="2010" data-range-end="2019">2010s</button>
+              <button data-range-start="2020" data-range-end="2026">2020s</button>
+            </div>
+            <div class="league-toggle" role="group" aria-label="League filter">
+              <button class="active" data-league="all">All MLB</button>
+              <button data-league="al">American League</button>
+              <button data-league="nl">National League</button>
+            </div>
+            <div class="team-filter">
+              <label for="team-filter">Team</label>
+              <select id="team-filter" aria-label="Team filter">
+                <option value="all">All teams</option>
+              </select>
+            </div>
+            <div class="position-filter">
+              <label for="position-filter">Position</label>
+              <select id="position-filter" aria-label="Position filter"></select>
+            </div>
+            <div class="league-toggle board-size-toggle" role="group" aria-label="Player board size">
+              <button class="active" data-board-size="leaders">Top 20</button>
+              <button data-board-size="all">All players</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="score-strip" aria-label="League summary">
+          <article>
+            <span id="run-summary-label">Run Environment</span>
+            <strong id="run-environment">4.52</strong>
+            <small id="run-context">runs per team game</small>
+          </article>
+          <article>
+            <span id="ops-summary-label">League OPS</span>
+            <strong id="league-ops">.724</strong>
+            <small id="ops-context">weighted by plate appearances</small>
+          </article>
+          <article>
+            <span>Strikeout Rate</span>
+            <strong id="k-rate">22.1%</strong>
+            <small id="k-context">of all plate appearances</small>
+          </article>
+          <article>
+            <span>Save Conversion</span>
+            <strong id="save-rate">66%</strong>
+            <small id="save-context">late-game pressure index</small>
+          </article>
         </section>
 
         <section class="panel park-panel" id="parks">
@@ -257,6 +263,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260530-rate-qualifier"></script>
+    <script src="script.js?v=20260601-home-hook"></script>
   </body>
 </html>
