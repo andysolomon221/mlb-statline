@@ -132,6 +132,10 @@ select {
   content: "Pick a batter, pitcher, team, roster, and ballpark for career head-to-head context.";
 }
 
+.rail-nav a[href="compare.html"]::after {
+  content: "Put two players side by side for single-season or historical range comparisons.";
+}
+
 .rail-nav a[href="splits.html"]::after {
   content: "One-player split tables by season, year range, handedness, home/away, day/night, and more.";
 }
@@ -1127,6 +1131,48 @@ td {
   align-items: start;
 }
 
+.compare-control-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.compare-control-grid label,
+.compare-range-fields label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.compare-controls-panel[data-active-mode="single"] .compare-range-fields {
+  display: none;
+}
+
+.compare-mode-toggle,
+.compare-range-fields {
+  margin-top: 14px;
+}
+
+.compare-player-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.compare-table-wrap table {
+  min-width: 560px;
+}
+
+.compare-edge {
+  color: var(--green);
+  font-weight: 900;
+}
+
 .matchup-form-grid label,
 .matchup-setup-column,
 .matchup-setup-column label,
@@ -1254,6 +1300,8 @@ td {
   .matchup-card-grid,
   .matchup-advanced-search,
   .browse-players-grid,
+  .compare-control-grid,
+  .compare-player-grid,
   .news-grid,
   .team-hub-grid,
   .team-directory-grid {
@@ -1302,6 +1350,8 @@ td {
   .matchup-card-grid,
   .matchup-advanced-search,
   .browse-players-grid,
+  .compare-control-grid,
+  .compare-player-grid,
   .team-hub-grid,
   .team-directory-grid,
   .team-pickers {
