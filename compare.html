@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MLB Statline Compare</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css?v=20260602-compare" />
+    <link rel="stylesheet" href="styles.css?v=20260602-compare-button" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -66,7 +66,6 @@
               <p class="eyebrow">Compare Players</p>
               <h2>Choose players and scope</h2>
             </div>
-            <button id="run-comparison" type="button">Compare</button>
           </div>
           <div class="compare-control-grid">
             <label>
@@ -83,6 +82,9 @@
               <span>Season</span>
               <select id="compare-season" aria-label="Comparison season"></select>
             </label>
+          </div>
+          <div class="compare-action-row">
+            <button id="run-comparison" type="button">Compare</button>
           </div>
           <div class="mode-toggle compare-mode-toggle" role="group" aria-label="Comparison scope">
             <button class="active" data-compare-mode="single">Single year</button>

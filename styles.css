@@ -1148,6 +1148,23 @@ td {
   text-transform: uppercase;
 }
 
+.compare-action-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 14px;
+}
+
+.compare-action-row button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 18px;
+  color: #fff;
+  background: var(--red);
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .compare-controls-panel[data-active-mode="single"] .compare-range-fields {
   display: none;
 }
