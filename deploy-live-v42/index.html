@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AC Andy's Dispensary Finder</title>
+    <link rel="stylesheet" href="styles.v42.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="search-panel" aria-label="Dispensary search controls">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span>
+          </div>
+          <div>
+            <p class="eyebrow">Nearby cannabis guide</p>
+            <h1>AC Andy's Dispensary Finder</h1>
+            <p class="version-label">Version 42</p>
+          </div>
+        </div>
+
+        <form class="search-card" id="search-form">
+          <label for="location-input">Area</label>
+          <div class="input-row">
+            <input
+              id="location-input"
+              name="location"
+              type="search"
+              autocomplete="address-level2"
+              placeholder="Try Long Branch, NJ"
+              value=""
+            />
+            <button type="submit" class="primary-button">Search</button>
+          </div>
+          <button type="button" id="near-me-button" class="ghost-button">
+            Use my location
+          </button>
+        </form>
+
+        <div class="filters" aria-label="Filters">
+          <label for="rating-filter">Minimum rating</label>
+          <input id="rating-filter" type="range" min="0" max="5" step="0.5" value="0" />
+          <div class="filter-values">
+            <span id="rating-label">Any rating</span>
+            <span>5.0</span>
+          </div>
+
+          <label for="distance-filter">Distance</label>
+          <input id="distance-filter" type="range" min="1" max="25" step="1" value="5" />
+          <div class="filter-values">
+            <span id="distance-label">Within 5 miles</span>
+            <span>25 mi</span>
+          </div>
+
+          <label class="toggle">
+            <input id="open-filter" type="checkbox" />
+            <span>Open now</span>
+          </label>
+        </div>
+
+        <details class="api-card">
+          <summary>Use real Google ratings</summary>
+          <p>
+            Live Google ratings are enabled for this site. You can paste your own browser key here
+            to override it on this device.
+          </p>
+          <div class="input-row">
+            <input id="api-key-input" type="password" placeholder="Google Maps API key" />
+            <button type="button" id="save-key-button" class="secondary-button">Save</button>
+          </div>
+          <div class="api-actions">
+            <button type="button" id="test-key-button" class="ghost-button">Test key</button>
+            <button type="button" id="discover-menus-button" class="ghost-button">Find menus</button>
+            <button type="button" id="clear-key-button" class="text-button">Clear saved key</button>
+          </div>
+          <p id="api-key-status" class="api-status">Site key enabled for live Google results.</p>
+          <p id="menu-discovery-status" class="api-status">Known menu links are checked after live results load.</p>
+        </details>
+      </section>
+
+      <section class="results-panel">
+        <div class="map-wrap">
+          <div id="google-map" class="google-map" aria-label="Dispensary map"></div>
+          <div class="map-art" id="fallback-map" aria-hidden="true">
+            <img
+              src="https://tile.openstreetmap.org/12/655/1583.png"
+              alt=""
+              class="map-tile"
+            />
+            <div class="street street-a"></div>
+            <div class="street street-b"></div>
+            <div class="street street-c"></div>
+            <div id="map-markers" class="map-markers"></div>
+          </div>
+          <div class="map-overlay">
+            <div>
+              <p id="result-kicker">Demo data</p>
+              <h2 id="area-heading">Portland, OR</h2>
+            </div>
+            <span id="source-pill">Demo data</span>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow">Sorted by rating</p>
+            <h2 id="count-heading">0 dispensaries</h2>
+          </div>
+          <select id="sort-select" aria-label="Sort results">
+            <option value="rating">Highest rated</option>
+            <option value="reviews">Most reviewed</option>
+            <option value="distance">Nearest</option>
+          </select>
+        </div>
+
+        <div id="status" class="status" role="status"></div>
+        <div id="results" class="results-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="app.v42.js"></script>
+  </body>
+</html>
