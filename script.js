@@ -1153,7 +1153,7 @@ function renderChart() {
 function renderTable() {
   if (leadersLoading) return renderLoadingLeaders();
   if (leaderError) return renderLeaderError(leaderError);
-  const query = document.querySelector("#player-search").value.trim().toLowerCase();
+  const query = cleanSearchInput(document.querySelector("#player-search").value).toLowerCase();
   const scope = leaderScopeLabel();
   const rows = sortedRows(qualifiedRows(leaderRows, activeSort.key)
     .filter((player) => `${player.name} ${player.team} ${player.teamName || ""} ${scope}`.toLowerCase().includes(query))
@@ -1174,12 +1174,23 @@ function renderTable() {
   `).join("") || `<tr><td colspan="9" class="empty-row">No players match this filter.</td></tr>`;
 }
 
+function cleanSearchInput(value) {
+  return String(value || "").replace(/\s+-\s+[^-]+(?:\s+-\s+.+)?$/, "").trim();
+}
+
+function playerSearchLabel(player) {
+  const context = [player.position || "MLB", player.teamName || player.team, activeMode === "range" ? currentScopeLabel() : ""]
+    .filter(Boolean)
+    .join(" - ");
+  return `${player.name} - ${context}`;
+}
+
 function renderSearchOptions() {
   const datalist = document.querySelector("#player-search-options");
   if (!datalist) return;
   const options = new Map();
   leaderRows.slice().sort((a, b) => playerWeight(b) - playerWeight(a)).slice(0, 450).forEach((player) => {
-    options.set(player.name, `${player.teamName || player.team} ${player.position || ""}`.trim());
+    options.set(playerSearchLabel(player), "Player");
   });
   teamRows.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach((team) => {
     options.set(team.name, team.abbr);
