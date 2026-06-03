@@ -95,9 +95,20 @@ function cleanPlayerInput(value) {
   return value.replace(/\s+-\s+[^()]+(?:\s+\([^)]+\))?$/, "").replace(/\s+\([^)]+\)$/, "").trim();
 }
 
+function playerContextLabel(person) {
+  const parts = [person.position || "MLB"];
+  if (person.teamName || person.team) {
+    parts.push(person.teamName || person.team);
+  } else if (person.mlbDebutDate) {
+    parts.push(`MLB debut ${String(person.mlbDebutDate).slice(0, 4)}`);
+  } else {
+    parts.push("No MLB debut listed");
+  }
+  return parts.filter(Boolean).join(" - ");
+}
+
 function displayPlayerOption(person) {
-  const teamText = person.teamName || person.team ? ` - ${person.teamName || person.team}` : "";
-  return `${person.fullName}${teamText}${person.position ? ` (${person.position})` : ""}`;
+  return `${person.fullName} - ${playerContextLabel(person)}`;
 }
 
 async function searchPeople(query) {
@@ -111,7 +122,8 @@ async function searchPeople(query) {
     fullName: person.fullName,
     position: person.primaryPosition?.abbreviation || "MLB",
     team: person.currentTeam?.abbreviation || "",
-    teamName: person.currentTeam?.name || ""
+    teamName: person.currentTeam?.name || "",
+    mlbDebutDate: person.mlbDebutDate || ""
   }));
   peopleCache.set(cacheKey, people);
   return people;

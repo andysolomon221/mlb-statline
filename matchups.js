@@ -99,6 +99,15 @@ function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Request returned ${response.status}`);
@@ -107,8 +116,15 @@ async function fetchJson(url) {
 
 function displayPlayerOption(person) {
   const teamName = person.teamName || teamNameByAbbr.get(person.team) || "";
-  const teamText = teamName || person.team ? ` - ${teamName || person.team}` : "";
-  return `${person.fullName}${teamText}${person.position ? ` (${person.position})` : ""}`;
+  const parts = [person.position || "MLB"];
+  if (teamName || person.team) {
+    parts.push(teamName || person.team);
+  } else if (person.mlbDebutDate) {
+    parts.push(`MLB debut ${String(person.mlbDebutDate).slice(0, 4)}`);
+  } else {
+    parts.push("No MLB debut listed");
+  }
+  return `${person.fullName} - ${parts.filter(Boolean).join(" - ")}`;
 }
 
 function cleanPlayerInput(value) {
@@ -128,6 +144,7 @@ async function searchPeople(query, group) {
       position: person.primaryPosition?.abbreviation || "MLB",
       team: person.currentTeam?.abbreviation || "",
       teamName: person.currentTeam?.name || "",
+      mlbDebutDate: person.mlbDebutDate || "",
       batSide: person.batSide?.code || "",
       pitchHand: person.pitchHand?.code || ""
     }))
@@ -237,7 +254,7 @@ function teamMatches(query) {
 
 function renderAutocompleteOptions(listId, people) {
   document.querySelector(listId).innerHTML = uniquePeople(people).map((person) => `
-    <option value="${displayPlayerOption(person)}" label="${person.fullName}"></option>
+    <option value="${escapeHtml(displayPlayerOption(person))}" label="${escapeHtml(person.fullName)}"></option>
   `).join("");
 }
 
