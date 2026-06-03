@@ -2,12 +2,13 @@ const firstSeason = 1901;
 const lastSeason = 2026;
 const peopleCache = new Map();
 const statsCache = new Map();
-const firstFourSeasonCache = new Map();
+const firstSeasonRowsCache = new Map();
 
 let activeGroup = "hitting";
 let activeMode = "single";
 let activeSeason = "2026";
 let activeRange = { start: 2021, end: 2026 };
+let activeCareerSeasonRange = { start: 1, end: 4 };
 let playerA = { id: 592450, fullName: "Aaron Judge", position: "OF", mlbDebutDate: "2016-08-13" };
 let playerB = { id: 660271, fullName: "Shohei Ohtani", position: "DH", mlbDebutDate: "2018-03-29" };
 let candidatesA = [playerA];
@@ -79,7 +80,10 @@ function yearList(start, end) {
 
 function scopeLabel() {
   if (activeMode === "single") return activeSeason;
-  if (activeMode === "first4") return "First 4 seasons";
+  if (activeMode === "careerSeasons") {
+    const range = careerSeasonRange();
+    return range.start === range.end ? `Career season ${range.start}` : `Career seasons ${range.start}-${range.end}`;
+  }
   return activeRange.start === activeRange.end ? String(activeRange.start) : `${activeRange.start}-${activeRange.end}`;
 }
 
@@ -87,8 +91,16 @@ function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
-function firstFourSeasonKey(player) {
-  return `${player.id}:${activeGroup}:first4`;
+function firstSeasonRowsKey(player) {
+  return `${player.id}:${activeGroup}:first-seasons`;
+}
+
+function careerSeasonRange() {
+  const cleanStart = Math.max(1, Math.floor(toNumber(activeCareerSeasonRange.start)) || 1);
+  const cleanEnd = Math.max(1, Math.floor(toNumber(activeCareerSeasonRange.end)) || cleanStart);
+  const start = Math.min(cleanStart, cleanEnd);
+  const end = Math.max(cleanStart, cleanEnd);
+  return { start, end };
 }
 
 async function fetchJson(url) {
@@ -208,9 +220,9 @@ function debutYear(player) {
   return Number.isFinite(year) && year >= firstSeason ? year : firstSeason;
 }
 
-async function fetchFirstFourSeasonStats(player) {
-  const cacheKey = firstFourSeasonKey(player);
-  if (firstFourSeasonCache.has(cacheKey)) return firstFourSeasonCache.get(cacheKey);
+async function fetchFirstSeasonRows(player) {
+  const cacheKey = firstSeasonRowsKey(player);
+  if (firstSeasonRowsCache.has(cacheKey)) return firstSeasonRowsCache.get(cacheKey);
   let rows = [];
   try {
     const params = new URLSearchParams({ stats: "yearByYear", group: activeGroup });
@@ -218,8 +230,7 @@ async function fetchFirstFourSeasonStats(player) {
     rows = (data.stats?.[0]?.splits || [])
       .map((split) => ({ season: Number(split.season), stat: mapSeasonStat(split.stat || {}) }))
       .filter((row) => Number.isFinite(row.season) && hasUsefulStat(row.stat))
-      .sort((a, b) => a.season - b.season)
-      .slice(0, 4);
+      .sort((a, b) => a.season - b.season);
   } catch (error) {
     rows = [];
   }
@@ -228,16 +239,17 @@ async function fetchFirstFourSeasonStats(player) {
     for (const year of yearList(start, lastSeason)) {
       const stat = await fetchSeasonStat(player, year);
       if (hasUsefulStat(stat)) rows.push({ season: year, stat });
-      if (rows.length === 4) break;
+      if (rows.length === 20) break;
     }
   }
-  firstFourSeasonCache.set(cacheKey, rows);
+  firstSeasonRowsCache.set(cacheKey, rows);
   return rows;
 }
 
 async function playerStats(player) {
-  const stats = activeMode === "first4"
-    ? (await fetchFirstFourSeasonStats(player)).map((row) => row.stat)
+  const range = careerSeasonRange();
+  const stats = activeMode === "careerSeasons"
+    ? (await fetchFirstSeasonRows(player)).slice(range.start - 1, range.end).map((row) => row.stat)
     : await Promise.all((activeMode === "single" ? [Number(activeSeason)] : yearList(activeRange.start, activeRange.end)).map((year) => fetchSeasonStat(player, year)));
   return finalizeStats(stats.reduce((total, stat) => {
     Object.entries(stat).forEach(([key, value]) => {
@@ -263,12 +275,14 @@ function finalizeStats(stat) {
 }
 
 function playerScopeLine(player) {
-  if (activeMode !== "first4") return `${scopeLabel()} ${activeGroup === "hitting" ? "batting" : "pitching"} line`;
-  const rows = firstFourSeasonCache.get(firstFourSeasonKey(player)) || [];
+  if (activeMode !== "careerSeasons") return `${scopeLabel()} ${activeGroup === "hitting" ? "batting" : "pitching"} line`;
+  const range = careerSeasonRange();
+  const rows = (firstSeasonRowsCache.get(firstSeasonRowsKey(player)) || []).slice(range.start - 1, range.end);
   const years = rows.map((row) => row.season).filter(Boolean);
-  if (!years.length) return "Each player's first MLB seasons";
+  if (!years.length) return "Each player's matching career seasons";
   const seasonText = years.length === 1 ? years[0] : `${years[0]}-${years[years.length - 1]}`;
-  return `First ${years.length} MLB seasons (${seasonText})`;
+  const careerText = range.start === range.end ? `career season ${range.start}` : `career seasons ${range.start}-${range.end}`;
+  return `${careerText} (${seasonText})`;
 }
 
 function formatValue(key, value, digits) {
@@ -286,8 +300,8 @@ function renderComparison(statsA, statsB) {
   document.querySelector("#compare-player-a-note").textContent = playerA.position || "Player";
   document.querySelector("#compare-player-b-note").textContent = playerB.position || "Player";
   document.querySelector("#compare-scope-card").textContent = scopeLabel();
-  document.querySelector("#compare-scope-note").textContent = activeMode === "first4"
-    ? `Each player's own first MLB seasons`
+  document.querySelector("#compare-scope-note").textContent = activeMode === "careerSeasons"
+    ? `Each player's own matching career seasons`
     : `${activeGroup === "hitting" ? "Batting" : "Pitching"} comparison`;
   document.querySelector("#compare-table-title").textContent = `${playerA.fullName} vs ${playerB.fullName}`;
   document.querySelector("#compare-player-grid").innerHTML = [playerA, playerB].map((player) => `
@@ -350,6 +364,8 @@ function updateModeControls() {
   document.querySelector(".compare-controls-panel").setAttribute("data-active-mode", activeMode);
   document.querySelector("#compare-range-start-value").textContent = activeRange.start;
   document.querySelector("#compare-range-end-value").textContent = activeRange.end;
+  document.querySelector("#compare-career-season-start-value").textContent = careerSeasonRange().start;
+  document.querySelector("#compare-career-season-end-value").textContent = careerSeasonRange().end;
 }
 
 function bindAutocomplete(side) {
@@ -394,6 +410,18 @@ function bindEvents() {
     activeRange.end = Number(event.target.value);
     updateModeControls();
     if (activeMode === "range") runComparison();
+  });
+  document.querySelector("#compare-career-season-start").addEventListener("change", (event) => {
+    activeCareerSeasonRange.start = Number(event.target.value);
+    activeMode = "careerSeasons";
+    updateModeControls();
+    runComparison();
+  });
+  document.querySelector("#compare-career-season-end").addEventListener("change", (event) => {
+    activeCareerSeasonRange.end = Number(event.target.value);
+    activeMode = "careerSeasons";
+    updateModeControls();
+    runComparison();
   });
 }
 

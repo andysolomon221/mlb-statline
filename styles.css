@@ -1139,7 +1139,8 @@ td {
 }
 
 .compare-control-grid label,
-.compare-range-fields label {
+.compare-range-fields label,
+.compare-career-season-fields label {
   display: grid;
   gap: 8px;
   color: var(--muted);
@@ -1166,13 +1167,16 @@ td {
 }
 
 .compare-controls-panel[data-active-mode="single"] .compare-range-fields,
-.compare-controls-panel[data-active-mode="first4"] .compare-range-fields,
-.compare-controls-panel[data-active-mode="first4"] .compare-season-field {
+.compare-controls-panel[data-active-mode="single"] .compare-career-season-fields,
+.compare-controls-panel[data-active-mode="range"] .compare-career-season-fields,
+.compare-controls-panel[data-active-mode="careerSeasons"] .compare-range-fields,
+.compare-controls-panel[data-active-mode="careerSeasons"] .compare-season-field {
   display: none;
 }
 
 .compare-mode-toggle,
-.compare-range-fields {
+.compare-range-fields,
+.compare-career-season-fields {
   margin-top: 14px;
 }
 

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MLB Statline Compare</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css?v=20260602-first4" />
+    <link rel="stylesheet" href="styles.css?v=20260602-career-seasons" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -86,7 +86,7 @@
           <div class="mode-toggle compare-mode-toggle" role="group" aria-label="Comparison scope">
             <button class="active" data-compare-mode="single">Single year</button>
             <button data-compare-mode="range">Year range</button>
-            <button data-compare-mode="first4">First 4 seasons</button>
+            <button data-compare-mode="careerSeasons">Career seasons</button>
           </div>
           <div class="range-fields compare-range-fields">
             <label>
@@ -96,6 +96,16 @@
             <label>
               <span>To <strong id="compare-range-end-value">2026</strong></span>
               <select id="compare-range-end" aria-label="Comparison range end"></select>
+            </label>
+          </div>
+          <div class="range-fields compare-career-season-fields">
+            <label>
+              <span>Career season from <strong id="compare-career-season-start-value">1</strong></span>
+              <input id="compare-career-season-start" type="number" min="1" step="1" value="1" aria-label="Career season range start" />
+            </label>
+            <label>
+              <span>To <strong id="compare-career-season-end-value">4</strong></span>
+              <input id="compare-career-season-end" type="number" min="1" step="1" value="4" aria-label="Career season range end" />
             </label>
           </div>
           <div class="compare-action-row">
@@ -161,6 +171,6 @@
       </main>
     </div>
 
-    <script src="compare.js?v=20260602-first4"></script>
+    <script src="compare.js?v=20260602-career-seasons"></script>
   </body>
 </html>
