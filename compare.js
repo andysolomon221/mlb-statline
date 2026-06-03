@@ -2,13 +2,14 @@ const firstSeason = 1901;
 const lastSeason = 2026;
 const peopleCache = new Map();
 const statsCache = new Map();
+const firstFourSeasonCache = new Map();
 
 let activeGroup = "hitting";
 let activeMode = "single";
 let activeSeason = "2026";
 let activeRange = { start: 2021, end: 2026 };
-let playerA = { id: 592450, fullName: "Aaron Judge", position: "OF" };
-let playerB = { id: 660271, fullName: "Shohei Ohtani", position: "DH" };
+let playerA = { id: 592450, fullName: "Aaron Judge", position: "OF", mlbDebutDate: "2016-08-13" };
+let playerB = { id: 660271, fullName: "Shohei Ohtani", position: "DH", mlbDebutDate: "2018-03-29" };
 let candidatesA = [playerA];
 let candidatesB = [playerB];
 let searchTimer;
@@ -78,11 +79,16 @@ function yearList(start, end) {
 
 function scopeLabel() {
   if (activeMode === "single") return activeSeason;
+  if (activeMode === "first4") return "First 4 seasons";
   return activeRange.start === activeRange.end ? String(activeRange.start) : `${activeRange.start}-${activeRange.end}`;
 }
 
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
+}
+
+function firstFourSeasonKey(player) {
+  return `${player.id}:${activeGroup}:first4`;
 }
 
 async function fetchJson(url) {
@@ -192,9 +198,47 @@ async function fetchSeasonStat(player, year) {
   return stat;
 }
 
+function hasUsefulStat(stat) {
+  if (activeGroup === "pitching") return toNumber(stat.ipOuts) > 0 || toNumber(stat.gamesPlayed) > 0;
+  return toNumber(stat.plateAppearances) > 0 || toNumber(stat.atBats) > 0 || toNumber(stat.gamesPlayed) > 0;
+}
+
+function debutYear(player) {
+  const year = Number(String(player.mlbDebutDate || "").slice(0, 4));
+  return Number.isFinite(year) && year >= firstSeason ? year : firstSeason;
+}
+
+async function fetchFirstFourSeasonStats(player) {
+  const cacheKey = firstFourSeasonKey(player);
+  if (firstFourSeasonCache.has(cacheKey)) return firstFourSeasonCache.get(cacheKey);
+  let rows = [];
+  try {
+    const params = new URLSearchParams({ stats: "yearByYear", group: activeGroup });
+    const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${player.id}/stats?${params.toString()}`);
+    rows = (data.stats?.[0]?.splits || [])
+      .map((split) => ({ season: Number(split.season), stat: mapSeasonStat(split.stat || {}) }))
+      .filter((row) => Number.isFinite(row.season) && hasUsefulStat(row.stat))
+      .sort((a, b) => a.season - b.season)
+      .slice(0, 4);
+  } catch (error) {
+    rows = [];
+  }
+  if (!rows.length) {
+    const start = debutYear(player);
+    for (const year of yearList(start, lastSeason)) {
+      const stat = await fetchSeasonStat(player, year);
+      if (hasUsefulStat(stat)) rows.push({ season: year, stat });
+      if (rows.length === 4) break;
+    }
+  }
+  firstFourSeasonCache.set(cacheKey, rows);
+  return rows;
+}
+
 async function playerStats(player) {
-  const years = activeMode === "single" ? [Number(activeSeason)] : yearList(activeRange.start, activeRange.end);
-  const stats = await Promise.all(years.map((year) => fetchSeasonStat(player, year)));
+  const stats = activeMode === "first4"
+    ? (await fetchFirstFourSeasonStats(player)).map((row) => row.stat)
+    : await Promise.all((activeMode === "single" ? [Number(activeSeason)] : yearList(activeRange.start, activeRange.end)).map((year) => fetchSeasonStat(player, year)));
   return finalizeStats(stats.reduce((total, stat) => {
     Object.entries(stat).forEach(([key, value]) => {
       total[key] = (total[key] || 0) + toNumber(value);
@@ -218,6 +262,15 @@ function finalizeStats(stat) {
   return stat;
 }
 
+function playerScopeLine(player) {
+  if (activeMode !== "first4") return `${scopeLabel()} ${activeGroup === "hitting" ? "batting" : "pitching"} line`;
+  const rows = firstFourSeasonCache.get(firstFourSeasonKey(player)) || [];
+  const years = rows.map((row) => row.season).filter(Boolean);
+  if (!years.length) return "Each player's first MLB seasons";
+  const seasonText = years.length === 1 ? years[0] : `${years[0]}-${years[years.length - 1]}`;
+  return `First ${years.length} MLB seasons (${seasonText})`;
+}
+
 function formatValue(key, value, digits) {
   if (key === "inningsPitched") return outsToInnings(Math.round(toNumber(value) * 3));
   if (digits > 0) return toNumber(value).toFixed(digits).replace(/^0/, "");
@@ -233,13 +286,15 @@ function renderComparison(statsA, statsB) {
   document.querySelector("#compare-player-a-note").textContent = playerA.position || "Player";
   document.querySelector("#compare-player-b-note").textContent = playerB.position || "Player";
   document.querySelector("#compare-scope-card").textContent = scopeLabel();
-  document.querySelector("#compare-scope-note").textContent = `${activeGroup === "hitting" ? "Batting" : "Pitching"} comparison`;
+  document.querySelector("#compare-scope-note").textContent = activeMode === "first4"
+    ? `Each player's own first MLB seasons`
+    : `${activeGroup === "hitting" ? "Batting" : "Pitching"} comparison`;
   document.querySelector("#compare-table-title").textContent = `${playerA.fullName} vs ${playerB.fullName}`;
   document.querySelector("#compare-player-grid").innerHTML = [playerA, playerB].map((player) => `
     <article class="fantasy-note-card">
       <span>${player.position || "MLB"}</span>
       <strong><a class="summary-link" href="${baseballReferenceSearchUrl(player.fullName)}" target="_blank" rel="noopener noreferrer">${escapeHtml(player.fullName)}</a></strong>
-      <small>${escapeHtml(scopeLabel())} ${activeGroup === "hitting" ? "batting" : "pitching"} line</small>
+      <small>${escapeHtml(playerScopeLine(player))}</small>
     </article>
   `).join("");
   document.querySelector("#compare-table").innerHTML = metrics.map(([key, label, lowerBetter, digits]) => {

@@ -1165,7 +1165,9 @@ td {
   cursor: pointer;
 }
 
-.compare-controls-panel[data-active-mode="single"] .compare-range-fields {
+.compare-controls-panel[data-active-mode="single"] .compare-range-fields,
+.compare-controls-panel[data-active-mode="first4"] .compare-range-fields,
+.compare-controls-panel[data-active-mode="first4"] .compare-season-field {
   display: none;
 }
 
