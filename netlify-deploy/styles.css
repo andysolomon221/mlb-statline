@@ -1672,3 +1672,176 @@ td {
     font-size: 12px;
   }
 }
+
+@media (max-width: 480px) and (orientation: portrait) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app-shell {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .rail {
+    position: static;
+    display: block;
+    width: 100%;
+    height: auto;
+    padding: 8px;
+  }
+
+  .brand-mark {
+    display: none;
+  }
+
+  .rail-nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+    width: 100%;
+    overflow: visible;
+  }
+
+  .rail-nav a {
+    justify-content: center;
+    min-height: 34px;
+    border-radius: 6px;
+    padding: 0 4px;
+    font-size: 10px;
+    line-height: 1;
+    text-align: center;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100%;
+    padding: 8px;
+  }
+
+  .topbar {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .topbar .eyebrow,
+  .eyebrow {
+    font-size: 10px;
+  }
+
+  h1 {
+    font-size: 28px;
+    line-height: 1.03;
+  }
+
+  h2 {
+    font-size: 17px;
+  }
+
+  .hero-search {
+    margin-top: 12px;
+  }
+
+  .season-control {
+    padding: 10px;
+  }
+
+  .panel {
+    padding: 12px;
+  }
+
+  .range-toolbar {
+    gap: 10px;
+  }
+
+  .mode-toggle,
+  .quick-ranges,
+  .league-toggle {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    overflow: visible;
+  }
+
+  .league-toggle button,
+  .mode-toggle button,
+  .quick-ranges button {
+    width: 100%;
+    min-height: 34px;
+    justify-content: center;
+  }
+
+  .score-strip,
+  .workbench,
+  .data-grid,
+  .start-grid,
+  .park-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .score-strip article {
+    min-height: auto;
+  }
+
+  .bar-row {
+    grid-template-columns: minmax(96px, 1fr) minmax(80px, 1fr) 42px;
+  }
+
+  .snapshot-panel {
+    overflow: hidden;
+  }
+
+  .team-pickers {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-header {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-header span {
+    display: none;
+  }
+
+  .comparison-header strong {
+    white-space: normal;
+  }
+
+  .comparison {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    background: #fff;
+  }
+
+  .comparison > div:nth-child(2) {
+    order: -1;
+  }
+
+  .comparison-value {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .comparison-value-right {
+    justify-items: stretch;
+  }
+
+  .table-wrap {
+    max-width: 100%;
+  }
+
+  table {
+    min-width: 560px;
+  }
+}
