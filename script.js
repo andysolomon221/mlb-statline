@@ -1309,7 +1309,14 @@ function renderComparison() {
     ["pct", "Win %", false]
   ];
 
-  document.querySelector("#compare-grid").innerHTML = metrics.map(([key, label, lowerBetter]) => {
+  const teamHeader = `
+    <div class="comparison-header">
+      <span>${escapeHtml(a.abbr)}</span>
+      <strong>${escapeHtml(a.name)} vs ${escapeHtml(b.name)}</strong>
+      <span>${escapeHtml(b.abbr)}</span>
+    </div>
+  `;
+  document.querySelector("#compare-grid").innerHTML = teamHeader + metrics.map(([key, label, lowerBetter]) => {
     const rawA = a[key];
     const rawB = b[key];
     const floor = Math.min(rawA, rawB, 0);
@@ -1326,7 +1333,10 @@ function renderComparison() {
     const right = (bv / total) * 100;
     return `
       <div class="comparison">
-        <strong>${fmtStat(key, rawA)}</strong>
+        <div class="comparison-value">
+          <span>${escapeHtml(a.abbr)}</span>
+          <strong>${fmtStat(key, rawA)}</strong>
+        </div>
         <div>
           <span>${label}</span>
           <div class="split-track">
@@ -1334,7 +1344,10 @@ function renderComparison() {
             <div class="split-right" style="width:${right}%"></div>
           </div>
         </div>
-        <strong>${fmtStat(key, rawB)}</strong>
+        <div class="comparison-value comparison-value-right">
+          <span>${escapeHtml(b.abbr)}</span>
+          <strong>${fmtStat(key, rawB)}</strong>
+        </div>
       </div>
     `;
   }).join("");
