@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Compare</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=20260602-career-seasons" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="compare">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a class="active" href="compare.html">Compare</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="compare-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Side By Side</p>
+            <h1>Compare two players across any season or era.</h1>
+          </div>
+          <div class="season-control" aria-label="Comparison stat type">
+            <label for="compare-group">Stat Type</label>
+            <select id="compare-group" aria-label="Comparison stat type">
+              <option value="hitting">Batting</option>
+              <option value="pitching">Pitching</option>
+            </select>
+          </div>
+        </header>
+
+        <section class="panel compare-controls-panel" aria-label="Comparison controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Compare Players</p>
+              <h2>Choose players and scope</h2>
+            </div>
+          </div>
+          <div class="compare-control-grid">
+            <label>
+              <span>Player 1</span>
+              <input id="compare-player-a" type="search" list="compare-player-a-options" autocomplete="off" value="Aaron Judge" aria-label="First player" />
+              <datalist id="compare-player-a-options"></datalist>
+            </label>
+            <label>
+              <span>Player 2</span>
+              <input id="compare-player-b" type="search" list="compare-player-b-options" autocomplete="off" value="Shohei Ohtani" aria-label="Second player" />
+              <datalist id="compare-player-b-options"></datalist>
+            </label>
+            <label class="compare-season-field">
+              <span>Season</span>
+              <select id="compare-season" aria-label="Comparison season"></select>
+            </label>
+          </div>
+          <div class="mode-toggle compare-mode-toggle" role="group" aria-label="Comparison scope">
+            <button class="active" data-compare-mode="single">Single year</button>
+            <button data-compare-mode="range">Year range</button>
+            <button data-compare-mode="careerSeasons">Career seasons</button>
+          </div>
+          <div class="range-fields compare-range-fields">
+            <label>
+              <span>From <strong id="compare-range-start-value">2021</strong></span>
+              <select id="compare-range-start" aria-label="Comparison range start"></select>
+            </label>
+            <label>
+              <span>To <strong id="compare-range-end-value">2026</strong></span>
+              <select id="compare-range-end" aria-label="Comparison range end"></select>
+            </label>
+          </div>
+          <div class="range-fields compare-career-season-fields">
+            <label>
+              <span>Career season from <strong id="compare-career-season-start-value">1</strong></span>
+              <input id="compare-career-season-start" type="number" min="1" step="1" value="1" aria-label="Career season range start" />
+            </label>
+            <label>
+              <span>To <strong id="compare-career-season-end-value">4</strong></span>
+              <input id="compare-career-season-end" type="number" min="1" step="1" value="4" aria-label="Career season range end" />
+            </label>
+          </div>
+          <div class="compare-action-row">
+            <button id="run-comparison" type="button">Compare</button>
+          </div>
+        </section>
+
+        <section class="score-strip compare-summary" aria-label="Comparison summary">
+          <article>
+            <span>Player 1</span>
+            <strong id="compare-player-a-card">Aaron Judge</strong>
+            <small id="compare-player-a-note">Ready</small>
+          </article>
+          <article>
+            <span>Player 2</span>
+            <strong id="compare-player-b-card">Shohei Ohtani</strong>
+            <small id="compare-player-b-note">Ready</small>
+          </article>
+          <article>
+            <span>Scope</span>
+            <strong id="compare-scope-card">2026</strong>
+            <small id="compare-scope-note">Batting comparison</small>
+          </article>
+          <article>
+            <span>Status</span>
+            <strong id="compare-status-card">Loading</strong>
+            <small id="compare-status-note">MLB Stats API</small>
+          </article>
+        </section>
+
+        <section class="data-grid advanced-grid">
+          <section class="panel leaderboard">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Side By Side</p>
+                <h2 id="compare-table-title">Player comparison</h2>
+              </div>
+              <div class="split-status" id="compare-status">Loading comparison...</div>
+            </div>
+            <div class="compare-player-grid" id="compare-player-grid"></div>
+            <div class="table-wrap compare-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Stat</th>
+                    <th id="compare-head-a">Player 1</th>
+                    <th id="compare-head-b">Player 2</th>
+                    <th>Edge</th>
+                  </tr>
+                </thead>
+                <tbody id="compare-table"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="compare.js?v=20260602-career-seasons"></script>
+  </body>
+</html>

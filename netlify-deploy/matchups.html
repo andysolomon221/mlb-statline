@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Matchups</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=20260602-compare-button" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="matchups">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a class="active" href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="matchups-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Matchup Lab</p>
+            <h1>Turn a batter-pitcher matchup into a quick read.</h1>
+          </div>
+          <div class="season-control" aria-label="Matchup season">
+            <label for="matchup-season">Season</label>
+            <select id="matchup-season" aria-label="Matchup season"></select>
+            <button id="run-matchup" type="button">Analyze</button>
+          </div>
+        </header>
+
+        <section class="score-strip matchup-summary" aria-label="Matchup summary">
+          <article>
+            <span>Batter</span>
+            <strong id="matchup-batter-card">Mookie Betts</strong>
+            <small id="matchup-batter-note">Season and handedness split.</small>
+          </article>
+          <article>
+            <span>Pitcher</span>
+            <strong id="matchup-pitcher-card">Paul Skenes</strong>
+            <small id="matchup-pitcher-note">Season and handedness split.</small>
+          </article>
+          <article>
+            <span>Edge</span>
+            <strong id="matchup-edge-card">Loading</strong>
+            <small id="matchup-edge-note">Data-driven read, not a betting line.</small>
+          </article>
+          <article>
+            <span>Context</span>
+            <strong id="matchup-context-card">2026</strong>
+            <small id="matchup-context-note">Manual matchup setup.</small>
+          </article>
+        </section>
+
+        <section class="panel matchup-controls-panel" aria-label="Matchup controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Setup</p>
+              <h2>Choose teams, batter, and pitcher</h2>
+            </div>
+            <div class="split-status" id="matchup-status">Loading matchup...</div>
+          </div>
+          <div class="matchup-setup-grid">
+            <div class="matchup-setup-column">
+              <label>
+                <span>Batting Team</span>
+                <select id="matchup-batting-team" aria-label="Batting team"></select>
+              </label>
+              <label>
+                <span>Batter</span>
+                <input id="batter-autocomplete" type="search" list="batter-options" autocomplete="off" placeholder="Type player or team" aria-label="Search or choose batter" />
+                <datalist id="batter-options"></datalist>
+              </label>
+            </div>
+            <div class="matchup-setup-column">
+              <label>
+                <span>Pitching Team</span>
+                <select id="matchup-pitching-team" aria-label="Pitching team"></select>
+              </label>
+              <label>
+                <span>Pitcher</span>
+                <input id="pitcher-autocomplete" type="search" list="pitcher-options" autocomplete="off" placeholder="Type player or team" aria-label="Search or choose pitcher" />
+                <datalist id="pitcher-options"></datalist>
+              </label>
+            </div>
+            <div class="matchup-setup-column">
+              <label>
+                <span>Ballpark</span>
+                <select id="matchup-park" aria-label="Ballpark context"></select>
+              </label>
+              <label>
+                <span>Roster Pool</span>
+                <select id="matchup-roster-pool" aria-label="Roster pool">
+                  <option value="active">Active roster</option>
+                  <option value="40Man">40-man roster</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <small class="data-note">Season controls roster dropdowns and current-season player stats. Head-to-head tables use career batter-vs-pitcher history.</small>
+          <div class="browse-players-wrap">
+            <button id="browse-players-toggle" type="button" aria-expanded="false">Browse players</button>
+            <div class="browse-players-grid" id="browse-players-panel" hidden>
+              <label>
+                <span>Batters From Selected Team</span>
+                <select id="browse-batter-select" aria-label="Browse batters"></select>
+              </label>
+              <label>
+                <span>Pitchers From Selected Team</span>
+                <select id="browse-pitcher-select" aria-label="Browse pitchers"></select>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="data-grid advanced-grid">
+          <section class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Matchup Read</p>
+                <h2 id="matchup-title">Batter vs pitcher context</h2>
+              </div>
+            </div>
+            <div class="matchup-read" id="matchup-read"></div>
+          </section>
+
+          <section class="panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Side By Side</p>
+                <h2>Season and split profile</h2>
+              </div>
+            </div>
+            <div class="matchup-card-grid" id="matchup-card-grid"></div>
+          </section>
+        </section>
+
+        <section class="panel matchup-offense-panel" aria-label="Team offense against selected pitcher">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Team Offense</p>
+              <h2 id="team-offense-title">Selected offense vs pitcher</h2>
+            </div>
+            <div class="split-status" id="team-offense-status">Loading offense...</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><button type="button" data-team-sort="name" data-label="Hitter">Hitter</button></th>
+                  <th><button type="button" data-team-sort="position" data-label="Pos">Pos</button></th>
+                  <th><button type="button" data-team-sort="pa" data-label="Career PA">Career PA</button></th>
+                  <th><button type="button" data-team-sort="ab" data-label="Career AB">Career AB</button></th>
+                  <th><button type="button" data-team-sort="h" data-label="Career H">Career H</button></th>
+                  <th><button type="button" data-team-sort="hr" data-label="Career HR">Career HR</button></th>
+                  <th><button type="button" data-team-sort="rbi" data-label="Career RBI">Career RBI</button></th>
+                  <th><button type="button" data-team-sort="bb" data-label="Career BB">Career BB</button></th>
+                  <th><button type="button" data-team-sort="so" data-label="Career SO">Career SO</button></th>
+                  <th><button type="button" data-team-sort="avg" data-label="Career AVG">Career AVG</button></th>
+                  <th><button type="button" data-team-sort="ops" data-label="Career OPS">Career OPS</button></th>
+                  <th><button type="button" data-team-sort="seasons" data-label="Seasons">Seasons</button></th>
+                </tr>
+              </thead>
+              <tbody id="team-offense-table">
+                <tr><td colspan="12" class="empty-row">Loading team offense...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="matchups.js?v=20260602-player-labels"></script>
+  </body>
+</html>

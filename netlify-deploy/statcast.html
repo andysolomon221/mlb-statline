@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Statcast</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=20260602-compare-button" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="statcast">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a class="active" href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="statcast-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Statcast</p>
+            <h1>Contact quality, barrels, and expected stats.</h1>
+          </div>
+          <div class="season-control" aria-label="Statcast filters">
+            <label for="statcast-season">Season</label>
+            <select id="statcast-season" aria-label="Select season"></select>
+            <select id="statcast-team" aria-label="Filter by team">
+              <option value="all">All teams</option>
+            </select>
+          </div>
+        </header>
+
+        <section class="score-strip news-summary" aria-label="Statcast summary">
+          <article>
+            <span>Leader</span>
+            <strong id="statcast-leader">Loading</strong>
+            <small id="statcast-leader-note">Baseball Savant</small>
+          </article>
+          <article>
+            <span>Metric</span>
+            <strong id="statcast-metric-card">EV</strong>
+            <small id="statcast-metric-note">Selected Statcast field</small>
+          </article>
+          <article>
+            <span>Scope</span>
+            <strong id="statcast-scope-card">2026</strong>
+            <small id="statcast-scope-note">All MLB</small>
+          </article>
+          <article>
+            <span>Players</span>
+            <strong id="statcast-count">0</strong>
+            <small id="statcast-count-note">Minimum 25 tracked events</small>
+          </article>
+        </section>
+
+        <section class="panel news-controls-panel" aria-label="Statcast controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Board Controls</p>
+              <h2>Choose view and metric</h2>
+            </div>
+            <select id="statcast-metric" aria-label="Statcast metric"></select>
+          </div>
+          <div class="league-toggle news-topic-toggle" role="group" aria-label="Player type">
+            <button class="active" data-statcast-type="batter">Hitters</button>
+            <button data-statcast-type="pitcher">Pitchers</button>
+          </div>
+        </section>
+
+        <section class="data-grid advanced-grid" id="statcast-board">
+          <section class="panel leaderboard">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Leaderboard</p>
+                <h2 id="statcast-chart-title">Statcast leaders</h2>
+              </div>
+              <div class="split-status" id="statcast-status">Loading...</div>
+            </div>
+            <div class="bar-chart" id="statcast-chart"></div>
+          </section>
+
+          <section class="panel leaderboard" id="statcast-table-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Player Board</p>
+                <h2 id="statcast-table-title">Statcast players</h2>
+              </div>
+              <input id="statcast-search" type="search" placeholder="Search player or team" aria-label="Search Statcast board" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead id="statcast-head"></thead>
+                <tbody id="statcast-table"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Source Note</p>
+              <h2>Baseball Savant leaderboards</h2>
+            </div>
+          </div>
+          <p class="data-note">This page uses Baseball Savant Statcast leaderboard CSV data merged with MLB team metadata.</p>
+        </section>
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="statcast.js?v=20260528-statcast-sync"></script>
+  </body>
+</html>

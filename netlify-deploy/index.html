@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=20260602-compare-button" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="hitting">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a class="active" href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">MLB Statline</p>
+            <h1>League intelligence for every inning.</h1>
+            <div class="hero-search">
+              <label for="hero-player-search">Search Player Or Club</label>
+              <input id="hero-player-search" type="search" list="player-search-options" placeholder="Try Aaron Judge, Red Sox, Dodgers..." aria-label="Search player or club" />
+              <datalist id="player-search-options"></datalist>
+            </div>
+          </div>
+          <div class="season-control" aria-label="Historical season">
+            <label for="season-select">Choose Season</label>
+            <select id="season-select" aria-label="Select historical season"></select>
+          </div>
+        </header>
+
+        <section class="panel range-panel" data-active-mode="single" id="history-tools" aria-label="Year range tools">
+          <div class="range-toolbar">
+            <div>
+              <p class="eyebrow">Refine Stats</p>
+              <h2 id="scope-title">Single-season leaders</h2>
+              <small class="data-note" id="data-note">Player leaders load from MLB Stats API for the selected season.</small>
+            </div>
+            <div class="mode-toggle" role="group" aria-label="Leader scope">
+              <button class="active" data-mode="single">Single year</button>
+              <button data-mode="range">Year range</button>
+            </div>
+            <div class="range-fields">
+              <label>
+                <span>From <strong id="range-start-value">1990</strong></span>
+                <select id="range-start" aria-label="Range start year"></select>
+              </label>
+              <label>
+                <span>To <strong id="range-end-value">1999</strong></span>
+                <select id="range-end" aria-label="Range end year"></select>
+              </label>
+            </div>
+            <div class="quick-ranges" role="group" aria-label="Quick ranges">
+              <button data-range-start="1990" data-range-end="1999">1990s</button>
+              <button data-range-start="2000" data-range-end="2009">2000s</button>
+              <button data-range-start="2010" data-range-end="2019">2010s</button>
+              <button data-range-start="2020" data-range-end="2026">2020s</button>
+            </div>
+            <div class="league-toggle" role="group" aria-label="League filter">
+              <button class="active" data-league="all">All MLB</button>
+              <button data-league="al">American League</button>
+              <button data-league="nl">National League</button>
+            </div>
+            <div class="team-filter">
+              <label for="team-filter">Team</label>
+              <select id="team-filter" aria-label="Team filter">
+                <option value="all">All teams</option>
+              </select>
+            </div>
+            <div class="position-filter">
+              <label for="position-filter">Position</label>
+              <select id="position-filter" aria-label="Position filter"></select>
+            </div>
+            <div class="league-toggle board-size-toggle" role="group" aria-label="Player board size">
+              <button class="active" data-board-size="leaders">Top 20</button>
+              <button data-board-size="all">All players</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="workbench">
+          <div class="panel feature-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow" id="leader-eyebrow">Run Creation</p>
+                <h2 id="chart-title">Top offensive engines</h2>
+              </div>
+              <select id="metric-select" aria-label="Metric"></select>
+            </div>
+            <div class="bar-chart" id="bar-chart" aria-label="Leaderboard bar chart"></div>
+          </div>
+
+          <div class="panel snapshot-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Matchup Lens</p>
+                <h2 id="compare-title">Club comparison</h2>
+              </div>
+            </div>
+            <div class="team-pickers">
+              <select id="team-a" aria-label="First team"></select>
+              <select id="team-b" aria-label="Second team"></select>
+            </div>
+            <div class="compare-grid" id="compare-grid"></div>
+          </div>
+        </section>
+
+        <section class="data-grid">
+          <div class="panel leaderboard" id="leaders">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Player Board</p>
+                <h2 id="table-title">Sortable league leaders</h2>
+              </div>
+              <input id="player-search" type="search" list="player-search-options" placeholder="Search player or club" aria-label="Search players" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead id="player-head">
+                </thead>
+                <tbody id="player-table"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel division-panel" id="clubs">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Club Pulse</p>
+                <h2 id="team-list-title">Team stats</h2>
+              </div>
+              <select id="team-metric-select" aria-label="Team metric"></select>
+            </div>
+            <div class="club-list" id="club-list"></div>
+          </div>
+        </section>
+
+        <section class="score-strip" aria-label="League summary">
+          <article>
+            <span id="run-summary-label">Run Environment</span>
+            <strong id="run-environment">4.52</strong>
+            <small id="run-context">runs per team game</small>
+          </article>
+          <article>
+            <span id="ops-summary-label">League OPS</span>
+            <strong id="league-ops">.724</strong>
+            <small id="ops-context">weighted by plate appearances</small>
+          </article>
+          <article>
+            <span>Strikeout Rate</span>
+            <strong id="k-rate">22.1%</strong>
+            <small id="k-context">of all plate appearances</small>
+          </article>
+          <article>
+            <span>Save Conversion</span>
+            <strong id="save-rate">66%</strong>
+            <small id="save-context">late-game pressure index</small>
+          </article>
+        </section>
+
+        <section class="panel park-panel" id="parks">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Ballpark Effects</p>
+              <h2>Where outcomes tilt</h2>
+            </div>
+          </div>
+          <div class="park-grid" id="park-grid"></div>
+        </section>
+
+        <section class="panel start-panel" aria-label="Start here">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Explore The Archive</p>
+              <h2>Today's matchups, historical ranges, and team/player rabbit holes</h2>
+            </div>
+          </div>
+          <div class="start-grid">
+            <a class="start-card" href="index.html?mode=range&start=1990&end=1999&metric=hr#leaders">
+              <span>Batting</span>
+              <strong>Batting Leaders By Any Era</strong>
+              <small>Compare hitters by single season, decade, custom year range, league, team, position, and stat.</small>
+            </a>
+            <a class="start-card" href="pitching.html?mode=range&start=1990&end=1999&metric=strikeouts#leaders">
+              <span>Pitching</span>
+              <strong>Pitching Leaders By Any Era</strong>
+              <small>Search starters and relievers across years for strikeouts, ERA, WHIP, wins, saves, and team pitching.</small>
+            </a>
+            <a class="start-card" href="advanced.html">
+              <span>Advanced</span>
+              <strong>Rate Stats And Deeper Boards</strong>
+              <small>Sort by advanced offensive and pitching metrics when traditional totals are not enough.</small>
+            </a>
+            <a class="start-card" href="statcast.html">
+              <span>Statcast</span>
+              <strong>Quality Of Contact</strong>
+              <small>Use public Statcast-style boards for exit velocity, barrels, hard-hit rate, and related skill indicators.</small>
+            </a>
+            <a class="start-card" href="matchups.html">
+              <span>Matchups</span>
+              <strong>Roster vs Pitcher Matchups</strong>
+              <small>Pick teams, players, roster pool, and ballpark to see career head-to-head context for a whole offense.</small>
+            </a>
+            <a class="start-card" href="splits.html">
+              <span>Splits</span>
+              <strong>One Player Across Seasons</strong>
+              <small>Use splits to inspect home/away, handedness, day/night, single years, or multi-year ranges.</small>
+            </a>
+            <a class="start-card" href="fantasy.html">
+              <span>Fantasy</span>
+              <strong>Decision Board</strong>
+              <small>Filter by category need, position, team, player pool, and current or historical range.</small>
+            </a>
+            <a class="start-card" href="news.html">
+              <span>News</span>
+              <strong>Headlines And Communities</strong>
+              <small>Filter free baseball stories by team and jump into official, media, and fan-community sources.</small>
+            </a>
+            <a class="start-card" href="teams.html">
+              <span>Teams</span>
+              <strong>Club Hubs And Team Filters</strong>
+              <small>Start with any club, then jump into its batting, pitching, advanced, Statcast, fantasy, news, and community links.</small>
+            </a>
+          </div>
+        </section>
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="script.js?v=20260603-team-compare-sync"></script>
+  </body>
+</html>

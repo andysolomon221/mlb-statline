@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About MLB Statline</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=20260602-compare-button" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="about">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main>
+        <header class="topbar trust-hero">
+          <div>
+            <p class="eyebrow">About</p>
+            <h1>Baseball stats built for quick context.</h1>
+          </div>
+        </header>
+
+        <section class="panel trust-panel">
+          <p>MLB Statline is an unofficial baseball statistics tool for exploring season leaders, team context, player splits, Statcast boards, fantasy angles, news links, and batter-pitcher matchups.</p>
+          <p>The goal is to make public baseball data easier to scan and compare, especially across seasons, teams, leagues, and player matchups.</p>
+          <p>This site is not affiliated with Major League Baseball, MLB Advanced Media, Baseball Reference, Baseball Savant, or any MLB club.</p>
+        </section>
+
+        <section class="panel trust-panel">
+          <div>
+            <p class="eyebrow">How To Use This Site</p>
+            <h2>Start with a question, then narrow the board.</h2>
+          </div>
+          <p>Use Batting and Pitching to compare single seasons or year ranges, then narrow by league, team, position, or stat category.</p>
+          <p>Use Advanced and Statcast when you want rate stats, quality-of-contact context, and deeper player profiles beyond traditional box-score totals.</p>
+          <p>Use Matchups to compare a batter against a pitcher, review career head-to-head history, check pitcher handedness splits, and see how a whole roster has performed against that pitcher.</p>
+          <p>Use Splits for one-player breakdowns across seasons, and Fantasy when you want a practical board organized by fantasy needs.</p>
+          <p>Use Teams and News when you want a team-specific starting point for stats, links, communities, and current baseball headlines.</p>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
