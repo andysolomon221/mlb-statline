@@ -1718,6 +1718,52 @@ td {
     text-align: center;
   }
 
+  .rail-nav a[href="index.html"] {
+    order: 1;
+  }
+
+  .rail-nav a[href="pitching.html"] {
+    order: 2;
+  }
+
+  .rail-nav a[href="matchups.html"] {
+    order: 3;
+  }
+
+  .rail-nav a[href="teams.html"] {
+    order: 4;
+  }
+
+  .rail-nav a[href="news.html"] {
+    order: 5;
+  }
+
+  .rail-nav a[href="advanced.html"] {
+    order: 6;
+  }
+
+  .rail-nav a[href="statcast.html"] {
+    order: 7;
+  }
+
+  .rail-nav a[href="compare.html"] {
+    order: 8;
+  }
+
+  .rail-nav a[href="splits.html"] {
+    order: 9;
+  }
+
+  .rail-nav a[href="fantasy.html"] {
+    order: 10;
+  }
+
+  .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="teams.html"]):not([href="news.html"]) {
+    min-height: 28px;
+    color: #b9cce0;
+    font-size: 9px;
+  }
+
   main {
     width: 100%;
     max-width: 100%;
