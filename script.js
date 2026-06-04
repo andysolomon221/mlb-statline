@@ -1242,8 +1242,28 @@ function teamOptions() {
   const values = teamRows.map((team) => String(team.id));
   const yankees = teamRows.find((team) => team.abbr === "NYY")?.id;
   const dodgers = teamRows.find((team) => team.abbr === "LAD")?.id;
-  document.querySelector("#team-a").value = values.includes(previousA) ? previousA : String(yankees || teamRows[0].id);
-  document.querySelector("#team-b").value = values.includes(previousB) ? previousB : String(dodgers || teamRows[1]?.id || teamRows[0].id);
+  const defaultA = activeTeamId !== "all" && values.includes(String(activeTeamId))
+    ? String(activeTeamId)
+    : String(yankees || teamRows[0].id);
+  document.querySelector("#team-a").value = values.includes(previousA) && activeTeamId === "all" ? previousA : defaultA;
+  const selectedA = document.querySelector("#team-a").value;
+  const defaultB = [previousB, dodgers, yankees, teamRows[0]?.id, teamRows[1]?.id]
+    .map((id) => String(id || ""))
+    .find((id) => values.includes(id) && id !== selectedA) || selectedA;
+  document.querySelector("#team-b").value = defaultB;
+}
+
+function syncComparisonToActiveTeam() {
+  if (activeTeamId === "all" || !teamRows.length) return;
+  const values = teamRows.map((team) => String(team.id));
+  const selectedTeam = String(activeTeamId);
+  if (!values.includes(selectedTeam)) return;
+  const teamA = document.querySelector("#team-a");
+  const teamB = document.querySelector("#team-b");
+  teamA.value = selectedTeam;
+  if (teamB.value === selectedTeam || !values.includes(teamB.value)) {
+    teamB.value = values.find((id) => id !== selectedTeam) || selectedTeam;
+  }
 }
 
 function teamFilterOptions() {
@@ -1276,6 +1296,7 @@ function teamFilterOptions() {
 function renderComparison() {
   if (teamsLoading) return;
   if (teamError) return renderTeamError();
+  syncComparisonToActiveTeam();
   const a = teamRows.find((team) => String(team.id) === document.querySelector("#team-a").value) || teamRows[0];
   const b = teamRows.find((team) => String(team.id) === document.querySelector("#team-b").value) || teamRows[1] || teamRows[0];
   if (!a || !b) return;
@@ -1379,6 +1400,7 @@ function bindEvents() {
     activeTeamName = event.target.selectedOptions[0]?.textContent || "All teams";
     updateModeControls();
     renderSummary();
+    renderComparison();
     updateLeaders();
   });
 
