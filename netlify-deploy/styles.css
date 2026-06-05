@@ -1140,6 +1140,34 @@ td {
   font-weight: 650;
 }
 
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trust-grid article {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.trust-grid strong {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.trust-grid span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
 .site-footer {
   display: flex;
   flex-wrap: wrap;
@@ -1831,7 +1859,8 @@ td {
   .workbench,
   .data-grid,
   .start-grid,
-  .park-grid {
+  .park-grid,
+  .trust-grid {
     grid-template-columns: 1fr;
   }
 

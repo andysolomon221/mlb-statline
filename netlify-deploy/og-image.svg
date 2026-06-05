@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Statline Baseball">
+  <rect width="1200" height="630" fill="#f6f4ef"/>
+  <rect x="56" y="48" width="1088" height="534" rx="24" fill="#102a45"/>
+  <path d="M56 474 C220 410 310 520 470 454 C610 396 716 486 850 430 C954 386 1050 408 1144 350 L1144 582 L56 582 Z" fill="#17476f"/>
+  <circle cx="964" cy="174" r="76" fill="#fffdf8"/>
+  <path d="M904 154 C940 176 983 181 1024 154" fill="none" stroke="#c03a2b" stroke-width="8" stroke-linecap="round"/>
+  <path d="M904 194 C940 172 983 167 1024 194" fill="none" stroke="#c03a2b" stroke-width="8" stroke-linecap="round"/>
+  <rect x="96" y="90" width="188" height="86" rx="10" fill="none" stroke="#fffdf8" stroke-width="3"/>
+  <text x="190" y="143" fill="#fffdf8" font-family="Avenir Next, Montserrat, Arial, sans-serif" font-size="28" font-weight="900" text-anchor="middle">Statline</text>
+  <text x="96" y="246" fill="#d99b2b" font-family="Avenir Next, Montserrat, Arial, sans-serif" font-size="24" font-weight="900" letter-spacing="2">STATLINE BASEBALL</text>
+  <text x="96" y="326" fill="#fffdf8" font-family="Avenir Next, Montserrat, Arial, sans-serif" font-size="68" font-weight="900">MLB stats by season,</text>
+  <text x="96" y="404" fill="#fffdf8" font-family="Avenir Next, Montserrat, Arial, sans-serif" font-size="68" font-weight="900">team, and matchup.</text>
+  <text x="96" y="486" fill="#dbe8f4" font-family="Avenir Next, Montserrat, Arial, sans-serif" font-size="30" font-weight="700">Historical leaderboards, player comparisons, splits, fantasy, and news.</text>
+  <rect x="96" y="522" width="258" height="44" rx="22" fill="#fffdf8"/>
+  <text x="225" y="552" fill="#102a45" font-family="Avenir Next, Montserrat, Arial, sans-serif" font-size="20" font-weight="900" text-anchor="middle">statlinebaseball.com</text>
+</svg>
