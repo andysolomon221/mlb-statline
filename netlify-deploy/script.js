@@ -601,8 +601,7 @@ function sortedRows(rows) {
 }
 
 function qualifiedRows(rows, metric = activeMetric) {
-  const position = currentPositionFilter();
-  const positionRows = position === "all" ? rows : rows.filter((player) => player.position === position);
+  const positionRows = positionFilteredRows(rows);
   if (activeTeamId !== "all") return positionRows;
   if (!config.rateMetrics.includes(metric)) return positionRows;
   const years = activeMode === "single" ? 1 : yearList(activeRange.start, activeRange.end).length;
@@ -615,6 +614,11 @@ function qualifiedRows(rows, metric = activeMetric) {
   const threshold = activeMode === "single" ? seasonThreshold : rangeThreshold;
   const filtered = positionRows.filter((player) => playerWeight(player) >= threshold);
   return filtered.length >= 5 ? filtered : positionRows.filter((player) => playerWeight(player) >= Math.max(50, threshold * .5));
+}
+
+function positionFilteredRows(rows) {
+  const position = currentPositionFilter();
+  return position === "all" ? rows : rows.filter((player) => player.position === position);
 }
 
 function renderLoadingLeaders() {
@@ -1123,7 +1127,8 @@ function renderChart() {
   if (leaderError) return renderLeaderError(leaderError);
   const direction = defaultSortDir(activeMetric);
   const query = currentPlayerSearchQuery();
-  const data = qualifiedRows(leaderRows).filter((player) => matchesPlayerSearch(player, query)).slice().sort((a, b) => (a[activeMetric] - b[activeMetric]) * direction).slice(0, 7);
+  const sourceRows = query ? positionFilteredRows(leaderRows) : qualifiedRows(leaderRows);
+  const data = sourceRows.filter((player) => matchesPlayerSearch(player, query)).slice().sort((a, b) => (a[activeMetric] - b[activeMetric]) * direction).slice(0, 7);
   if (!data.length) {
     document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">No players found for this filter.</div>`;
     return;
@@ -1156,7 +1161,8 @@ function renderTable() {
   if (leaderError) return renderLeaderError(leaderError);
   const query = currentPlayerSearchQuery();
   const hasSearch = Boolean(query);
-  const rows = sortedRows(qualifiedRows(leaderRows, activeSort.key)
+  const sourceRows = hasSearch ? positionFilteredRows(leaderRows) : qualifiedRows(leaderRows, activeSort.key);
+  const rows = sortedRows(sourceRows
     .filter((player) => matchesPlayerSearch(player, query))
   );
   const visibleRows = !hasSearch && activeBoardSize === "leaders" ? rows.slice(0, 20) : rows;
