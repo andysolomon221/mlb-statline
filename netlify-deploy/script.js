@@ -125,7 +125,6 @@ let teamRows = [];
 let teamsLoading = true;
 let teamError = "";
 let teamRequestId = 0;
-let heroSearchScrollTimer;
 const initialParams = new URLSearchParams(window.location.search);
 
 const numberFormat = new Intl.NumberFormat("en-US");
@@ -1197,11 +1196,8 @@ function cleanSearchInput(value) {
 }
 
 function revealPlayerBoardFromHero() {
-  clearTimeout(heroSearchScrollTimer);
   if (!currentPlayerSearchQuery()) return;
-  heroSearchScrollTimer = setTimeout(() => {
-    document.querySelector("#leaders")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, 180);
+  document.querySelector("#leaders")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function playerSearchLabel(player) {
@@ -1429,7 +1425,20 @@ function bindEvents() {
     playerSearch.value = heroPlayerSearch.value;
     renderChart();
     renderTable();
+  });
+  heroPlayerSearch?.addEventListener("change", () => {
+    playerSearch.value = heroPlayerSearch.value;
+    renderChart();
+    renderTable();
     revealPlayerBoardFromHero();
+  });
+  heroPlayerSearch?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      playerSearch.value = heroPlayerSearch.value;
+      renderChart();
+      renderTable();
+      revealPlayerBoardFromHero();
+    }
   });
 
   document.querySelector("#team-metric-select").addEventListener("change", (event) => {
