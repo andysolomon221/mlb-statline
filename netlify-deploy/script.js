@@ -125,6 +125,7 @@ let teamRows = [];
 let teamsLoading = true;
 let teamError = "";
 let teamRequestId = 0;
+let heroSearchScrollTimer;
 const initialParams = new URLSearchParams(window.location.search);
 
 const numberFormat = new Intl.NumberFormat("en-US");
@@ -1122,7 +1123,8 @@ function renderChart() {
   if (leadersLoading) return renderLoadingLeaders();
   if (leaderError) return renderLeaderError(leaderError);
   const direction = defaultSortDir(activeMetric);
-  const data = qualifiedRows(leaderRows).slice().sort((a, b) => (a[activeMetric] - b[activeMetric]) * direction).slice(0, 7);
+  const query = currentPlayerSearchQuery();
+  const data = qualifiedRows(leaderRows).filter((player) => matchesPlayerSearch(player, query)).slice().sort((a, b) => (a[activeMetric] - b[activeMetric]) * direction).slice(0, 7);
   if (!data.length) {
     document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">No players found for this filter.</div>`;
     return;
@@ -1153,11 +1155,10 @@ function renderChart() {
 function renderTable() {
   if (leadersLoading) return renderLoadingLeaders();
   if (leaderError) return renderLeaderError(leaderError);
-  const query = cleanSearchInput(document.querySelector("#player-search").value).toLowerCase();
+  const query = currentPlayerSearchQuery();
   const hasSearch = Boolean(query);
-  const scope = leaderScopeLabel();
   const rows = sortedRows(qualifiedRows(leaderRows, activeSort.key)
-    .filter((player) => `${player.name} ${player.team} ${player.teamName || ""} ${scope}`.toLowerCase().includes(query))
+    .filter((player) => matchesPlayerSearch(player, query))
   );
   const visibleRows = !hasSearch && activeBoardSize === "leaders" ? rows.slice(0, 20) : rows;
   const note = document.querySelector("#table-note");
@@ -1181,8 +1182,26 @@ function renderTable() {
   `).join("") || `<tr><td colspan="9" class="empty-row">No players match this filter.</td></tr>`;
 }
 
+function currentPlayerSearchQuery() {
+  return cleanSearchInput(document.querySelector("#player-search")?.value || "").toLowerCase();
+}
+
+function matchesPlayerSearch(player, query) {
+  if (!query) return true;
+  const scope = leaderScopeLabel();
+  return `${player.name} ${player.team} ${player.teamName || ""} ${scope}`.toLowerCase().includes(query);
+}
+
 function cleanSearchInput(value) {
   return String(value || "").replace(/\s+-\s+[^-]+(?:\s+-\s+.+)?$/, "").trim();
+}
+
+function revealPlayerBoardFromHero() {
+  clearTimeout(heroSearchScrollTimer);
+  if (!currentPlayerSearchQuery()) return;
+  heroSearchScrollTimer = setTimeout(() => {
+    document.querySelector("#leaders")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 180);
 }
 
 function playerSearchLabel(player) {
@@ -1403,11 +1422,14 @@ function bindEvents() {
   const heroPlayerSearch = document.querySelector("#hero-player-search");
   playerSearch.addEventListener("input", () => {
     if (heroPlayerSearch && heroPlayerSearch.value !== playerSearch.value) heroPlayerSearch.value = playerSearch.value;
+    renderChart();
     renderTable();
   });
   heroPlayerSearch?.addEventListener("input", () => {
     playerSearch.value = heroPlayerSearch.value;
+    renderChart();
     renderTable();
+    revealPlayerBoardFromHero();
   });
 
   document.querySelector("#team-metric-select").addEventListener("change", (event) => {
