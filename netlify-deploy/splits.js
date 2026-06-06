@@ -35,9 +35,9 @@ const columns = {
 };
 
 let selectedPlayer = { id: 660271, fullName: "Shohei Ohtani" };
-let activeSeason = "2023";
+let activeSeason = "2026";
 let activeMode = "single";
-let activeRange = { start: 2021, end: 2023 };
+let activeRange = { start: 2024, end: 2026 };
 let activeGroup = "hitting";
 let activeSplitSet = "common";
 let activeRequestId = 0;

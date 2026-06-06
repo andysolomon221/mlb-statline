@@ -1154,11 +1154,18 @@ function renderTable() {
   if (leadersLoading) return renderLoadingLeaders();
   if (leaderError) return renderLeaderError(leaderError);
   const query = cleanSearchInput(document.querySelector("#player-search").value).toLowerCase();
+  const hasSearch = Boolean(query);
   const scope = leaderScopeLabel();
   const rows = sortedRows(qualifiedRows(leaderRows, activeSort.key)
     .filter((player) => `${player.name} ${player.team} ${player.teamName || ""} ${scope}`.toLowerCase().includes(query))
   );
-  const visibleRows = activeBoardSize === "leaders" ? rows.slice(0, 20) : rows;
+  const visibleRows = !hasSearch && activeBoardSize === "leaders" ? rows.slice(0, 20) : rows;
+  const note = document.querySelector("#table-note");
+  if (note) {
+    note.textContent = hasSearch
+      ? `Showing all ${rows.length} matching ${config.label} ${rows.length === 1 ? "player" : "players"}. Clear search to return to ${activeBoardSize === "leaders" ? "Top 20" : "the full board"}.`
+      : "";
+  }
 
   document.querySelector("#player-table").innerHTML = visibleRows.map((player) => `
     <tr>
