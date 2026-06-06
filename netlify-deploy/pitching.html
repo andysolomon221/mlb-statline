@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Pitching" />
     <meta name="twitter:description" content="Sort MLB pitching leaders by season, team, league, year range, ERA, WHIP, strikeouts, saves, and more." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260604-scroll-nav" />
+    <link rel="stylesheet" href="styles.css?v=20260606-firefox-search" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -177,7 +177,10 @@
                 <h2 id="table-title">Sortable league leaders</h2>
                 <small class="data-note table-note" id="table-note"></small>
               </div>
-              <input id="player-search" type="search" placeholder="Search player or club" aria-label="Search players" />
+              <div class="search-action board-search-action">
+                <input id="player-search" type="search" placeholder="Search player or club" aria-label="Search players" />
+                <button type="button" id="player-search-submit">View</button>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
@@ -217,6 +220,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260605-search-unqualified"></script>
+    <script src="script.js?v=20260606-firefox-search"></script>
   </body>
 </html>

@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball" />
     <meta name="twitter:description" content="Explore MLB stats by season, team, league, player, custom year range, and matchup." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260604-scroll-nav" />
+    <link rel="stylesheet" href="styles.css?v=20260606-firefox-search" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -65,7 +65,10 @@
             <h1>League intelligence for every inning.</h1>
             <div class="hero-search">
               <label for="hero-player-search">Search Player Or Club</label>
-              <input id="hero-player-search" type="search" list="player-search-options" placeholder="Try Aaron Judge, Red Sox, Dodgers..." aria-label="Search player or club" />
+              <div class="search-action">
+                <input id="hero-player-search" type="search" list="player-search-options" placeholder="Try Aaron Judge, Red Sox, Dodgers..." aria-label="Search player or club" />
+                <button type="button" id="hero-search-submit">View</button>
+              </div>
               <datalist id="player-search-options"></datalist>
             </div>
           </div>
@@ -159,7 +162,10 @@
                 <h2 id="table-title">Sortable league leaders</h2>
                 <small class="data-note table-note" id="table-note"></small>
               </div>
-              <input id="player-search" type="search" list="player-search-options" placeholder="Search player or club" aria-label="Search players" />
+              <div class="search-action board-search-action">
+                <input id="player-search" type="search" list="player-search-options" placeholder="Search player or club" aria-label="Search players" />
+                <button type="button" id="player-search-submit">View</button>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
@@ -279,6 +285,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260605-search-unqualified"></script>
+    <script src="script.js?v=20260606-firefox-search"></script>
   </body>
 </html>

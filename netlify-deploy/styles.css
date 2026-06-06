@@ -265,6 +265,31 @@ h2 {
   background: #fff;
 }
 
+.search-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.search-action button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 14px;
+  color: #fff;
+  background: var(--navy);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.search-action button:hover {
+  background: #17476f;
+}
+
+.board-search-action {
+  width: min(360px, 100%);
+}
+
 .score-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1490,6 +1515,10 @@ td {
   select,
   input[type="search"] {
     min-height: 42px;
+  }
+
+  .search-action {
+    width: 100%;
   }
 
   .season-control,

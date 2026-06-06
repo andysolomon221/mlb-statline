@@ -1194,16 +1194,48 @@ function currentPlayerSearchQuery() {
 function matchesPlayerSearch(player, query) {
   if (!query) return true;
   const scope = leaderScopeLabel();
-  return `${player.name} ${player.team} ${player.teamName || ""} ${scope}`.toLowerCase().includes(query);
+  const haystack = normalizeSearchText(`${player.name} ${player.team} ${player.teamName || ""} ${scope}`);
+  const needles = searchNeedles(query);
+  return needles.some((needle) => haystack.includes(needle));
 }
 
 function cleanSearchInput(value) {
   return String(value || "").replace(/\s+-\s+[^-]+(?:\s+-\s+.+)?$/, "").trim();
 }
 
+function normalizeSearchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function searchNeedles(query) {
+  const normalized = normalizeSearchText(query);
+  const parts = normalized.split(" ");
+  const firstDashLikeName = normalized.split(/\s+(?:mlb|of|dh|c|1b|2b|3b|ss|sp|rp|p|new|york|los|angeles|boston|chicago|san|st\\.?|st|bay|city|sox|yankees|dodgers|mets|red|blue|white|guardians|orioles|rays|jays|tigers|royals|twins|astros|mariners|angels|athletics|rangers|braves|marlins|nationals|phillies|cubs|reds|brewers|pirates|cardinals|diamondbacks|rockies|padres|giants)\\b/)[0].trim();
+  return Array.from(new Set([
+    normalized,
+    firstDashLikeName,
+    parts.length >= 2 ? `${parts[0]} ${parts[1]}` : normalized
+  ].filter(Boolean)));
+}
+
 function revealPlayerBoardFromHero() {
   if (!currentPlayerSearchQuery()) return;
   document.querySelector("#leaders")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function submitPlayerSearch(sourceInput) {
+  const playerSearch = document.querySelector("#player-search");
+  const heroPlayerSearch = document.querySelector("#hero-player-search");
+  const value = sourceInput?.value || playerSearch?.value || heroPlayerSearch?.value || "";
+  if (playerSearch) playerSearch.value = value;
+  if (heroPlayerSearch) heroPlayerSearch.value = value;
+  renderChart();
+  renderTable();
+  revealPlayerBoardFromHero();
 }
 
 function playerSearchLabel(player) {
@@ -1427,6 +1459,12 @@ function bindEvents() {
     renderChart();
     renderTable();
   });
+  playerSearch.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submitPlayerSearch(playerSearch);
+    }
+  });
   heroPlayerSearch?.addEventListener("input", () => {
     playerSearch.value = heroPlayerSearch.value;
     renderChart();
@@ -1440,12 +1478,12 @@ function bindEvents() {
   });
   heroPlayerSearch?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
-      playerSearch.value = heroPlayerSearch.value;
-      renderChart();
-      renderTable();
-      revealPlayerBoardFromHero();
+      event.preventDefault();
+      submitPlayerSearch(heroPlayerSearch);
     }
   });
+  document.querySelector("#hero-search-submit")?.addEventListener("click", () => submitPlayerSearch(heroPlayerSearch));
+  document.querySelector("#player-search-submit")?.addEventListener("click", () => submitPlayerSearch(playerSearch));
 
   document.querySelector("#team-metric-select").addEventListener("change", (event) => {
     activeTeamMetric = event.target.value;
