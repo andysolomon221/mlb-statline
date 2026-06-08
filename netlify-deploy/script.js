@@ -234,6 +234,7 @@ const boardConfig = {
       ["ops", "OPS"],
       ["hits", "H"],
       ["hr", "HR"],
+      ["sb", "SB"],
       ["rbi", "RBI"],
       ["slg", "SLG"]
     ],
@@ -241,11 +242,12 @@ const boardConfig = {
       ["ops", "OPS"],
       ["hits", "Hits"],
       ["hr", "HR"],
+      ["sb", "SB"],
       ["rbi", "RBI"],
       ["slg", "SLG"],
       ["avg", "AVG"]
     ],
-    sortMap: { avg: "avg", ops: "ops", hits: "hits", hr: "homeRuns", rbi: "rbi", slg: "slg" },
+    sortMap: { avg: "avg", ops: "ops", hits: "hits", hr: "homeRuns", sb: "stolenBases", rbi: "rbi", slg: "slg" },
     rateMetrics: ["avg", "ops", "slg"],
     weightKey: "pa",
     lowerBetter: []
@@ -255,6 +257,7 @@ const boardConfig = {
       ["runs", "Runs"],
       ["hits", "Hits"],
       ["hr", "HR"],
+      ["sb", "SB"],
       ["rbi", "RBI"],
       ["ops", "OPS"],
       ["avg", "AVG"],
@@ -492,6 +495,7 @@ function mapApiPlayer(split) {
     slg: toNumber(stat.slg),
     hits: toNumber(stat.hits),
     hr: toNumber(stat.homeRuns),
+    sb: toNumber(stat.stolenBases),
     rbi: toNumber(stat.rbi),
     ab: toNumber(stat.atBats),
     pa: toNumber(stat.plateAppearances),
@@ -741,6 +745,7 @@ function mapTeamStat(split) {
     ops: toNumber(stat.ops),
     hits: toNumber(stat.hits),
     hr: toNumber(stat.homeRuns),
+    sb: toNumber(stat.stolenBases),
     rbi: toNumber(stat.rbi),
     runs: toNumber(stat.runs),
     strikeouts: toNumber(stat.strikeOuts),
@@ -809,6 +814,7 @@ async function currentTeams() {
       earnedRuns: 0,
       walks: 0,
       hr: 0,
+      sb: 0,
       rbi: 0,
       strikeouts: 0,
       saves: 0,
@@ -829,6 +835,7 @@ async function currentTeams() {
     existing.earnedRuns += team.earnedRuns || 0;
     existing.walks += team.walks || 0;
     existing.hr += team.hr || 0;
+    existing.sb += team.sb || 0;
     existing.rbi += team.rbi || 0;
     existing.strikeouts += team.strikeouts || 0;
     existing.saves += team.saves || 0;
