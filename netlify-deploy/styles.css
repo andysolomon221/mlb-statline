@@ -136,6 +136,10 @@ select {
   content: "Put two players side by side for single-season or historical range comparisons.";
 }
 
+.rail-nav a[href="career.html"]::after {
+  content: "Pick one player and scan their year-by-year batting or pitching career log.";
+}
+
 .rail-nav a[href="splits.html"]::after {
   content: "One-player split tables by season, year range, handedness, home/away, day/night, and more.";
 }
@@ -572,6 +576,19 @@ input[type="search"] {
 
 .summary-link:hover {
   text-decoration: underline;
+}
+
+.career-reference-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.total-row td {
+  border-top: 2px solid var(--ink);
+  color: var(--ink);
+  background: #fff;
+  font-weight: 900;
 }
 
 .split-controls {
@@ -1811,12 +1828,16 @@ td {
     order: 8;
   }
 
-  .rail-nav a[href="splits.html"] {
+  .rail-nav a[href="career.html"] {
     order: 9;
   }
 
-  .rail-nav a[href="fantasy.html"] {
+  .rail-nav a[href="splits.html"] {
     order: 10;
+  }
+
+  .rail-nav a[href="fantasy.html"] {
+    order: 11;
   }
 
   .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="teams.html"]):not([href="news.html"]) {

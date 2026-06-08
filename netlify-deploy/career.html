@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Career</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/career" />
+    <meta name="description" content="View MLB player year-by-year batting or pitching stats, career totals, and Baseball Reference links." />
+    <meta property="og:title" content="Statline Baseball Career" />
+    <meta property="og:description" content="View MLB player year-by-year batting or pitching stats, career totals, and Baseball Reference links." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/career" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Statline Baseball Career" />
+    <meta name="twitter:description" content="View MLB player year-by-year batting or pitching stats, career totals, and Baseball Reference links." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260608-career-page" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="career">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a class="active" href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="career-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Career Log</p>
+            <h1>One player, season by season.</h1>
+          </div>
+          <div class="season-control split-search-card" aria-label="Career player search">
+            <label for="career-player-query">Player</label>
+            <div class="search-action">
+              <input id="career-player-query" type="search" value="Aaron Judge" list="career-player-options" autocomplete="off" placeholder="Search a player" aria-label="Search player" />
+              <button type="button" id="career-player-submit">View</button>
+            </div>
+            <datalist id="career-player-options"></datalist>
+          </div>
+        </header>
+
+        <section class="panel career-controls-panel" aria-label="Career controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Player Career</p>
+              <h2>Year-by-year line</h2>
+            </div>
+          </div>
+          <div class="compare-control-grid">
+            <label>
+              <span>Stat Type</span>
+              <select id="career-group" aria-label="Career stat type">
+                <option value="hitting">Batting</option>
+                <option value="pitching">Pitching</option>
+              </select>
+            </label>
+            <label>
+              <span>Sort</span>
+              <select id="career-sort" aria-label="Career table sort">
+                <option value="season">Season</option>
+                <option value="ops">OPS</option>
+                <option value="homeRuns">HR</option>
+                <option value="stolenBases">SB</option>
+                <option value="era">ERA</option>
+                <option value="strikeOuts">SO</option>
+              </select>
+            </label>
+            <label>
+              <span>Baseball Reference</span>
+              <a id="career-reference-link" class="summary-link career-reference-button" href="https://www.baseball-reference.com/search/search.fcgi?search=Aaron%20Judge" target="_blank" rel="noopener noreferrer">Open player lookup</a>
+            </label>
+          </div>
+        </section>
+
+        <section class="score-strip career-summary" aria-label="Career summary">
+          <article>
+            <span>Selected Player</span>
+            <strong id="career-player-name">Aaron Judge</strong>
+            <small id="career-player-note">Search by name, then choose a player.</small>
+          </article>
+          <article>
+            <span>Seasons</span>
+            <strong id="career-season-count">--</strong>
+            <small id="career-season-note">Year-by-year MLB seasons</small>
+          </article>
+          <article>
+            <span id="career-total-label">Career HR</span>
+            <strong id="career-total-primary">--</strong>
+            <small id="career-total-note">Selected stat type</small>
+          </article>
+          <article>
+            <span id="career-rate-label">Career OPS</span>
+            <strong id="career-rate-primary">--</strong>
+            <small id="career-rate-note">Calculated from yearly totals</small>
+          </article>
+        </section>
+
+        <section class="panel leaderboard career-table-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Season Log</p>
+              <h2 id="career-table-title">Batting seasons</h2>
+            </div>
+            <div class="split-status" id="career-status">Loading career data...</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="career-head"></thead>
+              <tbody id="career-table"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="career.js?v=20260608-career-page"></script>
+  </body>
+</html>
