@@ -117,6 +117,8 @@ let activeTeamName = "All teams";
 let activePosition = "all";
 let activeBoardSize = "leaders";
 let activeTeamMetric = "wins";
+let activeQualifier = "auto";
+let activeSearchScope = "all";
 let leaderRows = [];
 let leaderError = "";
 let leadersLoading = true;
@@ -250,6 +252,14 @@ const boardConfig = {
     sortMap: { avg: "avg", ops: "ops", hits: "hits", hr: "homeRuns", sb: "stolenBases", rbi: "rbi", slg: "slg" },
     rateMetrics: ["avg", "ops", "slg"],
     weightKey: "pa",
+    qualifierLabel: "Min PA",
+    qualifierOptions: [
+      ["auto", "Auto"],
+      ["0", "All"],
+      ["100", "100+"],
+      ["300", "300+"],
+      ["500", "500+"]
+    ],
     lowerBetter: []
     ,
     teamMetrics: [
@@ -294,6 +304,15 @@ const boardConfig = {
     sortMap: { era: "era", wins: "wins", losses: "losses", hits: "hits", strikeouts: "strikeOuts", whip: "whip", saves: "saves" },
     rateMetrics: ["era", "whip"],
     weightKey: "ipOuts",
+    qualifierLabel: "Min IP",
+    qualifierOptions: [
+      ["auto", "Auto"],
+      ["0", "All"],
+      ["75", "25+"],
+      ["150", "50+"],
+      ["300", "100+"],
+      ["450", "150+"]
+    ],
     lowerBetter: ["era", "whip"]
     ,
     teamMetrics: [
@@ -413,6 +432,12 @@ function leaderScopeLabel() {
 
 function playerWeight(player) {
   return Math.max(1, Number(player[config.weightKey]) || 1);
+}
+
+function manualQualifierThreshold() {
+  if (activeQualifier === "auto") return null;
+  const threshold = Number(activeQualifier);
+  return Number.isFinite(threshold) ? threshold : null;
 }
 
 function mlbStatsUrl(year, sortMetric = activeMetric) {
@@ -609,6 +634,8 @@ function sortedRows(rows) {
 
 function qualifiedRows(rows, metric = activeMetric) {
   const positionRows = positionFilteredRows(rows);
+  const manualThreshold = manualQualifierThreshold();
+  if (manualThreshold !== null) return positionRows.filter((player) => playerWeight(player) >= manualThreshold);
   if (activeTeamId !== "all") return positionRows;
   if (!config.rateMetrics.includes(metric)) return positionRows;
   const years = activeMode === "single" ? 1 : yearList(activeRange.start, activeRange.end).length;
@@ -1137,7 +1164,7 @@ function renderChart() {
   if (leaderError) return renderLeaderError(leaderError);
   const direction = defaultSortDir(activeMetric);
   const query = currentPlayerSearchQuery();
-  const sourceRows = query ? positionFilteredRows(leaderRows) : qualifiedRows(leaderRows);
+  const sourceRows = query && manualQualifierThreshold() === null ? positionFilteredRows(leaderRows) : qualifiedRows(leaderRows);
   const data = sourceRows.filter((player) => matchesPlayerSearch(player, query)).slice().sort((a, b) => (a[activeMetric] - b[activeMetric]) * direction).slice(0, 7);
   if (!data.length) {
     document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">No players found for this filter.</div>`;
@@ -1171,16 +1198,19 @@ function renderTable() {
   if (leaderError) return renderLeaderError(leaderError);
   const query = currentPlayerSearchQuery();
   const hasSearch = Boolean(query);
-  const sourceRows = hasSearch ? positionFilteredRows(leaderRows) : qualifiedRows(leaderRows, activeSort.key);
+  const sourceRows = hasSearch && manualQualifierThreshold() === null ? positionFilteredRows(leaderRows) : qualifiedRows(leaderRows, activeSort.key);
   const rows = sortedRows(sourceRows
     .filter((player) => matchesPlayerSearch(player, query))
   );
   const visibleRows = !hasSearch && activeBoardSize === "leaders" ? rows.slice(0, 20) : rows;
   const note = document.querySelector("#table-note");
   if (note) {
+    const qualifierText = activeQualifier === "auto"
+      ? ""
+      : ` Minimum ${boardType === "pitching" ? "IP" : "PA"} filter is active.`;
     note.textContent = hasSearch
-      ? `Showing all ${rows.length} matching ${config.label} ${rows.length === 1 ? "player" : "players"}. Clear search to return to ${activeBoardSize === "leaders" ? "Top 20" : "the full board"}.`
-      : "";
+      ? `Showing all ${rows.length} matching ${config.label} ${rows.length === 1 ? "player" : "players"} in ${currentSearchScope()} search. Clear search to return to ${activeBoardSize === "leaders" ? "Top 20" : "the full board"}.${qualifierText}`
+      : qualifierText.trim();
   }
 
   document.querySelector("#player-table").innerHTML = visibleRows.map((player) => `
@@ -1194,17 +1224,26 @@ function renderTable() {
       <td>${player.team}</td>
       ${config.columns.map(([key]) => `<td>${fmtStat(key, player[key])}</td>`).join("")}
     </tr>
-  `).join("") || `<tr><td colspan="9" class="empty-row">No players match this filter.</td></tr>`;
+  `).join("") || `<tr><td colspan="${config.columns.length + 2}" class="empty-row">No players match this filter.</td></tr>`;
 }
 
 function currentPlayerSearchQuery() {
   return cleanSearchInput(document.querySelector("#player-search")?.value || "").toLowerCase();
 }
 
+function currentSearchScope() {
+  return document.querySelector("#search-scope")?.value || activeSearchScope || "all";
+}
+
 function matchesPlayerSearch(player, query) {
   if (!query) return true;
   const scope = leaderScopeLabel();
-  const haystack = normalizeSearchText(`${player.name} ${player.team} ${player.teamName || ""} ${scope}`);
+  const searchScope = currentSearchScope();
+  const haystack = searchScope === "player"
+    ? normalizeSearchText(player.name)
+    : searchScope === "team"
+      ? normalizeSearchText(`${player.team} ${player.teamName || ""} ${scope}`)
+      : normalizeSearchText(`${player.name} ${player.team} ${player.teamName || ""} ${scope}`);
   const needles = searchNeedles(query);
   return needles.some((needle) => haystack.includes(needle));
 }
@@ -1292,6 +1331,12 @@ function renderBoardControls() {
     .map(([key, label]) => `<option value="${key}">${label}</option>`)
     .join("");
   document.querySelector("#position-filter").value = activePosition;
+  document.querySelector(".qualifier-filter label").textContent = config.qualifierLabel;
+  document.querySelector("#qualifier-filter").innerHTML = config.qualifierOptions
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join("");
+  document.querySelector("#qualifier-filter").value = activeQualifier;
+  document.querySelector("#search-scope").value = activeSearchScope;
 }
 
 function teamMetricLabel(key = activeTeamMetric) {
@@ -1516,6 +1561,18 @@ function bindEvents() {
     renderTable();
   });
 
+  document.querySelector("#qualifier-filter").addEventListener("change", (event) => {
+    activeQualifier = event.target.value;
+    renderChart();
+    renderTable();
+  });
+
+  document.querySelector("#search-scope").addEventListener("change", (event) => {
+    activeSearchScope = event.target.value;
+    renderChart();
+    renderTable();
+  });
+
   document.querySelectorAll("[data-board-size]").forEach((button) => {
     button.addEventListener("click", () => {
       activeBoardSize = button.dataset.boardSize;
@@ -1528,6 +1585,11 @@ function bindEvents() {
     heading.addEventListener("click", () => {
       const key = heading.dataset.sort;
       activeSort = { key, dir: activeSort.key === key ? activeSort.dir * -1 : defaultSortDir(key) };
+      if (config.metrics.some(([metric]) => metric === key)) {
+        activeMetric = key;
+        document.querySelector("#metric-select").value = activeMetric;
+        renderChart();
+      }
       renderTable();
     });
   });

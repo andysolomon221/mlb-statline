@@ -136,6 +136,10 @@
               <label for="position-filter">Position</label>
               <select id="position-filter" aria-label="Position filter"></select>
             </div>
+            <div class="qualifier-filter">
+              <label for="qualifier-filter">Min IP</label>
+              <select id="qualifier-filter" aria-label="Minimum innings pitched"></select>
+            </div>
             <div class="league-toggle board-size-toggle" role="group" aria-label="Player board size">
               <button class="active" data-board-size="leaders">Top 20</button>
               <button data-board-size="all">All players</button>
@@ -180,6 +184,11 @@
               </div>
               <div class="search-action board-search-action">
                 <input id="player-search" type="search" placeholder="Search player or club" aria-label="Search players" />
+                <select id="search-scope" aria-label="Search scope">
+                  <option value="all">All</option>
+                  <option value="player">Player</option>
+                  <option value="team">Team</option>
+                </select>
                 <button type="button" id="player-search-submit">View</button>
               </div>
             </div>
@@ -221,6 +230,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260608-pitcher-losses"></script>
+    <script src="script.js?v=20260609-search-qualifiers"></script>
   </body>
 </html>
