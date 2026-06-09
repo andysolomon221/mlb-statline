@@ -276,6 +276,7 @@ const boardConfig = {
       ["ipOuts", "IP"],
       ["era", "ERA"],
       ["wins", "W"],
+      ["losses", "L"],
       ["hits", "H"],
       ["strikeouts", "SO"],
       ["whip", "WHIP"],
@@ -286,13 +287,14 @@ const boardConfig = {
       ["strikeouts", "SO"],
       ["hits", "Hits Allowed"],
       ["wins", "Wins"],
+      ["losses", "Losses"],
       ["whip", "WHIP"],
       ["saves", "Saves"]
     ],
-    sortMap: { era: "era", wins: "wins", hits: "hits", strikeouts: "strikeOuts", whip: "whip", saves: "saves" },
+    sortMap: { era: "era", wins: "wins", losses: "losses", hits: "hits", strikeouts: "strikeOuts", whip: "whip", saves: "saves" },
     rateMetrics: ["era", "whip"],
     weightKey: "ipOuts",
-    lowerBetter: ["era", "whip"]
+    lowerBetter: ["era", "whip", "losses"]
     ,
     teamMetrics: [
       ["wins", "Wins"],
@@ -478,6 +480,7 @@ function mapApiPlayer(split) {
       position: gamesStarted >= Math.max(1, gamesPitched / 2) ? "SP" : "RP",
       era: toNumber(stat.era),
       wins: toNumber(stat.wins),
+      losses: toNumber(stat.losses),
       hits: toNumber(stat.hits),
       strikeouts: toNumber(stat.strikeOuts),
       whip: toNumber(stat.whip),

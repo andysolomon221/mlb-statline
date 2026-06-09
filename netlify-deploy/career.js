@@ -32,6 +32,7 @@ const careerColumns = {
     ["gamesStarted", "GS"],
     ["inningsPitched", "IP"],
     ["wins", "W"],
+    ["losses", "L"],
     ["saves", "SV"],
     ["hits", "H"],
     ["earnedRuns", "ER"],
@@ -205,6 +206,7 @@ function mapSeasonRow(split) {
     ops: toNumber(stat.ops),
     inningsPitched: stat.inningsPitched || outsToInnings(ipOuts),
     wins: toNumber(stat.wins),
+    losses: toNumber(stat.losses),
     saves: toNumber(stat.saves),
     earnedRuns: toNumber(stat.earnedRuns),
     era: toNumber(stat.era),
@@ -216,7 +218,7 @@ function mapSeasonRow(split) {
 function combineRows(rows) {
   const teamList = Array.from(new Set(rows.flatMap((row) => row.teamList || [row.team]).filter(Boolean)));
   const combined = rows.reduce((acc, row) => {
-    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "saves", "earnedRuns", "ipOuts"].forEach((key) => {
+    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "losses", "saves", "earnedRuns", "ipOuts"].forEach((key) => {
       acc[key] += toNumber(row[key]);
     });
     return acc;
@@ -239,6 +241,7 @@ function combineRows(rows) {
     sacFlies: 0,
     totalBases: 0,
     wins: 0,
+    losses: 0,
     saves: 0,
     earnedRuns: 0,
     ipOuts: 0
@@ -318,7 +321,7 @@ async function fetchCareerRows() {
 
 function careerTotals(rows) {
   const totals = rows.reduce((acc, row) => {
-    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "saves", "earnedRuns", "ipOuts"].forEach((key) => {
+    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "losses", "saves", "earnedRuns", "ipOuts"].forEach((key) => {
       acc[key] += toNumber(row[key]);
     });
     return acc;
@@ -337,6 +340,7 @@ function careerTotals(rows) {
     sacFlies: 0,
     totalBases: 0,
     wins: 0,
+    losses: 0,
     saves: 0,
     earnedRuns: 0,
     ipOuts: 0
