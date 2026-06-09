@@ -584,6 +584,36 @@ input[type="search"] {
   min-height: 40px;
 }
 
+.career-team-panel {
+  margin-top: 18px;
+}
+
+.career-team-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.career-team-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.career-team-chip strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.career-team-chip small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .total-row td {
   border-top: 2px solid var(--ink);
   color: var(--ink);

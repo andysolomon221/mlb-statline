@@ -214,6 +214,7 @@ function mapSeasonRow(split) {
 }
 
 function combineRows(rows) {
+  const teamList = Array.from(new Set(rows.flatMap((row) => row.teamList || [row.team]).filter(Boolean)));
   const combined = rows.reduce((acc, row) => {
     ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "saves", "earnedRuns", "ipOuts"].forEach((key) => {
       acc[key] += toNumber(row[key]);
@@ -221,7 +222,9 @@ function combineRows(rows) {
     return acc;
   }, {
     season: rows[0]?.season || 0,
-    team: "MLB",
+    team: teamList.length ? teamList.join("/") : "MLB",
+    teamList,
+    multiTeam: teamList.length > 1,
     gamesPlayed: 0,
     gamesStarted: 0,
     plateAppearances: 0,
@@ -257,8 +260,21 @@ function collapseCareerRows(rows) {
     bySeason.get(row.season).push(row);
   });
   return Array.from(bySeason.values()).map((seasonRows) => {
+    const teamRows = seasonRows.filter((row) => !row.isAggregate);
+    const teamList = Array.from(new Set(teamRows.map((row) => row.team).filter(Boolean)));
+    if (seasonRows.length === 1 && !seasonRows[0].isAggregate) {
+      return { ...seasonRows[0], teamList, multiTeam: false };
+    }
     const aggregate = seasonRows.find((row) => row.isAggregate);
-    return aggregate || combineRows(seasonRows);
+    if (aggregate) {
+      return {
+        ...aggregate,
+        team: teamList.length > 1 ? teamList.join("/") : (teamList[0] || aggregate.team),
+        teamList: teamList.length ? teamList : [aggregate.team].filter(Boolean),
+        multiTeam: teamList.length > 1
+      };
+    }
+    return combineRows(seasonRows);
   }).sort((a, b) => a.season - b.season);
 }
 
@@ -403,6 +419,25 @@ function renderSummary(rows) {
   }
 }
 
+function renderTeamTimeline(rows) {
+  const timeline = [];
+  rows.forEach((row) => {
+    const teams = row.teamList?.length ? row.teamList : [row.team];
+    teams.filter(Boolean).forEach((team) => {
+      const previous = timeline[timeline.length - 1];
+      if (previous && previous.team === team && row.season <= previous.end + 1) {
+        previous.end = Math.max(previous.end, row.season);
+      } else {
+        timeline.push({ team, start: row.season, end: row.season });
+      }
+    });
+  });
+  document.querySelector("#career-team-timeline").innerHTML = timeline.length ? timeline.map((item) => {
+    const years = item.start === item.end ? item.start : `${item.start}-${item.end}`;
+    return `<span class="career-team-chip"><strong>${escapeHtml(item.team)}</strong><small>${years}</small></span>`;
+  }).join("") : `<span class="career-team-chip"><strong>No teams found</strong><small>Try another player</small></span>`;
+}
+
 function renderRows(rows) {
   const visible = sortedRows(rows);
   const totals = careerTotals(rows);
@@ -430,10 +465,12 @@ async function renderCareer() {
   try {
     const rows = await fetchCareerRows();
     renderSummary(rows);
+    renderTeamTimeline(rows);
     renderRows(rows);
     document.querySelector("#career-status").textContent = rows.length ? `${rows.length} seasons loaded` : "No seasons found";
   } catch (error) {
     document.querySelector("#career-status").textContent = "Could not load career data";
+    document.querySelector("#career-team-timeline").innerHTML = `<span class="career-team-chip"><strong>No teams found</strong><small>Try another player</small></span>`;
     document.querySelector("#career-table").innerHTML = `<tr><td colspan="${careerColumns[activeGroup].length}" class="empty-row">Could not load career data. Try another player or stat type.</td></tr>`;
   }
 }

@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Career" />
     <meta name="twitter:description" content="View MLB player year-by-year batting or pitching stats, career totals, and Baseball Reference links." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260608-career-page" />
+    <link rel="stylesheet" href="styles.css?v=20260608-team-timeline" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -131,6 +131,17 @@
           </article>
         </section>
 
+        <section class="panel career-team-panel" aria-label="Career team timeline">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Teams</p>
+              <h2>Career path</h2>
+            </div>
+          </div>
+          <div class="career-team-timeline" id="career-team-timeline"></div>
+          <small class="data-note">Multi-team seasons list each club while using the combined season stat line.</small>
+        </section>
+
         <section class="panel leaderboard career-table-panel">
           <div class="section-head">
             <div>
@@ -156,6 +167,6 @@
       </main>
     </div>
 
-    <script src="career.js?v=20260608-career-fix"></script>
+    <script src="career.js?v=20260608-team-slashes"></script>
   </body>
 </html>
