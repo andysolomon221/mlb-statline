@@ -22,6 +22,7 @@ const metricSets = {
     ["atBats", "AB", false, 0],
     ["hits", "H", false, 0],
     ["homeRuns", "HR", false, 0],
+    ["stolenBases", "SB", false, 0],
     ["rbi", "RBI", false, 0],
     ["baseOnBalls", "BB", false, 0],
     ["strikeOuts", "SO", true, 0],
@@ -80,6 +81,7 @@ function yearList(start, end) {
 
 function scopeLabel() {
   if (activeMode === "single") return activeSeason;
+  if (activeMode === "career") return "Full career";
   if (activeMode === "careerSeasons") {
     const range = careerSeasonRange();
     return range.start === range.end ? `Career season ${range.start}` : `Career seasons ${range.start}-${range.end}`;
@@ -113,6 +115,10 @@ function cleanPlayerInput(value) {
   return value.replace(/\s+-\s+[^()]+(?:\s+\([^)]+\))?$/, "").replace(/\s+\([^)]+\)$/, "").trim();
 }
 
+function normalizeName(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 function playerContextLabel(person) {
   const parts = [person.position || "MLB"];
   if (person.teamName || person.team) {
@@ -129,6 +135,24 @@ function displayPlayerOption(person) {
   return `${person.fullName} - ${playerContextLabel(person)}`;
 }
 
+function playerSearchRank(person, query) {
+  const name = normalizeName(person.fullName);
+  const cleanQuery = normalizeName(query);
+  const groupMatch = activeGroup === "pitching"
+    ? person.position === "P"
+    : person.position !== "P";
+  let rank = 0;
+  if (name === cleanQuery) rank += 100;
+  if (person.mlbDebutDate) rank += 40;
+  if (groupMatch) rank += 20;
+  if (person.teamName || person.team) rank += 10;
+  return rank;
+}
+
+function rankPeople(people, query) {
+  return people.slice().sort((a, b) => playerSearchRank(b, query) - playerSearchRank(a, query));
+}
+
 async function searchPeople(query) {
   const clean = query.trim();
   if (!clean) return [];
@@ -143,8 +167,9 @@ async function searchPeople(query) {
     teamName: person.currentTeam?.name || "",
     mlbDebutDate: person.mlbDebutDate || ""
   }));
-  peopleCache.set(cacheKey, people);
-  return people;
+  const ranked = rankPeople(people, clean);
+  peopleCache.set(cacheKey, ranked);
+  return ranked;
 }
 
 function renderCandidates(side, people) {
@@ -159,12 +184,16 @@ function renderCandidates(side, people) {
 async function hydratePlayer(side) {
   const input = document.querySelector(`#compare-player-${side}`);
   const clean = cleanPlayerInput(input.value);
+  const rawValue = input.value.trim();
   const candidates = side === "a" ? candidatesA : candidatesB;
-  let match = candidates.find((person) => person.fullName.toLowerCase() === clean.toLowerCase());
+  let match = candidates.find((person) => normalizeName(displayPlayerOption(person)) === normalizeName(rawValue));
+  if (!match) {
+    match = rankPeople(candidates.filter((person) => normalizeName(person.fullName) === normalizeName(clean)), clean)[0];
+  }
   if (!match) {
     const people = await searchPeople(clean);
     renderCandidates(side, people);
-    match = people[0];
+    match = rankPeople(people.filter((person) => normalizeName(person.fullName) === normalizeName(clean)), clean)[0] || people[0];
   }
   if (!match) throw new Error(`Could not find ${clean}`);
   if (side === "a") playerA = match;
@@ -187,6 +216,7 @@ function mapSeasonStat(stat = {}) {
     atBats,
     hits,
     homeRuns: toNumber(stat.homeRuns),
+    stolenBases: toNumber(stat.stolenBases),
     rbi: toNumber(stat.rbi),
     baseOnBalls: walks,
     strikeOuts: toNumber(stat.strikeOuts),
@@ -198,6 +228,28 @@ function mapSeasonStat(stat = {}) {
     earnedRuns: toNumber(stat.earnedRuns),
     ipOuts
   };
+}
+
+function combineStats(stats) {
+  return stats.reduce((total, stat) => {
+    Object.entries(stat).forEach(([key, value]) => {
+      total[key] = (total[key] || 0) + toNumber(value);
+    });
+    return total;
+  }, {});
+}
+
+function collapseSeasonRows(rows) {
+  const bySeason = new Map();
+  rows.forEach((row) => {
+    if (!bySeason.has(row.season)) bySeason.set(row.season, []);
+    bySeason.get(row.season).push(row);
+  });
+  return Array.from(bySeason.entries()).map(([season, seasonRows]) => {
+    const aggregate = seasonRows.find((row) => row.isAggregate);
+    if (aggregate) return { season, stat: aggregate.stat };
+    return { season, stat: combineStats(seasonRows.map((row) => row.stat)) };
+  }).sort((a, b) => a.season - b.season);
 }
 
 async function fetchSeasonStat(player, year) {
@@ -228,9 +280,10 @@ async function fetchFirstSeasonRows(player) {
     const params = new URLSearchParams({ stats: "yearByYear", group: activeGroup });
     const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${player.id}/stats?${params.toString()}`);
     rows = (data.stats?.[0]?.splits || [])
-      .map((split) => ({ season: Number(split.season), stat: mapSeasonStat(split.stat || {}) }))
+      .map((split) => ({ season: Number(split.season), stat: mapSeasonStat(split.stat || {}), isAggregate: !split.team }))
       .filter((row) => Number.isFinite(row.season) && hasUsefulStat(row.stat))
       .sort((a, b) => a.season - b.season);
+    rows = collapseSeasonRows(rows);
   } catch (error) {
     rows = [];
   }
@@ -248,15 +301,12 @@ async function fetchFirstSeasonRows(player) {
 
 async function playerStats(player) {
   const range = careerSeasonRange();
-  const stats = activeMode === "careerSeasons"
-    ? (await fetchFirstSeasonRows(player)).slice(range.start - 1, range.end).map((row) => row.stat)
-    : await Promise.all((activeMode === "single" ? [Number(activeSeason)] : yearList(activeRange.start, activeRange.end)).map((year) => fetchSeasonStat(player, year)));
-  return finalizeStats(stats.reduce((total, stat) => {
-    Object.entries(stat).forEach(([key, value]) => {
-      total[key] = (total[key] || 0) + toNumber(value);
-    });
-    return total;
-  }, {}));
+  const stats = activeMode === "career"
+    ? (await fetchFirstSeasonRows(player)).map((row) => row.stat)
+    : activeMode === "careerSeasons"
+      ? (await fetchFirstSeasonRows(player)).slice(range.start - 1, range.end).map((row) => row.stat)
+      : await Promise.all((activeMode === "single" ? [Number(activeSeason)] : yearList(activeRange.start, activeRange.end)).map((year) => fetchSeasonStat(player, year)));
+  return finalizeStats(combineStats(stats));
 }
 
 function finalizeStats(stat) {
@@ -275,6 +325,12 @@ function finalizeStats(stat) {
 }
 
 function playerScopeLine(player) {
+  if (activeMode === "career") {
+    const rows = firstSeasonRowsCache.get(firstSeasonRowsKey(player)) || [];
+    const years = rows.map((row) => row.season).filter(Boolean);
+    const seasonText = years.length ? `${years[0]}-${years[years.length - 1]}` : "all MLB seasons";
+    return `Full career (${seasonText})`;
+  }
   if (activeMode !== "careerSeasons") return `${scopeLabel()} ${activeGroup === "hitting" ? "batting" : "pitching"} line`;
   const range = careerSeasonRange();
   const rows = (firstSeasonRowsCache.get(firstSeasonRowsKey(player)) || []).slice(range.start - 1, range.end);

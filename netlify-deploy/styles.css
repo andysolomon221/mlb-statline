@@ -1274,7 +1274,11 @@ td {
 
 .compare-controls-panel[data-active-mode="single"] .compare-range-fields,
 .compare-controls-panel[data-active-mode="single"] .compare-career-season-fields,
+.compare-controls-panel[data-active-mode="range"] .compare-season-field,
 .compare-controls-panel[data-active-mode="range"] .compare-career-season-fields,
+.compare-controls-panel[data-active-mode="career"] .compare-season-field,
+.compare-controls-panel[data-active-mode="career"] .compare-range-fields,
+.compare-controls-panel[data-active-mode="career"] .compare-career-season-fields,
 .compare-controls-panel[data-active-mode="careerSeasons"] .compare-range-fields,
 .compare-controls-panel[data-active-mode="careerSeasons"] .compare-season-field {
   display: none;

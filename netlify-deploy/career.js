@@ -213,6 +213,55 @@ function mapSeasonRow(split) {
   };
 }
 
+function combineRows(rows) {
+  const combined = rows.reduce((acc, row) => {
+    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "saves", "earnedRuns", "ipOuts"].forEach((key) => {
+      acc[key] += toNumber(row[key]);
+    });
+    return acc;
+  }, {
+    season: rows[0]?.season || 0,
+    team: "MLB",
+    gamesPlayed: 0,
+    gamesStarted: 0,
+    plateAppearances: 0,
+    atBats: 0,
+    hits: 0,
+    homeRuns: 0,
+    stolenBases: 0,
+    rbi: 0,
+    baseOnBalls: 0,
+    strikeOuts: 0,
+    hitByPitch: 0,
+    sacFlies: 0,
+    totalBases: 0,
+    wins: 0,
+    saves: 0,
+    earnedRuns: 0,
+    ipOuts: 0
+  });
+  combined.avg = safeRate(combined.hits, combined.atBats);
+  combined.obp = safeRate(combined.hits + combined.baseOnBalls + combined.hitByPitch, combined.atBats + combined.baseOnBalls + combined.hitByPitch + combined.sacFlies);
+  combined.slg = safeRate(combined.totalBases, combined.atBats);
+  combined.ops = combined.obp + combined.slg;
+  combined.era = combined.ipOuts ? (combined.earnedRuns * 27) / combined.ipOuts : 0;
+  combined.whip = combined.ipOuts ? ((combined.baseOnBalls + combined.hits) * 3) / combined.ipOuts : 0;
+  combined.inningsPitched = outsToInnings(combined.ipOuts);
+  return combined;
+}
+
+function collapseCareerRows(rows) {
+  const bySeason = new Map();
+  rows.forEach((row) => {
+    if (!bySeason.has(row.season)) bySeason.set(row.season, []);
+    bySeason.get(row.season).push(row);
+  });
+  return Array.from(bySeason.values()).map((seasonRows) => {
+    const aggregate = seasonRows.find((row) => row.isAggregate);
+    return aggregate || combineRows(seasonRows);
+  }).sort((a, b) => a.season - b.season);
+}
+
 function hasUsefulRow(row) {
   if (row.season < firstCareerSeason || row.season > lastCareerSeason) return false;
   if (activeGroup === "pitching") return row.ipOuts > 0 || row.gamesPlayed > 0;
@@ -224,10 +273,10 @@ async function fetchCareerRowsFor(player, group = activeGroup) {
   if (careerCache.has(cacheKey)) return careerCache.get(cacheKey);
   const params = new URLSearchParams({ stats: "yearByYear", group, sportId: "1", hydrate: "team" });
   const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${player.id}/stats?${params.toString()}`);
-  const rows = (data.stats?.[0]?.splits || [])
-    .map(mapSeasonRow)
+  const rows = collapseCareerRows((data.stats?.[0]?.splits || [])
+    .map((split) => ({ ...mapSeasonRow(split), isAggregate: !split.team }))
     .filter(hasUsefulRow)
-    .sort((a, b) => a.season - b.season);
+    .sort((a, b) => a.season - b.season));
   careerCache.set(cacheKey, rows);
   return rows;
 }
