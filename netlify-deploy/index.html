@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball" />
     <meta name="twitter:description" content="Explore MLB stats by season, team, league, player, custom year range, and matchup." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260608-career-page" />
+    <link rel="stylesheet" href="styles.css?v=20260609-home-jumps" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -78,6 +78,29 @@
             <select id="season-select" aria-label="Select historical season"></select>
           </div>
         </header>
+
+        <section class="quick-jump-panel" aria-label="Quick paths">
+          <a class="quick-jump-card" href="compare.html">
+            <span>Compare</span>
+            <strong>Put Two Players Side By Side</strong>
+            <small>Full careers, single years, custom ranges, or career seasons.</small>
+          </a>
+          <a class="quick-jump-card" href="matchups.html">
+            <span>Matchups</span>
+            <strong>Check A Lineup vs A Pitcher</strong>
+            <small>Roster context, head-to-head history, and ballpark notes.</small>
+          </a>
+          <a class="quick-jump-card" href="career.html">
+            <span>Career</span>
+            <strong>View A Player Year By Year</strong>
+            <small>Season logs, teams, totals, and Baseball Reference lookup.</small>
+          </a>
+          <a class="quick-jump-card" href="index.html?mode=range&start=1990&end=1999&metric=hr#leaders">
+            <span>History</span>
+            <strong>Who Led MLB In HR In The 1990s?</strong>
+            <small>Jump straight into a historical leaderboard.</small>
+          </a>
+        </section>
 
         <section class="panel range-panel" data-active-mode="single" id="history-tools" aria-label="Year range tools">
           <div class="range-toolbar">
