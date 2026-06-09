@@ -294,7 +294,7 @@ const boardConfig = {
     sortMap: { era: "era", wins: "wins", losses: "losses", hits: "hits", strikeouts: "strikeOuts", whip: "whip", saves: "saves" },
     rateMetrics: ["era", "whip"],
     weightKey: "ipOuts",
-    lowerBetter: ["era", "whip", "losses"]
+    lowerBetter: ["era", "whip"]
     ,
     teamMetrics: [
       ["wins", "Wins"],
