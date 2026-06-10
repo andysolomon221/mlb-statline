@@ -347,6 +347,31 @@ function formatValue(key, value, digits) {
   return new Intl.NumberFormat("en-US").format(Math.round(toNumber(value)));
 }
 
+function mobileSummaryMetrics() {
+  return activeGroup === "pitching"
+    ? [["inningsPitched", "IP", 1], ["era", "ERA", 2], ["whip", "WHIP", 2], ["strikeOuts", "SO", 0], ["wins", "W", 0], ["saves", "SV", 0]]
+    : [["plateAppearances", "PA", 0], ["hits", "H", 0], ["homeRuns", "HR", 0], ["rbi", "RBI", 0], ["avg", "AVG", 3], ["ops", "OPS", 3]];
+}
+
+function renderMobileCompareStack(statsA, statsB) {
+  const cards = [[playerA, statsA], [playerB, statsB]];
+  document.querySelector("#compare-mobile-stack").innerHTML = cards.map(([player, stats]) => `
+    <article class="compare-mobile-card">
+      <span>${escapeHtml(player.position || "MLB")}</span>
+      <strong>${escapeHtml(player.fullName)}</strong>
+      <small>${escapeHtml(playerScopeLine(player))}</small>
+      <div class="compare-mobile-stat-grid">
+        ${mobileSummaryMetrics().map(([key, label, digits]) => `
+          <div>
+            <span>${label}</span>
+            <strong>${formatValue(key, stats[key] || 0, digits)}</strong>
+          </div>
+        `).join("")}
+      </div>
+    </article>
+  `).join("");
+}
+
 function renderComparison(statsA, statsB) {
   const metrics = metricSets[activeGroup];
   document.querySelector("#compare-head-a").textContent = playerA.fullName;
@@ -367,6 +392,7 @@ function renderComparison(statsA, statsB) {
       <small>${escapeHtml(playerScopeLine(player))}</small>
     </article>
   `).join("");
+  renderMobileCompareStack(statsA, statsB);
   document.querySelector("#compare-table").innerHTML = metrics.map(([key, label, lowerBetter, digits]) => {
     const valueA = statsA[key] || 0;
     const valueB = statsB[key] || 0;
