@@ -386,6 +386,10 @@ function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
+function statlinePlayerUrl(page, name) {
+  return `${page}?player=${encodeURIComponent(name)}`;
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => ({
     "&": "&amp;",
@@ -1216,10 +1220,16 @@ function renderTable() {
   document.querySelector("#player-table").innerHTML = visibleRows.map((player) => `
     <tr>
       <td>
-        <a class="player-link" href="${baseballReferenceSearchUrl(player.name)}" target="_blank" rel="noopener noreferrer">
-          <span class="avatar">${initials(player.name)}</span>
-          <span>${player.name}</span>
-        </a>
+        <div class="player-cell-stack">
+          <a class="player-link" href="${baseballReferenceSearchUrl(player.name)}" target="_blank" rel="noopener noreferrer">
+            <span class="avatar">${initials(player.name)}</span>
+            <span>${player.name}</span>
+          </a>
+          <div class="player-row-actions" aria-label="Statline player links">
+            <a href="${statlinePlayerUrl("career.html", player.name)}">Career</a>
+            <a href="${statlinePlayerUrl("splits.html", player.name)}">Splits</a>
+          </div>
+        </div>
       </td>
       <td>${player.team}</td>
       ${config.columns.map(([key]) => `<td>${fmtStat(key, player[key])}</td>`).join("")}

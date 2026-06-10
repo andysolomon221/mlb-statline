@@ -517,7 +517,17 @@ function bindEvents() {
   });
 }
 
-renderCandidates([selectedPlayer]);
-document.querySelector("#career-reference-link").href = baseballReferenceSearchUrl(selectedPlayer.fullName);
-bindEvents();
-renderCareer();
+async function initializeCareerPage() {
+  renderCandidates([selectedPlayer]);
+  document.querySelector("#career-reference-link").href = baseballReferenceSearchUrl(selectedPlayer.fullName);
+  bindEvents();
+  const requestedPlayer = new URLSearchParams(window.location.search).get("player");
+  if (requestedPlayer) {
+    document.querySelector("#career-player-query").value = requestedPlayer;
+    await submitCareerSearch();
+    return;
+  }
+  renderCareer();
+}
+
+initializeCareerPage();

@@ -454,8 +454,18 @@ function updateSplitModeControls() {
   updateSummary();
 }
 
-populateSeasonSelect();
-updateSplitModeControls();
-renderPlayerAutocomplete([{ ...selectedPlayer, position: "DH" }]);
-bindEvents();
-loadSplits();
+async function initializeSplitsPage() {
+  populateSeasonSelect();
+  updateSplitModeControls();
+  renderPlayerAutocomplete([{ ...selectedPlayer, position: "DH" }]);
+  bindEvents();
+  const requestedPlayer = new URLSearchParams(window.location.search).get("player");
+  if (requestedPlayer) {
+    document.querySelector("#player-query").value = requestedPlayer;
+    await handleSearch({ preventDefault() {} });
+    return;
+  }
+  loadSplits();
+}
+
+initializeSplitsPage();
