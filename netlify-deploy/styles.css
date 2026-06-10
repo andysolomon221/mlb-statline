@@ -974,6 +974,12 @@ input[type="search"] {
   text-decoration: underline;
 }
 
+.chart-player-actions {
+  margin-top: 3px;
+  padding-left: 0;
+  gap: 7px;
+}
+
 .bar-label span,
 .comparison span,
 .club-meta {

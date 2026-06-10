@@ -1189,6 +1189,10 @@ function renderChart() {
             <strong>${player.name}</strong>
           </a>
           <span>${player.team}</span>
+          <div class="player-row-actions chart-player-actions" aria-label="Statline player links">
+            <a href="${statlinePlayerUrl("career.html", player.name)}">Career</a>
+            <a href="${statlinePlayerUrl("splits.html", player.name)}">Splits</a>
+          </div>
         </div>
         <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
         <div class="bar-value">${fmtStat(activeMetric, player[activeMetric])}</div>
