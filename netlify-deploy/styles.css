@@ -357,6 +357,45 @@ h2 {
   line-height: 1.35;
 }
 
+.rabbit-hole-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) 1fr;
+  align-items: center;
+  gap: 16px;
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+}
+
+.rabbit-hole-panel h2 {
+  font-size: 20px;
+}
+
+.rabbit-hole-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rabbit-hole-links a {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--navy);
+  background: #f8fafc;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.rabbit-hole-links a:hover {
+  border-color: rgba(18, 53, 91, 0.42);
+  background: #fff;
+}
+
 .range-panel {
   margin-bottom: 18px;
 }
@@ -1612,6 +1651,7 @@ td {
 
   .score-strip,
   .quick-jump-panel,
+  .rabbit-hole-panel,
   .range-toolbar,
   .start-grid,
   .workbench,
@@ -1709,6 +1749,18 @@ td {
   .quick-jump-card {
     min-height: auto;
     padding: 13px;
+  }
+
+  .rabbit-hole-panel {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin: 10px 0;
+    padding: 13px;
+  }
+
+  .rabbit-hole-links {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   h1 {
