@@ -491,6 +491,10 @@ h2 {
   width: fit-content;
 }
 
+.advanced-quick-ranges[hidden] {
+  display: none;
+}
+
 .quick-ranges {
   grid-column: 1 / -1;
   width: fit-content;
