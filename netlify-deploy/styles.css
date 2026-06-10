@@ -246,6 +246,27 @@ h2 {
   border-color: rgba(255, 255, 255, 0.28);
 }
 
+.advanced-range-fields {
+  display: none;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.advanced-season-control[data-active-mode="range"] > label,
+.advanced-season-control[data-active-mode="range"] > #advanced-season {
+  display: none;
+}
+
+.advanced-season-control[data-active-mode="range"] .advanced-range-fields {
+  display: grid;
+}
+
+.advanced-range-fields label {
+  color: #dbe8f4;
+  font-size: 11px;
+}
+
 .hero-search {
   display: grid;
   gap: 8px;
@@ -462,6 +483,12 @@ h2 {
 .split-controls-panel[data-active-mode="single"] .split-range-fields,
 .split-controls-panel[data-active-mode="single"] .split-quick-ranges {
   display: none;
+}
+
+.advanced-mode-toggle,
+.advanced-quick-ranges {
+  grid-column: 1 / -1;
+  width: fit-content;
 }
 
 .quick-ranges {

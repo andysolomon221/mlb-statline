@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Advanced" />
     <meta name="twitter:description" content="Explore advanced MLB hitting and pitching boards with deeper rate stats and historical filters." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260608-career-page" />
+    <link rel="stylesheet" href="styles.css?v=20260610-advanced-range" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -65,9 +65,15 @@
             <p class="eyebrow">Advanced Stats</p>
             <h1>Skill signals behind the box score.</h1>
           </div>
-          <div class="season-control" aria-label="Advanced filters">
+          <div class="season-control advanced-season-control" aria-label="Advanced filters">
             <label for="advanced-season">Season</label>
             <select id="advanced-season" aria-label="Select season"></select>
+            <div class="advanced-range-fields">
+              <label for="advanced-range-start">From</label>
+              <select id="advanced-range-start" aria-label="Advanced range start year"></select>
+              <label for="advanced-range-end">To</label>
+              <select id="advanced-range-end" aria-label="Advanced range end year"></select>
+            </div>
             <select id="advanced-team" aria-label="Filter by team">
               <option value="all">All teams</option>
             </select>
@@ -108,6 +114,16 @@
           <div class="league-toggle news-topic-toggle" role="group" aria-label="Player type">
             <button class="active" data-advanced-type="hitting">Hitters</button>
             <button data-advanced-type="pitching">Pitchers</button>
+          </div>
+          <div class="mode-toggle advanced-mode-toggle" role="group" aria-label="Advanced year scope">
+            <button class="active" data-advanced-mode="single">Single year</button>
+            <button data-advanced-mode="range">Year range</button>
+          </div>
+          <div class="quick-ranges advanced-quick-ranges" role="group" aria-label="Advanced quick ranges">
+            <button data-advanced-start="1990" data-advanced-end="1999">1990s</button>
+            <button data-advanced-start="2000" data-advanced-end="2009">2000s</button>
+            <button data-advanced-start="2010" data-advanced-end="2019">2010s</button>
+            <button data-advanced-start="2020" data-advanced-end="2026">2020s</button>
           </div>
           <div class="league-toggle news-topic-toggle" role="group" aria-label="League">
             <button class="active" data-advanced-league="all">All MLB</button>
@@ -152,7 +168,7 @@
               <h2>MLB advanced fields</h2>
             </div>
           </div>
-          <p class="data-note">WAR is not available from MLB's public Stats API, so this page uses live MLB advanced fields instead.</p>
+          <p class="data-note">WAR and wRC+ are not available from MLB's public Stats API, so this page uses live MLB advanced fields instead. Multi-year ranges weight rate stats by plate appearances for hitters and innings for pitchers.</p>
         </section>
         <footer class="site-footer">
           <a href="about.html">About</a>
@@ -163,6 +179,6 @@
       </main>
     </div>
 
-    <script src="advanced.js?v=20260528-advanced-ab-ip"></script>
+    <script src="advanced.js?v=20260610-advanced-range"></script>
   </body>
 </html>

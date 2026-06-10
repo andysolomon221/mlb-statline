@@ -68,7 +68,10 @@ const teamAbbr = {
 };
 
 let activeType = "hitting";
+let activeMode = "single";
 let activeSeason = "2026";
+let activeRangeStart = "1990";
+let activeRangeEnd = "1999";
 let activeLeague = "all";
 let pendingTeamAbbr = new URLSearchParams(window.location.search).get("team") || "";
 let activeTeamId = "all";
@@ -171,12 +174,27 @@ async function fetchJson(url) {
   return response.json();
 }
 
-function statsUrl() {
+function scopeSeason() {
+  return activeMode === "range" ? activeRangeEnd : activeSeason;
+}
+
+function scopeLabel() {
+  return activeMode === "range" ? `${activeRangeStart}-${activeRangeEnd}` : activeSeason;
+}
+
+function yearsInScope() {
+  if (activeMode === "single") return [activeSeason];
+  const start = Math.min(Number(activeRangeStart), Number(activeRangeEnd));
+  const end = Math.max(Number(activeRangeStart), Number(activeRangeEnd));
+  return Array.from({ length: end - start + 1 }, (_, index) => String(start + index));
+}
+
+function statsUrl(season = activeSeason) {
   const params = new URLSearchParams({
     stats: "seasonAdvanced",
     group: activeType,
     playerPool: activeTeamId === "all" ? "qualified" : "all",
-    season: activeSeason,
+    season,
     sportIds: "1",
     limit: "500"
   });
@@ -185,12 +203,12 @@ function statsUrl() {
   return `https://statsapi.mlb.com/api/v1/stats?${params.toString()}`;
 }
 
-function basicStatsUrl() {
+function basicStatsUrl(season = activeSeason) {
   const params = new URLSearchParams({
     stats: "season",
     group: activeType,
     playerPool: activeTeamId === "all" ? "qualified" : "all",
-    season: activeSeason,
+    season,
     sportIds: "1",
     limit: "500"
   });
@@ -202,7 +220,7 @@ function basicStatsUrl() {
 function standingsUrl() {
   const params = new URLSearchParams({
     leagueId: activeLeague === "all" ? "103,104" : leagueIds[activeLeague],
-    season: activeSeason,
+    season: scopeSeason(),
     standingsTypes: "regularSeason"
   });
   return `https://statsapi.mlb.com/api/v1/standings?${params.toString()}`;
@@ -224,17 +242,34 @@ function mapRow(split) {
   };
 }
 
+function inningsToOuts(value) {
+  const [whole = "0", partial = "0"] = String(value || "0").split(".");
+  return (Number(whole) || 0) * 3 + (Number(partial) || 0);
+}
+
+function outsToInnings(outs) {
+  const whole = Math.floor(outs / 3);
+  const partial = outs % 3;
+  return `${whole}.${partial}`;
+}
+
 function mapBasicStats(data) {
   return new Map((data.stats?.[0]?.splits || []).map((split) => [
     String(split.player?.id),
     activeType === "hitting"
-      ? { atBats: split.stat?.atBats || 0 }
-      : { inningsPitched: split.stat?.inningsPitched || "0.0" }
+      ? {
+          atBats: toNumber(split.stat?.atBats),
+          plateAppearances: toNumber(split.stat?.plateAppearances)
+        }
+      : {
+          inningsPitched: split.stat?.inningsPitched || "0.0",
+          inningsOuts: inningsToOuts(split.stat?.inningsPitched)
+        }
   ]));
 }
 
 async function updateTeams() {
-  const cacheKey = `${activeLeague}:${activeSeason}`;
+  const cacheKey = `${activeLeague}:${scopeSeason()}`;
   if (standingsCache.has(cacheKey)) {
     teams = standingsCache.get(cacheKey);
   } else {
@@ -274,17 +309,13 @@ function renderTeamOptions() {
 async function updatePlayers() {
   document.querySelector("#advanced-status").textContent = "Loading...";
   document.querySelector("#advanced-chart").innerHTML = `<div class="empty-state">Loading advanced stats...</div>`;
-  const cacheKey = [activeType, activeLeague, activeTeamId, activeSeason].join(":");
+  const cacheKey = [activeType, activeMode, activeLeague, activeTeamId, scopeLabel()].join(":");
   try {
     if (playerCache.has(cacheKey)) {
       rows = playerCache.get(cacheKey);
     } else {
-      const [data, basicData] = await Promise.all([fetchJson(statsUrl()), fetchJson(basicStatsUrl())]);
-      const basicByPlayer = mapBasicStats(basicData);
-      rows = (data.stats?.[0]?.splits || []).map((split) => ({
-        ...mapRow(split),
-        ...(basicByPlayer.get(String(split.player?.id)) || {})
-      }));
+      const seasonRows = await Promise.all(yearsInScope().map(fetchSeasonRows));
+      rows = activeMode === "range" ? aggregateRangeRows(seasonRows.flat()) : seasonRows.flat();
       playerCache.set(cacheKey, rows);
     }
     renderAll();
@@ -295,6 +326,75 @@ async function updatePlayers() {
     document.querySelector("#advanced-chart").innerHTML = `<div class="empty-state">Could not load MLB advanced stats.</div>`;
     document.querySelector("#advanced-table").innerHTML = `<tr><td colspan="9" class="empty-row">Could not load MLB advanced stats.</td></tr>`;
   }
+}
+
+async function fetchSeasonRows(season) {
+  const [data, basicData] = await Promise.all([fetchJson(statsUrl(season)), fetchJson(basicStatsUrl(season))]);
+  const basicByPlayer = mapBasicStats(basicData);
+  return (data.stats?.[0]?.splits || []).map((split) => ({
+    ...mapRow(split),
+    season,
+    ...(basicByPlayer.get(String(split.player?.id)) || {})
+  }));
+}
+
+function metricWeight(row) {
+  if (activeType === "pitching") return row.inningsOuts || inningsToOuts(row.inningsPitched);
+  return toNumber(row.plateAppearances) || toNumber(row.atBats) || 1;
+}
+
+function aggregateRangeRows(sourceRows) {
+  const byPlayer = new Map();
+  const keys = new Set([...config().metrics.map(([key]) => key), ...config().columns.map(([key]) => key)]);
+  sourceRows.forEach((row) => {
+    const id = String(row.id || row.name);
+    if (!byPlayer.has(id)) {
+      byPlayer.set(id, {
+        id: row.id,
+        name: row.name,
+        teamSet: new Set(),
+        position: row.position,
+        atBats: 0,
+        plateAppearances: 0,
+        inningsOuts: 0,
+        metricTotals: {}
+      });
+    }
+    const aggregate = byPlayer.get(id);
+    if (row.team && row.team !== "MLB") aggregate.teamSet.add(row.team);
+    aggregate.position = aggregate.position || row.position;
+    aggregate.atBats += toNumber(row.atBats);
+    aggregate.plateAppearances += toNumber(row.plateAppearances);
+    aggregate.inningsOuts += row.inningsOuts || inningsToOuts(row.inningsPitched);
+    const weight = metricWeight(row);
+    keys.forEach((key) => {
+      if (row[key] === undefined || row[key] === null || row[key] === "") return;
+      const value = toNumber(row[key]);
+      if (!Number.isFinite(value) || key === "atBats" || key === "plateAppearances" || key === "inningsPitched") return;
+      if (!aggregate.metricTotals[key]) aggregate.metricTotals[key] = { weighted: 0, weight: 0 };
+      aggregate.metricTotals[key].weighted += value * weight;
+      aggregate.metricTotals[key].weight += weight;
+    });
+  });
+
+  return Array.from(byPlayer.values()).map((aggregate) => {
+    const teamList = Array.from(aggregate.teamSet);
+    const row = {
+      id: aggregate.id,
+      name: aggregate.name,
+      team: teamList.length ? teamList.slice(0, 3).join("/") + (teamList.length > 3 ? "+" : "") : "MLB",
+      teamName: teamList.length ? teamList.join(", ") : "MLB",
+      position: aggregate.position,
+      atBats: aggregate.atBats,
+      plateAppearances: aggregate.plateAppearances,
+      inningsPitched: outsToInnings(aggregate.inningsOuts),
+      inningsOuts: aggregate.inningsOuts
+    };
+    Object.entries(aggregate.metricTotals).forEach(([key, total]) => {
+      row[key] = total.weight ? total.weighted / total.weight : 0;
+    });
+    return row;
+  });
 }
 
 function sortedRows() {
@@ -308,7 +408,13 @@ function renderControls() {
   document.querySelector("#advanced-metric").innerHTML = config().metrics.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelector("#advanced-metric").value = activeMetric;
   document.querySelectorAll("[data-advanced-type]").forEach((button) => button.classList.toggle("active", button.dataset.advancedType === activeType));
+  document.querySelectorAll("[data-advanced-mode]").forEach((button) => button.classList.toggle("active", button.dataset.advancedMode === activeMode));
   document.querySelectorAll("[data-advanced-league]").forEach((button) => button.classList.toggle("active", button.dataset.advancedLeague === activeLeague));
+  document.querySelector(".advanced-season-control").dataset.activeMode = activeMode;
+  document.querySelector(".advanced-quick-ranges").hidden = activeMode !== "range";
+  document.querySelectorAll("[data-advanced-start]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.advancedStart === activeRangeStart && button.dataset.advancedEnd === activeRangeEnd);
+  });
 }
 
 function renderSummary() {
@@ -317,12 +423,12 @@ function renderSummary() {
   document.querySelector("#advanced-leader").textContent = leader ? leader.name : "No players";
   document.querySelector("#advanced-leader-note").textContent = leader ? `${leader.team} | ${metricLabel()} ${fmtStat(activeMetric, leader[activeMetric])}` : "Try another filter";
   document.querySelector("#advanced-metric-card").textContent = metricLabel();
-  document.querySelector("#advanced-scope-card").textContent = activeSeason;
+  document.querySelector("#advanced-scope-card").textContent = scopeLabel();
   document.querySelector("#advanced-scope-note").textContent = activeTeamId === "all" ? (activeLeague === "all" ? "All MLB" : activeLeague.toUpperCase()) : activeTeamName;
   document.querySelector("#advanced-count").textContent = data.length;
-  document.querySelector("#advanced-count-note").textContent = activeTeamId === "all" ? "Qualified pool" : "Team player pool";
+  document.querySelector("#advanced-count-note").textContent = activeMode === "range" ? "Weighted range pool" : (activeTeamId === "all" ? "Qualified pool" : "Team player pool");
   document.querySelector("#advanced-chart-title").textContent = `${metricLabel()} ${activeType === "hitting" ? "hitter" : "pitcher"} leaders`;
-  document.querySelector("#advanced-table-title").textContent = `${activeTeamId === "all" ? activeSeason : activeTeamName} ${metricLabel()} advanced ${config().label}`;
+  document.querySelector("#advanced-table-title").textContent = `${activeTeamId === "all" ? scopeLabel() : activeTeamName} ${metricLabel()} advanced ${config().label}`;
 }
 
 function renderChart() {
@@ -381,16 +487,29 @@ function renderAll() {
 }
 
 function populateSeasonSelect() {
-  document.querySelector("#advanced-season").innerHTML = Array.from({ length: lastSeason - firstSeason + 1 }, (_, index) => {
+  const options = Array.from({ length: lastSeason - firstSeason + 1 }, (_, index) => {
     const year = lastSeason - index;
     return `<option value="${year}">${year}</option>`;
   }).join("");
+  document.querySelector("#advanced-season").innerHTML = options;
+  document.querySelector("#advanced-range-start").innerHTML = options;
+  document.querySelector("#advanced-range-end").innerHTML = options;
   document.querySelector("#advanced-season").value = activeSeason;
+  document.querySelector("#advanced-range-start").value = activeRangeStart;
+  document.querySelector("#advanced-range-end").value = activeRangeEnd;
 }
 
 function bindEvents() {
   document.querySelector("#advanced-season").addEventListener("change", (event) => {
     activeSeason = event.target.value;
+    updateTeams().then(updatePlayers);
+  });
+  document.querySelector("#advanced-range-start").addEventListener("change", (event) => {
+    activeRangeStart = event.target.value;
+    updateTeams().then(updatePlayers);
+  });
+  document.querySelector("#advanced-range-end").addEventListener("change", (event) => {
+    activeRangeEnd = event.target.value;
     updateTeams().then(updatePlayers);
   });
   document.querySelector("#advanced-team").addEventListener("change", (event) => {
@@ -410,6 +529,24 @@ function bindEvents() {
       activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
       renderControls();
       updatePlayers();
+    });
+  });
+  document.querySelectorAll("[data-advanced-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeMode = button.dataset.advancedMode;
+      renderControls();
+      updateTeams().then(updatePlayers);
+    });
+  });
+  document.querySelectorAll("[data-advanced-start]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeMode = "range";
+      activeRangeStart = button.dataset.advancedStart;
+      activeRangeEnd = button.dataset.advancedEnd;
+      document.querySelector("#advanced-range-start").value = activeRangeStart;
+      document.querySelector("#advanced-range-end").value = activeRangeEnd;
+      renderControls();
+      updateTeams().then(updatePlayers);
     });
   });
   document.querySelectorAll("[data-advanced-league]").forEach((button) => {
