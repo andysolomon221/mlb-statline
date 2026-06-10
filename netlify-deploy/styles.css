@@ -954,6 +954,8 @@ input[type="search"] {
 }
 
 .bar-label {
+  display: grid;
+  justify-items: start;
   min-width: 0;
 }
 
@@ -974,10 +976,12 @@ input[type="search"] {
   text-decoration: underline;
 }
 
-.chart-player-actions {
+.player-row-actions.chart-player-actions {
   margin-top: 3px;
   padding-left: 0;
   gap: 7px;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .bar-label span,
@@ -1765,7 +1769,7 @@ td {
   }
 
   .bar-row {
-    grid-template-columns: minmax(92px, 1fr) minmax(72px, 1fr) 46px;
+    grid-template-columns: minmax(136px, 0.92fr) minmax(72px, 1fr) 46px;
     gap: 8px;
     min-height: 32px;
   }
@@ -2054,7 +2058,7 @@ td {
   }
 
   .bar-row {
-    grid-template-columns: minmax(96px, 1fr) minmax(80px, 1fr) 42px;
+    grid-template-columns: minmax(136px, 0.92fr) minmax(80px, 1fr) 42px;
   }
 
   .snapshot-panel {
