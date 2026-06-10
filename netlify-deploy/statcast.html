@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Statcast" />
     <meta name="twitter:description" content="Review Statcast-style leaderboards for contact quality, barrels, exit velocity, and expected stats." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260608-career-page" />
+    <link rel="stylesheet" href="styles.css?v=20260610-sample-filters" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -109,6 +109,10 @@
             <button class="active" data-statcast-type="batter">Hitters</button>
             <button data-statcast-type="pitcher">Pitchers</button>
           </div>
+          <div class="qualifier-filter statcast-sample-filter">
+            <label for="statcast-sample-min">Minimum PA</label>
+            <select id="statcast-sample-min" aria-label="Minimum Statcast sample"></select>
+          </div>
         </section>
 
         <section class="data-grid advanced-grid" id="statcast-board">
@@ -158,6 +162,6 @@
       </main>
     </div>
 
-    <script src="statcast.js?v=20260528-statcast-sync"></script>
+    <script src="statcast.js?v=20260610-sample-filters"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ let pendingTeam = new URLSearchParams(window.location.search).get("team") || "al
 let activeTeam = "all";
 let activeMetric = "exit_velocity_avg";
 let activeSort = { key: "exit_velocity_avg", dir: -1 };
+let activeSampleMin = "auto";
 let rows = [];
 
 const metrics = {
@@ -59,6 +60,40 @@ function fmtStat(key, value) {
   return number.toFixed(1);
 }
 
+function sampleLabel() {
+  return activeType === "batter" ? "PA" : "BF";
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function seasonProgress(season = activeSeason) {
+  const year = Number(season);
+  const currentYear = new Date().getFullYear();
+  if (year < currentYear) return 1;
+  if (year > currentYear) return 0.25;
+  const today = new Date();
+  const seasonStart = new Date(year, 3, 1);
+  const seasonEnd = new Date(year, 8, 30);
+  return clamp((today - seasonStart) / (seasonEnd - seasonStart), 0.2, 1);
+}
+
+function roundedMinimum(fullSeasonMinimum, earlyMinimum, step = 25) {
+  const raw = Math.max(earlyMinimum, fullSeasonMinimum * seasonProgress());
+  return Math.round(raw / step) * step;
+}
+
+function autoSampleMinimum() {
+  return activeType === "batter" ? roundedMinimum(250, 50, 25) : roundedMinimum(250, 50, 25);
+}
+
+function activeSampleMinimum() {
+  if (activeSampleMin === "all") return 0;
+  if (activeSampleMin === "auto") return autoSampleMinimum();
+  return Number(activeSampleMin) || 0;
+}
+
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
@@ -77,6 +112,7 @@ function filteredRows() {
   return rows
     .filter((row) => activeTeam === "all" || row.team === activeTeam)
     .filter((row) => !query || `${row.name} ${row.team} ${row.teamName}`.toLowerCase().includes(query))
+    .filter((row) => query || toNumber(row.sample) >= activeSampleMinimum())
     .sort((a, b) => (toNumber(a[activeSort.key]) - toNumber(b[activeSort.key])) * activeSort.dir);
 }
 
@@ -100,6 +136,18 @@ function renderControls() {
   document.querySelector("#statcast-season").value = activeSeason;
   document.querySelector("#statcast-metric").innerHTML = metrics[activeType].map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelector("#statcast-metric").value = activeMetric;
+  document.querySelector(".statcast-sample-filter label").textContent = `Minimum ${sampleLabel()}`;
+  document.querySelector("#statcast-sample-min").innerHTML = [
+    ["auto", `Auto (${autoSampleMinimum()}+)`],
+    ["all", "All"],
+    ["25", "25+"],
+    ["50", "50+"],
+    ["100", "100+"],
+    ["250", "250+"],
+    ["500", "500+"]
+  ].map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  document.querySelector("#statcast-sample-min").value = activeSampleMin;
+  document.querySelector("#statcast-count-note").textContent = `${activeSampleMinimum() ? `${activeSampleMinimum()}+ ${sampleLabel()}` : `All ${sampleLabel()}`} sample`;
   document.querySelectorAll("[data-statcast-type]").forEach((button) => button.classList.toggle("active", button.dataset.statcastType === activeType));
 }
 
@@ -113,6 +161,7 @@ function renderSummary() {
   document.querySelector("#statcast-scope-card").textContent = activeSeason;
   document.querySelector("#statcast-scope-note").textContent = teamLabel;
   document.querySelector("#statcast-count").textContent = data.length;
+  document.querySelector("#statcast-count-note").textContent = `${activeSampleMinimum() ? `${activeSampleMinimum()}+ ${sampleLabel()}` : `All ${sampleLabel()}`} sample`;
   document.querySelector("#statcast-chart-title").textContent = `${metricLabel()} ${activeType === "batter" ? "hitter" : "pitcher"} leaders`;
   document.querySelector("#statcast-table-title").textContent = `${teamLabel} ${metricLabel()} Statcast ${activeType === "batter" ? "hitters" : "pitchers"}`;
 }
@@ -124,7 +173,7 @@ function renderChart() {
     <div class="bar-row">
       <div class="bar-label">
         <a class="chart-player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer"><strong>${row.name}</strong></a>
-        <span>${row.team}${row.position ? ` | ${row.position}` : ""}</span>
+        <span>${row.team}${row.position ? ` | ${row.position}` : ""} | ${fmtStat("sample", row.sample)} ${sampleLabel()}</span>
       </div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toNumber(row[activeMetric])) / max * 100)}%"></div></div>
       <div class="bar-value">${fmtStat(activeMetric, row[activeMetric])}</div>
@@ -195,6 +244,7 @@ async function loadStatcast() {
 function bindEvents() {
   document.querySelector("#statcast-season").addEventListener("change", (event) => {
     activeSeason = event.target.value;
+    renderControls();
     loadStatcast();
   });
   document.querySelector("#statcast-team").addEventListener("change", (event) => {
@@ -204,6 +254,10 @@ function bindEvents() {
   document.querySelector("#statcast-metric").addEventListener("change", (event) => {
     activeMetric = event.target.value;
     activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
+    renderAll();
+  });
+  document.querySelector("#statcast-sample-min").addEventListener("change", (event) => {
+    activeSampleMin = event.target.value;
     renderAll();
   });
   document.querySelectorAll("[data-statcast-type]").forEach((button) => {

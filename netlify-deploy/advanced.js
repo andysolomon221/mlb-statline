@@ -78,6 +78,7 @@ let activeTeamId = "all";
 let activeTeamName = "All MLB";
 let activeMetric = "iso";
 let activeSort = { key: "iso", dir: -1 };
+let activeQualifier = "auto";
 let rows = [];
 let teams = [];
 
@@ -160,6 +161,12 @@ function fmtStat(key, value) {
   return number.toFixed(2);
 }
 
+function workloadLabel(row) {
+  if (!row) return "";
+  if (activeType === "pitching") return `${fmtStat("inningsPitched", row.inningsPitched)} IP`;
+  return `${fmtStat("plateAppearances", row.plateAppearances)} PA`;
+}
+
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
@@ -189,14 +196,58 @@ function yearsInScope() {
   return Array.from({ length: end - start + 1 }, (_, index) => String(start + index));
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function seasonProgress(season = activeSeason) {
+  const year = Number(season);
+  const currentYear = new Date().getFullYear();
+  if (year < currentYear) return 1;
+  if (year > currentYear) return 0.25;
+  const today = new Date();
+  const seasonStart = new Date(year, 3, 1);
+  const seasonEnd = new Date(year, 8, 30);
+  return clamp((today - seasonStart) / (seasonEnd - seasonStart), 0.2, 1);
+}
+
+function roundedMinimum(fullSeasonMinimum, earlyMinimum, step = 25) {
+  const raw = Math.max(earlyMinimum, fullSeasonMinimum * seasonProgress(scopeSeason()));
+  return Math.round(raw / step) * step;
+}
+
+function rangeMinimum() {
+  const yearCount = yearsInScope().length;
+  return activeType === "pitching" ? Math.min(400, yearCount * 40) : Math.min(1000, yearCount * 100);
+}
+
+function qualifierLabel() {
+  return activeType === "pitching" ? "IP" : "PA";
+}
+
+function qualifierValue(row) {
+  return activeType === "pitching" ? inningsToOuts(row.inningsPitched) / 3 : toNumber(row.plateAppearances);
+}
+
+function autoQualifierMinimum() {
+  if (activeMode === "range") return rangeMinimum();
+  return activeType === "pitching" ? roundedMinimum(120, 30, 10) : roundedMinimum(400, 75, 25);
+}
+
+function activeQualifierMinimum() {
+  if (activeQualifier === "all") return 0;
+  if (activeQualifier === "auto") return autoQualifierMinimum();
+  return Number(activeQualifier) || 0;
+}
+
 function statsUrl(season = activeSeason) {
   const params = new URLSearchParams({
     stats: "seasonAdvanced",
     group: activeType,
-    playerPool: activeTeamId === "all" ? "qualified" : "all",
+    playerPool: "all",
     season,
     sportIds: "1",
-    limit: "500"
+    limit: "2000"
   });
   if (activeLeague !== "all") params.set("leagueIds", leagueIds[activeLeague]);
   if (activeTeamId !== "all") params.set("teamIds", activeTeamId);
@@ -207,10 +258,10 @@ function basicStatsUrl(season = activeSeason) {
   const params = new URLSearchParams({
     stats: "season",
     group: activeType,
-    playerPool: activeTeamId === "all" ? "qualified" : "all",
+    playerPool: "all",
     season,
     sportIds: "1",
-    limit: "500"
+    limit: "2000"
   });
   if (activeLeague !== "all") params.set("leagueIds", leagueIds[activeLeague]);
   if (activeTeamId !== "all") params.set("teamIds", activeTeamId);
@@ -401,12 +452,16 @@ function sortedRows() {
   const query = document.querySelector("#advanced-search").value.trim().toLowerCase();
   return rows
     .filter((row) => !query || `${row.name} ${row.team} ${row.teamName}`.toLowerCase().includes(query))
+    .filter((row) => query || qualifierValue(row) >= activeQualifierMinimum())
     .sort((a, b) => (toNumber(a[activeSort.key]) - toNumber(b[activeSort.key])) * activeSort.dir);
 }
 
 function renderControls() {
   document.querySelector("#advanced-metric").innerHTML = config().metrics.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelector("#advanced-metric").value = activeMetric;
+  document.querySelector(".advanced-qualifier-filter label").textContent = `Minimum ${qualifierLabel()}`;
+  document.querySelector("#advanced-qualifier").innerHTML = qualifierOptions().map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  document.querySelector("#advanced-qualifier").value = activeQualifier;
   document.querySelectorAll("[data-advanced-type]").forEach((button) => button.classList.toggle("active", button.dataset.advancedType === activeType));
   document.querySelectorAll("[data-advanced-mode]").forEach((button) => button.classList.toggle("active", button.dataset.advancedMode === activeMode));
   document.querySelectorAll("[data-advanced-league]").forEach((button) => button.classList.toggle("active", button.dataset.advancedLeague === activeLeague));
@@ -417,16 +472,40 @@ function renderControls() {
   });
 }
 
+function qualifierOptions() {
+  if (activeType === "pitching") {
+    return [
+      ["auto", `Auto (${autoQualifierMinimum()}+)`],
+      ["all", "All"],
+      ["25", "25+"],
+      ["50", "50+"],
+      ["100", "100+"],
+      ["150", "150+"],
+      ["200", "200+"]
+    ];
+  }
+  return [
+    ["auto", `Auto (${autoQualifierMinimum()}+)`],
+    ["all", "All"],
+    ["50", "50+"],
+    ["100", "100+"],
+    ["300", "300+"],
+    ["500", "500+"],
+    ["1000", "1000+"]
+  ];
+}
+
 function renderSummary() {
   const data = sortedRows();
   const leader = data[0];
+  const leaderWorkload = activeMode === "range" && leader ? ` | ${workloadLabel(leader)}` : "";
   document.querySelector("#advanced-leader").textContent = leader ? leader.name : "No players";
-  document.querySelector("#advanced-leader-note").textContent = leader ? `${leader.team} | ${metricLabel()} ${fmtStat(activeMetric, leader[activeMetric])}` : "Try another filter";
+  document.querySelector("#advanced-leader-note").textContent = leader ? `${leader.team} | ${metricLabel()} ${fmtStat(activeMetric, leader[activeMetric])}${leaderWorkload}` : "Try another filter";
   document.querySelector("#advanced-metric-card").textContent = metricLabel();
   document.querySelector("#advanced-scope-card").textContent = scopeLabel();
   document.querySelector("#advanced-scope-note").textContent = activeTeamId === "all" ? (activeLeague === "all" ? "All MLB" : activeLeague.toUpperCase()) : activeTeamName;
   document.querySelector("#advanced-count").textContent = data.length;
-  document.querySelector("#advanced-count-note").textContent = activeMode === "range" ? "Weighted range pool" : (activeTeamId === "all" ? "Qualified pool" : "Team player pool");
+  document.querySelector("#advanced-count-note").textContent = activeQualifierMinimum() ? `${activeQualifierMinimum()}+ ${qualifierLabel()} sample` : `All ${qualifierLabel()}`;
   document.querySelector("#advanced-chart-title").textContent = `${metricLabel()} ${activeType === "hitting" ? "hitter" : "pitcher"} leaders`;
   document.querySelector("#advanced-table-title").textContent = `${activeTeamId === "all" ? scopeLabel() : activeTeamName} ${metricLabel()} advanced ${config().label}`;
 }
@@ -438,7 +517,7 @@ function renderChart() {
     <div class="bar-row">
       <div class="bar-label">
         <a class="chart-player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer"><strong>${row.name}</strong></a>
-        <span>${row.team} | ${row.position}</span>
+        <span>${row.team} | ${row.position}${activeMode === "range" ? ` | ${workloadLabel(row)}` : ""}</span>
       </div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toNumber(row[activeMetric])) / max * 100)}%"></div></div>
       <div class="bar-value">${fmtStat(activeMetric, row[activeMetric])}</div>
@@ -502,14 +581,17 @@ function populateSeasonSelect() {
 function bindEvents() {
   document.querySelector("#advanced-season").addEventListener("change", (event) => {
     activeSeason = event.target.value;
+    renderControls();
     updateTeams().then(updatePlayers);
   });
   document.querySelector("#advanced-range-start").addEventListener("change", (event) => {
     activeRangeStart = event.target.value;
+    renderControls();
     updateTeams().then(updatePlayers);
   });
   document.querySelector("#advanced-range-end").addEventListener("change", (event) => {
     activeRangeEnd = event.target.value;
+    renderControls();
     updateTeams().then(updatePlayers);
   });
   document.querySelector("#advanced-team").addEventListener("change", (event) => {
@@ -520,6 +602,10 @@ function bindEvents() {
   document.querySelector("#advanced-metric").addEventListener("change", (event) => {
     activeMetric = event.target.value;
     activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
+    renderAll();
+  });
+  document.querySelector("#advanced-qualifier").addEventListener("change", (event) => {
+    activeQualifier = event.target.value;
     renderAll();
   });
   document.querySelectorAll("[data-advanced-type]").forEach((button) => {
