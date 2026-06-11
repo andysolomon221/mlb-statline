@@ -1429,6 +1429,13 @@ td {
   align-items: start;
 }
 
+.matchup-tool-tabs {
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+}
+
 .compare-control-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(220px, 1fr));

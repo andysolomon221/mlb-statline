@@ -99,9 +99,14 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">Setup</p>
-              <h2>Choose teams, batter, and pitcher</h2>
+              <h2 id="matchup-setup-title">Choose one matchup type</h2>
             </div>
             <div class="split-status" id="matchup-status">Loading matchup...</div>
+          </div>
+          <div class="matchup-tool-tabs mode-toggle" role="group" aria-label="Matchup type">
+            <button class="active" type="button" data-matchup-tool="batter-pitcher">Batter vs Pitcher</button>
+            <button type="button" data-matchup-tool="team-pitcher">Team vs Pitcher</button>
+            <button type="button" data-matchup-tool="player-team">Player vs Team</button>
           </div>
           <div class="matchup-setup-grid">
             <div class="matchup-setup-column">
@@ -109,7 +114,7 @@
                 <span>Batting Team</span>
                 <select id="matchup-batting-team" aria-label="Batting team"></select>
               </label>
-              <label>
+              <label data-tool-control="batter">
                 <span>Batter</span>
                 <input id="batter-autocomplete" type="search" list="batter-options" autocomplete="off" placeholder="Type player or team" aria-label="Search or choose batter" />
                 <datalist id="batter-options"></datalist>
@@ -131,7 +136,7 @@
                 <span>Ballpark</span>
                 <select id="matchup-park" aria-label="Ballpark context"></select>
               </label>
-              <label>
+              <label data-tool-control="batter-pitcher-mode">
                 <span>Batter-Pitcher Mode</span>
                 <select id="matchup-view-mode" aria-label="Matchup view mode">
                   <option value="season">Season profile + career H2H</option>
@@ -147,7 +152,7 @@
               </label>
             </div>
           </div>
-          <small class="data-note">Batter-Pitcher Mode controls the top read only. For pitcher-vs-team or batter-vs-team, use the Player vs Team section below.</small>
+          <small class="data-note" id="matchup-tool-note">Batter vs Pitcher compares one hitter against one pitcher, with a season read and career head-to-head history.</small>
           <div class="browse-players-wrap">
             <button id="browse-players-toggle" type="button" aria-expanded="false">Browse players</button>
             <div class="browse-players-grid" id="browse-players-panel" hidden>
@@ -219,11 +224,11 @@
           <small class="data-note">Player-vs-team uses MLB career regular-season vs-team history. Batter-vs-pitcher history remains in the table below.</small>
         </section>
 
-        <section class="panel matchup-offense-panel" aria-label="Team offense against selected pitcher">
+        <section class="panel matchup-offense-panel" aria-label="Roster offense against selected pitcher">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Team Offense</p>
-              <h2 id="team-offense-title">Selected offense vs pitcher</h2>
+              <p class="eyebrow">Roster vs Pitcher</p>
+              <h2 id="team-offense-title">Selected batting team vs selected pitcher</h2>
             </div>
             <div class="split-status" id="team-offense-status">Loading offense...</div>
           </div>
@@ -250,6 +255,7 @@
               </tbody>
             </table>
           </div>
+          <small class="data-note">This table shows hitters from the selected batting team against the selected pitcher using career batter-vs-pitcher history.</small>
         </section>
         <footer class="site-footer">
           <a href="about.html">About</a>

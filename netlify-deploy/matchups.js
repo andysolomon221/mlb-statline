@@ -79,6 +79,7 @@ const parks = [
 let activeSeason = "2026";
 let activeRosterType = "active";
 let activeViewMode = "season";
+let activeMatchupTool = "batter-pitcher";
 let batter = { id: 605141, fullName: "Mookie Betts", position: "SS" };
 let pitcher = { id: 694973, fullName: "Paul Skenes", position: "P" };
 let teamOffenseRows = [];
@@ -759,14 +760,61 @@ function renderCareerOnlyMatchup(payload) {
 }
 
 function syncViewModePanels() {
-  const careerOnly = activeViewMode === "career";
-  document.querySelector(".player-team-panel")?.removeAttribute("hidden");
-  document.querySelector(".matchup-offense-panel")?.toggleAttribute("hidden", careerOnly);
+  const isBatterPitcher = activeMatchupTool === "batter-pitcher";
+  const isTeamPitcher = activeMatchupTool === "team-pitcher";
+  const isPlayerTeam = activeMatchupTool === "player-team";
+  document.querySelector(".advanced-grid")?.toggleAttribute("hidden", !isBatterPitcher);
+  document.querySelector(".matchup-summary")?.toggleAttribute("hidden", !isBatterPitcher);
+  document.querySelector(".matchup-offense-panel")?.toggleAttribute("hidden", !isTeamPitcher);
+  document.querySelector(".player-team-panel")?.toggleAttribute("hidden", !isPlayerTeam);
+  document.querySelector('[data-tool-control="batter"]')?.toggleAttribute("hidden", isTeamPitcher);
+  document.querySelector('[data-tool-control="batter-pitcher-mode"]')?.toggleAttribute("hidden", !isBatterPitcher);
+  document.querySelector("#browse-batter-select")?.closest("label")?.toggleAttribute("hidden", isTeamPitcher);
+  document.querySelectorAll("[data-matchup-tool]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.matchupTool === activeMatchupTool);
+  });
+  const setupTitle = document.querySelector("#matchup-setup-title");
+  const toolNote = document.querySelector("#matchup-tool-note");
+  if (setupTitle) {
+    setupTitle.textContent = isTeamPitcher
+      ? "Choose a batting team and pitcher"
+      : isPlayerTeam
+        ? "Choose a player and opponent team"
+        : "Choose one batter and one pitcher";
+  }
+  if (toolNote) {
+    toolNote.textContent = isTeamPitcher
+      ? "Team vs Pitcher shows every hitter from the selected batting team against the selected pitcher."
+      : isPlayerTeam
+        ? "Player vs Team shows career regular-season history for the selected batter or pitcher against one opponent team."
+        : "Batter vs Pitcher compares one hitter against one pitcher, with a season read and career head-to-head history.";
+  }
 }
 
 async function analyzeMatchup() {
   syncViewModePanels();
   document.querySelector("#matchup-status").textContent = "Loading matchup...";
+  if (activeMatchupTool === "team-pitcher") {
+    try {
+      await resolveTypedPlayer("pitcher");
+      await updateTeamOffense();
+      document.querySelector("#matchup-status").textContent = "Team vs pitcher loaded";
+    } catch (error) {
+      document.querySelector("#matchup-status").textContent = "Choose a pitcher";
+    }
+    return;
+  }
+  if (activeMatchupTool === "player-team") {
+    try {
+      const type = document.querySelector("#player-team-type")?.value || "batter";
+      await resolveTypedPlayer(type);
+      await updatePlayerVsTeam();
+      document.querySelector("#matchup-status").textContent = "Player vs team loaded";
+    } catch (error) {
+      document.querySelector("#matchup-status").textContent = "Choose a player";
+    }
+    return;
+  }
   document.querySelector("#matchup-read").innerHTML = `<div class="empty-state">Loading MLB matchup data...</div>`;
   try {
     await Promise.all([resolveTypedPlayer("batter"), resolveTypedPlayer("pitcher")]);
@@ -781,12 +829,8 @@ async function analyzeMatchup() {
           playerStats(batter, "hitting"),
           playerStats(pitcher, "pitching"),
           headToHeadStats(batter, pitcher)
-        ]);
+    ]);
     renderMatchup({ batter: batterStats, pitcher: pitcherStats, headToHead });
-    updatePlayerVsTeam();
-    if (activeViewMode === "season") {
-      updateTeamOffense();
-    }
     document.querySelector("#matchup-status").textContent = "Matchup loaded";
   } catch (error) {
     document.querySelector("#matchup-status").textContent = "Could not load matchup";
@@ -817,6 +861,16 @@ function populateControls() {
 }
 
 function bindEvents() {
+  document.querySelectorAll("[data-matchup-tool]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeMatchupTool = button.dataset.matchupTool;
+      if (activeMatchupTool === "team-pitcher") {
+        document.querySelector("#player-team-type").value = "pitcher";
+        document.querySelector("#player-team-opponent").value = document.querySelector("#matchup-batting-team").value;
+      }
+      analyzeMatchup();
+    });
+  });
   document.querySelector("#matchup-season").addEventListener("change", (event) => {
     activeSeason = event.target.value;
     populateTeamPlayerDropdowns().then(analyzeMatchup);
