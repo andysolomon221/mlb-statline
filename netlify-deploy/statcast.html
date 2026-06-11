@@ -133,7 +133,11 @@
                 <p class="eyebrow">Player Board</p>
                 <h2 id="statcast-table-title">Statcast players</h2>
               </div>
-              <input id="statcast-search" type="search" placeholder="Search player or team" aria-label="Search Statcast board" />
+              <div class="search-action board-search-action">
+                <input id="statcast-search" type="search" list="statcast-search-options" placeholder="Search player or team" aria-label="Search Statcast board" />
+                <button type="button" id="statcast-search-submit">View</button>
+              </div>
+              <datalist id="statcast-search-options"></datalist>
             </div>
             <div class="table-wrap">
               <table>

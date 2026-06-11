@@ -116,6 +116,30 @@ function filteredRows() {
     .sort((a, b) => (toNumber(a[activeSort.key]) - toNumber(b[activeSort.key])) * activeSort.dir);
 }
 
+function renderSearchOptions() {
+  const options = new Map();
+  rows.forEach((row) => {
+    if (row.name) options.set(row.name, row.team ? `${row.name} (${row.team})` : row.name);
+    if (row.team && row.teamName) options.set(row.teamName, row.teamName);
+    if (row.team) options.set(row.team, row.team);
+  });
+  document.querySelector("#statcast-search-options").innerHTML = Array.from(options.entries())
+    .slice(0, 500)
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join("");
+}
+
+function focusSearchResult() {
+  const input = document.querySelector("#statcast-search");
+  const query = input.value.trim().toLowerCase();
+  if (query) {
+    const exact = rows.find((row) => row.name.toLowerCase() === query || row.team.toLowerCase() === query || row.teamName.toLowerCase() === query);
+    if (exact) input.value = exact.name.toLowerCase() === query ? exact.name : input.value;
+  }
+  renderAll();
+  document.querySelector("#statcast-table-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function renderTeamOptions() {
   const teams = Array.from(new Map(rows.filter((row) => row.team !== "MLB").map((row) => [row.team, row.teamName || row.team])).entries())
     .sort((a, b) => a[1].localeCompare(b[1]));
@@ -230,6 +254,7 @@ async function loadStatcast() {
     const data = await response.json();
     rows = data.rows || [];
     renderTeamOptions();
+    renderSearchOptions();
     renderAll();
     document.querySelector("#statcast-status").textContent = `${rows.length} players loaded`;
   } catch (error) {
@@ -270,6 +295,10 @@ function bindEvents() {
     });
   });
   document.querySelector("#statcast-search").addEventListener("input", renderAll);
+  document.querySelector("#statcast-search-submit").addEventListener("click", focusSearchResult);
+  document.querySelector("#statcast-search").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") focusSearchResult();
+  });
 }
 
 renderControls();

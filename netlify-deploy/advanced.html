@@ -154,7 +154,11 @@
                 <p class="eyebrow">Player Board</p>
                 <h2 id="advanced-table-title">Advanced players</h2>
               </div>
-              <input id="advanced-search" type="search" placeholder="Search player or team" aria-label="Search advanced board" />
+              <div class="search-action board-search-action">
+                <input id="advanced-search" type="search" list="advanced-search-options" placeholder="Search player or team" aria-label="Search advanced board" />
+                <button type="button" id="advanced-search-submit">View</button>
+              </div>
+              <datalist id="advanced-search-options"></datalist>
             </div>
             <div class="table-wrap">
               <table>

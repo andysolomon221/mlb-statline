@@ -369,6 +369,7 @@ async function updatePlayers() {
       rows = activeMode === "range" ? aggregateRangeRows(seasonRows.flat()) : seasonRows.flat();
       playerCache.set(cacheKey, rows);
     }
+    renderSearchOptions();
     renderAll();
     document.querySelector("#advanced-status").textContent = `${rows.length} players loaded`;
   } catch (error) {
@@ -377,6 +378,30 @@ async function updatePlayers() {
     document.querySelector("#advanced-chart").innerHTML = `<div class="empty-state">Could not load MLB advanced stats.</div>`;
     document.querySelector("#advanced-table").innerHTML = `<tr><td colspan="9" class="empty-row">Could not load MLB advanced stats.</td></tr>`;
   }
+}
+
+function renderSearchOptions() {
+  const options = new Map();
+  rows.forEach((row) => {
+    if (row.name) options.set(row.name, row.team ? `${row.name} (${row.team})` : row.name);
+    if (row.team && row.teamName) options.set(row.teamName, row.teamName);
+    if (row.team) options.set(row.team, row.team);
+  });
+  document.querySelector("#advanced-search-options").innerHTML = Array.from(options.entries())
+    .slice(0, 500)
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join("");
+}
+
+function focusSearchResult() {
+  const input = document.querySelector("#advanced-search");
+  const query = input.value.trim().toLowerCase();
+  if (query) {
+    const exact = rows.find((row) => row.name.toLowerCase() === query || row.team.toLowerCase() === query || row.teamName.toLowerCase() === query);
+    if (exact) input.value = exact.name.toLowerCase() === query ? exact.name : input.value;
+  }
+  renderAll();
+  document.querySelector("#advanced-table-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function fetchSeasonRows(season) {
@@ -645,6 +670,10 @@ function bindEvents() {
     });
   });
   document.querySelector("#advanced-search").addEventListener("input", renderAll);
+  document.querySelector("#advanced-search-submit").addEventListener("click", focusSearchResult);
+  document.querySelector("#advanced-search").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") focusSearchResult();
+  });
 }
 
 populateSeasonSelect();
