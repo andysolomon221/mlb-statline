@@ -78,6 +78,7 @@ const parks = [
 
 let activeSeason = "2026";
 let activeRosterType = "active";
+let activeViewMode = "season";
 let batter = { id: 605141, fullName: "Mookie Betts", position: "SS" };
 let pitcher = { id: 694973, fullName: "Paul Skenes", position: "P" };
 let teamOffenseRows = [];
@@ -328,6 +329,29 @@ function chooseAutocompletePlayer(role) {
   else pitcher = selected;
   setPlayerInput(role, selected);
   analyzeMatchup();
+}
+
+async function resolveTypedPlayer(role) {
+  const input = document.querySelector(role === "batter" ? "#batter-autocomplete" : "#pitcher-autocomplete");
+  const current = role === "batter" ? batter : pitcher;
+  const cleanValue = cleanPlayerInput(input.value);
+  if (!cleanValue || cleanValue.toLowerCase() === current.fullName.toLowerCase()) return current;
+  const candidates = role === "batter" ? batterCandidates : pitcherCandidates;
+  let selected = candidates.find((person) => person.fullName.toLowerCase() === cleanValue.toLowerCase() || displayPlayerOption(person).toLowerCase() === input.value.trim().toLowerCase());
+  if (!selected) {
+    const searched = await searchPeople(cleanValue, role === "pitcher" ? "pitching" : "hitting");
+    selected = searched[0];
+  }
+  if (!selected) return current;
+  if (role === "batter") {
+    batter = selected;
+    batterCandidates = uniquePeople([selected, ...batterCandidates]);
+  } else {
+    pitcher = selected;
+    pitcherCandidates = uniquePeople([selected, ...pitcherCandidates]);
+  }
+  setPlayerInput(role, selected);
+  return selected;
 }
 
 function splitForHand(stats, hand) {
@@ -634,6 +658,10 @@ async function populateTeamPlayerDropdowns({ selectFirst = false } = {}) {
 }
 
 function renderMatchup(payload) {
+  if (activeViewMode === "career") {
+    renderCareerOnlyMatchup(payload);
+    return;
+  }
   const hitter = hitterSummary(payload.batter, payload.pitcher.pitchHand);
   const pitcherProfile = pitcherSummary(payload.pitcher, payload.batter.batSide);
   const [edge, edgeNote] = edgeLabel(hitter, pitcherProfile);
@@ -686,18 +714,79 @@ function renderMatchup(payload) {
   `;
 }
 
+function renderCareerOnlyMatchup(payload) {
+  const careerH2h = aggregateHeadToHead(payload.headToHead || []);
+  const battingTeam = document.querySelector("#matchup-batting-team").selectedOptions[0]?.textContent || "Batting team";
+  const pitchingTeam = document.querySelector("#matchup-pitching-team").selectedOptions[0]?.textContent || "Pitching team";
+
+  document.querySelector("#matchup-batter-card").textContent = payload.batter.fullName;
+  document.querySelector("#matchup-pitcher-card").textContent = payload.pitcher.fullName;
+  document.querySelector("#matchup-edge-card").textContent = payload.headToHead?.length ? `${careerH2h.pa} PA` : "No H2H";
+  document.querySelector("#matchup-edge-note").textContent = "Career batter-vs-pitcher history.";
+  document.querySelector("#matchup-context-card").textContent = "Career";
+  document.querySelector("#matchup-context-note").textContent = "Season profile hidden";
+  document.querySelector("#matchup-title").textContent = `${payload.batter.fullName} vs ${payload.pitcher.fullName}`;
+  document.querySelector("#matchup-batter-note").textContent = `${battingTeam} selector | bats ${payload.batter.batSide || "?"}`;
+  document.querySelector("#matchup-pitcher-note").textContent = `${pitchingTeam} selector | throws ${payload.pitcher.pitchHand || "?"}`;
+
+  document.querySelector("#matchup-read").innerHTML = `
+    <p><strong>Career head-to-head:</strong> ${formatHeadToHeadLine(payload.headToHead || [], payload.batter.fullName, payload.pitcher.fullName, "for his career")}</p>
+    <p>This mode ignores the selected season and focuses only on recorded career batter-vs-pitcher history, which is better for retired-player comparisons.</p>
+    <p class="data-note">This is historical matchup context, not a projection or betting recommendation.</p>
+  `;
+
+  document.querySelector("#matchup-card-grid").innerHTML = `
+    <article class="fantasy-note-card">
+      <strong><a class="summary-link" href="${baseballReferenceSearchUrl(payload.batter.fullName)}" target="_blank" rel="noopener noreferrer">${payload.batter.fullName}</a></strong>
+      <span>Career matchup batter</span>
+      <span>Bats ${payload.batter.batSide || "?"}</span>
+    </article>
+    <article class="fantasy-note-card">
+      <strong><a class="summary-link" href="${baseballReferenceSearchUrl(payload.pitcher.fullName)}" target="_blank" rel="noopener noreferrer">${payload.pitcher.fullName}</a></strong>
+      <span>Career matchup pitcher</span>
+      <span>Throws ${payload.pitcher.pitchHand || "?"}</span>
+    </article>
+    <article class="fantasy-note-card">
+      <strong>Career head-to-head</strong>
+      <span>${payload.headToHead?.length ? `${careerH2h.h}-${careerH2h.ab} | ${careerH2h.hr} HR | ${careerH2h.bb} BB | ${careerH2h.so} SO` : "No recorded matchups"}</span>
+      <span>${payload.headToHead?.length ? `AVG ${fmt(careerH2h.avg)} | OPS ${fmt(careerH2h.ops)} | PA ${careerH2h.pa}` : "Try another pair"}</span>
+    </article>
+    <article class="fantasy-note-card">
+      <strong>Breakdown</strong>
+      <span>${headToHeadBreakdown(payload.headToHead || [])}</span>
+    </article>
+  `;
+}
+
+function syncViewModePanels() {
+  const careerOnly = activeViewMode === "career";
+  document.querySelector(".player-team-panel")?.toggleAttribute("hidden", careerOnly);
+  document.querySelector(".matchup-offense-panel")?.toggleAttribute("hidden", careerOnly);
+}
+
 async function analyzeMatchup() {
+  syncViewModePanels();
   document.querySelector("#matchup-status").textContent = "Loading matchup...";
   document.querySelector("#matchup-read").innerHTML = `<div class="empty-state">Loading MLB matchup data...</div>`;
   try {
-    const [batterStats, pitcherStats, headToHead] = await Promise.all([
-      playerStats(batter, "hitting"),
-      playerStats(pitcher, "pitching"),
-      headToHeadStats(batter, pitcher)
-    ]);
+    await Promise.all([resolveTypedPlayer("batter"), resolveTypedPlayer("pitcher")]);
+    const [batterDetails, pitcherDetails] = await Promise.all([personDetails(batter.id), personDetails(pitcher.id)]);
+    const [batterStats, pitcherStats, headToHead] = activeViewMode === "career"
+      ? [
+          { ...batter, ...batterDetails, season: {}, splits: {} },
+          { ...pitcher, ...pitcherDetails, season: {}, splits: {} },
+          await headToHeadStats(batter, pitcher)
+        ]
+      : await Promise.all([
+          playerStats(batter, "hitting"),
+          playerStats(pitcher, "pitching"),
+          headToHeadStats(batter, pitcher)
+        ]);
     renderMatchup({ batter: batterStats, pitcher: pitcherStats, headToHead });
-    updateTeamOffense();
-    updatePlayerVsTeam();
+    if (activeViewMode === "season") {
+      updateTeamOffense();
+      updatePlayerVsTeam();
+    }
     document.querySelector("#matchup-status").textContent = "Matchup loaded";
   } catch (error) {
     document.querySelector("#matchup-status").textContent = "Could not load matchup";
@@ -720,6 +809,7 @@ function populateControls() {
   document.querySelector("#matchup-pitching-team").value = "PIT";
   document.querySelector("#player-team-opponent").value = "PIT";
   document.querySelector("#matchup-roster-pool").value = activeRosterType;
+  document.querySelector("#matchup-view-mode").value = activeViewMode;
   document.querySelector("#matchup-park").innerHTML = parks.map(([abbr, name, factor]) => `<option value="${abbr}">${name} (${factor})</option>`).join("");
   document.querySelector("#matchup-park").value = "LAD";
   setPlayerInput("batter", batter);
@@ -732,6 +822,10 @@ function bindEvents() {
     populateTeamPlayerDropdowns().then(analyzeMatchup);
   });
   document.querySelector("#run-matchup").addEventListener("click", analyzeMatchup);
+  document.querySelector("#matchup-view-mode").addEventListener("change", (event) => {
+    activeViewMode = event.target.value;
+    analyzeMatchup();
+  });
   document.querySelector("#run-player-team").addEventListener("click", updatePlayerVsTeam);
   document.querySelector("#player-team-type").addEventListener("change", () => {
     const defaultOpponent = document.querySelector("#player-team-type").value === "pitcher"
