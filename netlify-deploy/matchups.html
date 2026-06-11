@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Matchups" />
     <meta name="twitter:description" content="Compare batter-vs-pitcher and roster-vs-pitcher matchups with career head-to-head context." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260611-matchup-mode-labels" />
+    <link rel="stylesheet" href="styles.css?v=20260611-matchup-tabs-default" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -72,7 +72,7 @@
           </div>
         </header>
 
-        <section class="score-strip matchup-summary" aria-label="Matchup summary">
+        <section class="score-strip matchup-summary" aria-label="Matchup summary" hidden>
           <article>
             <span>Batter</span>
             <strong id="matchup-batter-card">Mookie Betts</strong>
@@ -114,7 +114,7 @@
                 <span>Batting Team</span>
                 <select id="matchup-batting-team" aria-label="Batting team"></select>
               </label>
-              <label data-tool-control="batter">
+              <label data-tool-control="batter" hidden>
                 <span>Batter</span>
                 <input id="batter-autocomplete" type="search" list="batter-options" autocomplete="off" placeholder="Type player or team" aria-label="Search or choose batter" />
                 <datalist id="batter-options"></datalist>
@@ -136,7 +136,7 @@
                 <span>Ballpark</span>
                 <select id="matchup-park" aria-label="Ballpark context"></select>
               </label>
-              <label data-tool-control="batter-pitcher-mode">
+              <label data-tool-control="batter-pitcher-mode" hidden>
                 <span>Batter-Pitcher Mode</span>
                 <select id="matchup-view-mode" aria-label="Matchup view mode">
                   <option value="season">Season profile + career H2H</option>
@@ -156,7 +156,7 @@
           <div class="browse-players-wrap">
             <button id="browse-players-toggle" type="button" aria-expanded="false">Browse players</button>
             <div class="browse-players-grid" id="browse-players-panel" hidden>
-              <label>
+              <label hidden>
                 <span>Batters From Selected Team</span>
                 <select id="browse-batter-select" aria-label="Browse batters"></select>
               </label>
@@ -168,7 +168,7 @@
           </div>
         </section>
 
-        <section class="data-grid advanced-grid">
+        <section class="data-grid advanced-grid" hidden>
           <section class="panel">
             <div class="section-head">
               <div>
@@ -190,7 +190,7 @@
           </section>
         </section>
 
-        <section class="panel player-team-panel" aria-label="Player against team">
+        <section class="panel player-team-panel" aria-label="Player against team" hidden>
           <div class="section-head">
             <div>
               <p class="eyebrow">Player vs Team</p>
@@ -266,6 +266,6 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260611-matchup-mode-labels"></script>
+    <script src="matchups.js?v=20260611-matchup-tabs-default"></script>
   </body>
 </html>
