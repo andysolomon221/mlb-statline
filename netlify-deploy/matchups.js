@@ -760,7 +760,7 @@ function renderCareerOnlyMatchup(payload) {
 
 function syncViewModePanels() {
   const careerOnly = activeViewMode === "career";
-  document.querySelector(".player-team-panel")?.toggleAttribute("hidden", careerOnly);
+  document.querySelector(".player-team-panel")?.removeAttribute("hidden");
   document.querySelector(".matchup-offense-panel")?.toggleAttribute("hidden", careerOnly);
 }
 
@@ -783,9 +783,9 @@ async function analyzeMatchup() {
           headToHeadStats(batter, pitcher)
         ]);
     renderMatchup({ batter: batterStats, pitcher: pitcherStats, headToHead });
+    updatePlayerVsTeam();
     if (activeViewMode === "season") {
       updateTeamOffense();
-      updatePlayerVsTeam();
     }
     document.querySelector("#matchup-status").textContent = "Matchup loaded";
   } catch (error) {

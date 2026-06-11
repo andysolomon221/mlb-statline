@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Matchups" />
     <meta name="twitter:description" content="Compare batter-vs-pitcher and roster-vs-pitcher matchups with career head-to-head context." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260611-career-h2h-mode" />
+    <link rel="stylesheet" href="styles.css?v=20260611-matchup-mode-labels" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -132,7 +132,7 @@
                 <select id="matchup-park" aria-label="Ballpark context"></select>
               </label>
               <label>
-                <span>View Mode</span>
+                <span>Batter-Pitcher Mode</span>
                 <select id="matchup-view-mode" aria-label="Matchup view mode">
                   <option value="season">Season profile + career H2H</option>
                   <option value="career">Career H2H only</option>
@@ -147,7 +147,7 @@
               </label>
             </div>
           </div>
-          <small class="data-note">Season controls roster dropdowns and current-season player stats. Career H2H mode is best for retired-player matchups.</small>
+          <small class="data-note">Batter-Pitcher Mode controls the top read only. For pitcher-vs-team or batter-vs-team, use the Player vs Team section below.</small>
           <div class="browse-players-wrap">
             <button id="browse-players-toggle" type="button" aria-expanded="false">Browse players</button>
             <div class="browse-players-grid" id="browse-players-panel" hidden>
@@ -260,6 +260,6 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260611-career-h2h-mode"></script>
+    <script src="matchups.js?v=20260611-matchup-mode-labels"></script>
   </body>
 </html>
