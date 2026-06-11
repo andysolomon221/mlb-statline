@@ -1197,6 +1197,26 @@ table {
   min-width: 690px;
 }
 
+.team-offense-table {
+  table-layout: fixed;
+  min-width: 820px;
+}
+
+.team-offense-table th:first-child,
+.team-offense-table td:first-child {
+  width: 190px;
+}
+
+.team-offense-table th:nth-child(2),
+.team-offense-table td:nth-child(2) {
+  width: 56px;
+}
+
+.team-offense-table th:not(:first-child):not(:nth-child(2)),
+.team-offense-table td:not(:first-child):not(:nth-child(2)) {
+  width: 74px;
+}
+
 th,
 td {
   padding: 14px 12px;

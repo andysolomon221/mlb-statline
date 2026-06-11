@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Matchups" />
     <meta name="twitter:description" content="Compare batter-vs-pitcher and roster-vs-pitcher matchups with career head-to-head context." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260611-matchup-tabs-default" />
+    <link rel="stylesheet" href="styles.css?v=20260611-h2h-cleanup" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -214,7 +214,7 @@
           </div>
           <div class="matchup-card-grid player-team-grid" id="player-team-grid"></div>
           <div class="table-wrap">
-            <table>
+            <table class="team-offense-table">
               <thead id="player-team-head"></thead>
               <tbody id="player-team-table">
                 <tr><td class="empty-row">Loading player vs team...</td></tr>
@@ -247,11 +247,10 @@
                   <th><button type="button" data-team-sort="so" data-label="Career SO">Career SO</button></th>
                   <th><button type="button" data-team-sort="avg" data-label="Career AVG">Career AVG</button></th>
                   <th><button type="button" data-team-sort="ops" data-label="Career OPS">Career OPS</button></th>
-                  <th><button type="button" data-team-sort="seasons" data-label="H2H Years">H2H Years</button></th>
                 </tr>
               </thead>
               <tbody id="team-offense-table">
-                <tr><td colspan="12" class="empty-row">Loading team offense...</td></tr>
+                <tr><td colspan="11" class="empty-row">Loading team offense...</td></tr>
               </tbody>
             </table>
           </div>
@@ -266,6 +265,6 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260611-matchup-tabs-default"></script>
+    <script src="matchups.js?v=20260611-h2h-cleanup"></script>
   </body>
 </html>
