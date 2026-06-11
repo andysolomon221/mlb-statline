@@ -4,6 +4,7 @@ const peopleCache = new Map();
 const statsCache = new Map();
 const headToHeadCache = new Map();
 const rosterCache = new Map();
+const vsTeamCache = new Map();
 
 const teams = [
   ["ARI", "Arizona Diamondbacks", 109],
@@ -39,6 +40,7 @@ const teams = [
 ];
 
 const teamNameByAbbr = new Map(teams.map(([abbr, name]) => [abbr, name]));
+const teamById = new Map(teams.map(([abbr, name, id]) => [String(id), { abbr, name, id }]));
 
 const parks = [
   ["neutral", "Neutral park", 100, "Baseline run environment"],
@@ -97,6 +99,11 @@ function num(value) {
 
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
+}
+
+function teamByAbbr(abbr) {
+  const row = teams.find(([teamAbbr]) => teamAbbr === abbr) || teams[0];
+  return { abbr: row[0], name: row[1], id: row[2] };
 }
 
 function escapeHtml(value = "") {
@@ -205,6 +212,28 @@ async function headToHeadStats(batterPlayer, pitcherPlayer) {
   }));
   headToHeadCache.set(cacheKey, rows);
   return rows;
+}
+
+async function vsTeamStats(player, group, opponentTeamId) {
+  const cacheKey = `${player.id}:${group}:${opponentTeamId}`;
+  if (vsTeamCache.has(cacheKey)) return vsTeamCache.get(cacheKey);
+  const params = new URLSearchParams({
+    stats: "vsTeam",
+    group,
+    opposingTeamId: opponentTeamId,
+    sportId: 1
+  });
+  const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${player.id}/stats?${params.toString()}`);
+  const total = (data.stats || []).find((entry) => entry.type?.displayName === "vsTeamTotal")?.splits?.[0] || null;
+  const rows = ((data.stats || []).find((entry) => entry.type?.displayName === "vsTeam")?.splits || []).map((split) => ({
+    season: split.season || "Career",
+    team: split.team?.name || "",
+    opponent: split.opponent?.name || "",
+    stat: split.stat || {}
+  }));
+  const payload = { total, rows };
+  vsTeamCache.set(cacheKey, payload);
+  return payload;
 }
 
 function selectedBattingTeam() {
@@ -453,6 +482,120 @@ function renderTeamOffense(rows, teamName, pitcherName) {
   }).join("") || `<tr><td colspan="12" class="empty-row">No active hitters found for this team.</td></tr>`;
 }
 
+function statLine(stat = {}, keys = []) {
+  return keys.map(([key, label, formatter]) => `${label} ${formatter ? formatter(stat[key]) : (stat[key] ?? "-")}`).join(" | ");
+}
+
+function renderPlayerTeamTable(type, rows) {
+  const columns = type === "pitcher"
+    ? [
+        ["season", "Season"],
+        ["team", "Team"],
+        ["plateAppearances", "BF"],
+        ["atBats", "AB"],
+        ["hits", "H"],
+        ["homeRuns", "HR"],
+        ["baseOnBalls", "BB"],
+        ["strikeOuts", "SO"],
+        ["avg", "AVG"],
+        ["ops", "OPS"]
+      ]
+    : [
+        ["season", "Season"],
+        ["team", "Team"],
+        ["plateAppearances", "PA"],
+        ["atBats", "AB"],
+        ["hits", "H"],
+        ["homeRuns", "HR"],
+        ["rbi", "RBI"],
+        ["baseOnBalls", "BB"],
+        ["strikeOuts", "SO"],
+        ["avg", "AVG"],
+        ["ops", "OPS"]
+      ];
+  document.querySelector("#player-team-head").innerHTML = `<tr>${columns.map(([, label]) => `<th>${label}</th>`).join("")}</tr>`;
+  document.querySelector("#player-team-table").innerHTML = rows.length
+    ? rows
+        .slice()
+        .sort((a, b) => Number(b.season) - Number(a.season))
+        .map((row) => `
+          <tr>
+            ${columns.map(([key]) => {
+              const value = key === "season" ? row.season : key === "team" ? row.team : row.stat?.[key];
+              return `<td>${value ?? "-"}</td>`;
+            }).join("")}
+          </tr>
+        `).join("")
+    : `<tr><td colspan="${columns.length}" class="empty-row">No season-by-season history found for this player against that team.</td></tr>`;
+}
+
+async function updatePlayerVsTeam() {
+  const type = document.querySelector("#player-team-type")?.value || "batter";
+  const opponent = teamByAbbr(document.querySelector("#player-team-opponent")?.value || (type === "pitcher" ? selectedBattingTeam()[0] : document.querySelector("#matchup-pitching-team").value));
+  const player = type === "pitcher" ? pitcher : batter;
+  const group = type === "pitcher" ? "pitching" : "hitting";
+  document.querySelector("#player-team-title").textContent = `${player.fullName} vs ${opponent.name}`;
+  document.querySelector("#player-team-status").textContent = "Loading...";
+  document.querySelector("#player-team-grid").innerHTML = `<div class="empty-state">Loading player-vs-team history...</div>`;
+  document.querySelector("#player-team-table").innerHTML = `<tr><td class="empty-row">Loading player-vs-team history...</td></tr>`;
+  try {
+    const [profile, history] = await Promise.all([
+      playerStats(player, group),
+      vsTeamStats(player, group, opponent.id)
+    ]);
+    const totalStat = history.total?.stat || {};
+    const opponentLabel = history.total?.opponent?.name || opponent.name;
+    const playerTeam = history.total?.team?.name || profile.teamName || player.teamName || "Career";
+    const totalNote = type === "pitcher"
+      ? statLine(totalStat, [
+          ["plateAppearances", "BF"],
+          ["hits", "H"],
+          ["homeRuns", "HR"],
+          ["baseOnBalls", "BB"],
+          ["strikeOuts", "SO"],
+          ["avg", "AVG"],
+          ["ops", "OPS"]
+        ])
+      : statLine(totalStat, [
+          ["plateAppearances", "PA"],
+          ["hits", "H"],
+          ["homeRuns", "HR"],
+          ["rbi", "RBI"],
+          ["baseOnBalls", "BB"],
+          ["strikeOuts", "SO"],
+          ["avg", "AVG"],
+          ["ops", "OPS"]
+        ]);
+    const seasonLine = type === "pitcher"
+      ? `Season: ERA ${profile.season.era || "-"} | WHIP ${profile.season.whip || "-"} | SO ${profile.season.strikeOuts || 0}`
+      : `Season: AVG ${profile.season.avg || "-"} | OPS ${profile.season.ops || "-"} | HR ${profile.season.homeRuns || 0}`;
+
+    document.querySelector("#player-team-grid").innerHTML = `
+      <article class="fantasy-note-card">
+        <strong><a class="summary-link" href="${baseballReferenceSearchUrl(player.fullName)}" target="_blank" rel="noopener noreferrer">${player.fullName}</a></strong>
+        <span>${seasonLine}</span>
+        <span>${playerTeam}</span>
+      </article>
+      <article class="fantasy-note-card">
+        <strong>${opponentLabel}</strong>
+        <span>${type === "pitcher" ? "Opponent hitters faced" : "Opponent pitching faced"}</span>
+        <span>Career regular season vs team</span>
+      </article>
+      <article class="fantasy-note-card">
+        <strong>Career vs Team</strong>
+        <span>${history.total ? totalNote : "No recorded team history"}</span>
+        <span>${history.rows.length ? `${history.rows.length} detailed split rows` : "No season rows available"}</span>
+      </article>
+    `;
+    renderPlayerTeamTable(type, history.rows);
+    document.querySelector("#player-team-status").textContent = history.total ? "Loaded" : "No history found";
+  } catch (error) {
+    document.querySelector("#player-team-status").textContent = "Could not load";
+    document.querySelector("#player-team-grid").innerHTML = `<div class="empty-state">Could not load this player-vs-team view.</div>`;
+    document.querySelector("#player-team-table").innerHTML = `<tr><td class="empty-row">Could not load player-vs-team history.</td></tr>`;
+  }
+}
+
 async function updateTeamOffense() {
   const [teamAbbr, teamName] = selectedBattingTeam();
   document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcher.fullName}`;
@@ -554,6 +697,7 @@ async function analyzeMatchup() {
     ]);
     renderMatchup({ batter: batterStats, pitcher: pitcherStats, headToHead });
     updateTeamOffense();
+    updatePlayerVsTeam();
     document.querySelector("#matchup-status").textContent = "Matchup loaded";
   } catch (error) {
     document.querySelector("#matchup-status").textContent = "Could not load matchup";
@@ -571,8 +715,10 @@ function populateControls() {
   const teamOptions = teams.map(([abbr, name]) => `<option value="${abbr}">${name}</option>`).join("");
   document.querySelector("#matchup-batting-team").innerHTML = teamOptions;
   document.querySelector("#matchup-pitching-team").innerHTML = teamOptions;
+  document.querySelector("#player-team-opponent").innerHTML = teamOptions;
   document.querySelector("#matchup-batting-team").value = "LAD";
   document.querySelector("#matchup-pitching-team").value = "PIT";
+  document.querySelector("#player-team-opponent").value = "PIT";
   document.querySelector("#matchup-roster-pool").value = activeRosterType;
   document.querySelector("#matchup-park").innerHTML = parks.map(([abbr, name, factor]) => `<option value="${abbr}">${name} (${factor})</option>`).join("");
   document.querySelector("#matchup-park").value = "LAD";
@@ -586,11 +732,26 @@ function bindEvents() {
     populateTeamPlayerDropdowns().then(analyzeMatchup);
   });
   document.querySelector("#run-matchup").addEventListener("click", analyzeMatchup);
+  document.querySelector("#run-player-team").addEventListener("click", updatePlayerVsTeam);
+  document.querySelector("#player-team-type").addEventListener("change", () => {
+    const defaultOpponent = document.querySelector("#player-team-type").value === "pitcher"
+      ? document.querySelector("#matchup-batting-team").value
+      : document.querySelector("#matchup-pitching-team").value;
+    document.querySelector("#player-team-opponent").value = defaultOpponent;
+    updatePlayerVsTeam();
+  });
+  document.querySelector("#player-team-opponent").addEventListener("change", updatePlayerVsTeam);
   document.querySelector("#matchup-park").addEventListener("change", analyzeMatchup);
   document.querySelector("#matchup-batting-team").addEventListener("change", () => {
+    if (document.querySelector("#player-team-type").value === "pitcher") {
+      document.querySelector("#player-team-opponent").value = document.querySelector("#matchup-batting-team").value;
+    }
     populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
   });
   document.querySelector("#matchup-pitching-team").addEventListener("change", () => {
+    if (document.querySelector("#player-team-type").value === "batter") {
+      document.querySelector("#player-team-opponent").value = document.querySelector("#matchup-pitching-team").value;
+    }
     populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
   });
   document.querySelector("#matchup-roster-pool").addEventListener("change", (event) => {

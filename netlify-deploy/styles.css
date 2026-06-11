@@ -1575,6 +1575,31 @@ td {
   align-items: end;
 }
 
+.player-team-controls {
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.player-team-controls > label {
+  display: grid;
+  gap: 8px;
+}
+
+.player-team-controls button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 16px;
+  color: #fff;
+  background: var(--navy);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.player-team-grid {
+  margin-bottom: 18px;
+}
+
 .matchup-read {
   display: grid;
   gap: 10px;

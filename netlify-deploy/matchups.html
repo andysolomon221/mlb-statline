@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Matchups" />
     <meta name="twitter:description" content="Compare batter-vs-pitcher and roster-vs-pitcher matchups with career head-to-head context." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260608-career-page" />
+    <link rel="stylesheet" href="styles.css?v=20260611-player-team-matchup" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -178,6 +178,40 @@
           </section>
         </section>
 
+        <section class="panel player-team-panel" aria-label="Player against team">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Player vs Team</p>
+              <h2 id="player-team-title">Selected player against selected team</h2>
+            </div>
+            <div class="split-status" id="player-team-status">Loading player vs team...</div>
+          </div>
+          <div class="matchup-setup-grid player-team-controls">
+            <label>
+              <span>Player Type</span>
+              <select id="player-team-type" aria-label="Player vs team type">
+                <option value="batter">Batter vs team</option>
+                <option value="pitcher">Pitcher vs team</option>
+              </select>
+            </label>
+            <label>
+              <span>Opponent Team</span>
+              <select id="player-team-opponent" aria-label="Opponent team"></select>
+            </label>
+            <button id="run-player-team" type="button">View</button>
+          </div>
+          <div class="matchup-card-grid player-team-grid" id="player-team-grid"></div>
+          <div class="table-wrap">
+            <table>
+              <thead id="player-team-head"></thead>
+              <tbody id="player-team-table">
+                <tr><td class="empty-row">Loading player vs team...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <small class="data-note">Player-vs-team uses MLB career regular-season vs-team history. Batter-vs-pitcher history remains in the table below.</small>
+        </section>
+
         <section class="panel matchup-offense-panel" aria-label="Team offense against selected pitcher">
           <div class="section-head">
             <div>
@@ -219,6 +253,6 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260602-player-labels"></script>
+    <script src="matchups.js?v=20260611-player-team-matchup"></script>
   </body>
 </html>
