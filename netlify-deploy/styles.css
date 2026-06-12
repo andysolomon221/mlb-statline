@@ -1615,6 +1615,10 @@ td {
   display: none;
 }
 
+.compare-controls-panel[data-active-mode="careerSeasons"][data-advanced-career-windows] .compare-career-season-fields {
+  display: none;
+}
+
 .compare-mode-toggle,
 .compare-range-fields,
 .compare-career-season-fields {
