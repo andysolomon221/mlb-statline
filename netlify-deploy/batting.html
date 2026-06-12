@@ -3,20 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MLB Statline Pitching</title>
+    <title>Statline Baseball Batting</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="canonical" href="https://www.statlinebaseball.com/pitching" />
-    <meta name="description" content="Sort MLB pitching leaders by season, team, league, year range, ERA, WHIP, strikeouts, saves, and more." />
-    <meta property="og:title" content="Statline Baseball Pitching" />
-    <meta property="og:description" content="Sort MLB pitching leaders by season, team, league, year range, ERA, WHIP, strikeouts, saves, and more." />
+    <link rel="canonical" href="https://www.statlinebaseball.com/batting" />
+    <meta name="description" content="Explore MLB batting leaders by season, team, league, position, player, and custom year range." />
+    <meta property="og:title" content="Statline Baseball Batting" />
+    <meta property="og:description" content="Explore MLB batting leaders by season, team, league, position, player, and custom year range." />
     <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="https://www.statlinebaseball.com/pitching" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/batting" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Statline Baseball Pitching" />
-    <meta name="twitter:description" content="Sort MLB pitching leaders by season, team, league, year range, ERA, WHIP, strikeouts, saves, and more." />
+    <meta name="twitter:title" content="Statline Baseball Batting" />
+    <meta name="twitter:description" content="Explore MLB batting leaders by season, team, league, position, player, and custom year range." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
     <link rel="stylesheet" href="styles.css?v=20260611-home-batting-split" />
     <script>
@@ -40,14 +40,14 @@
       });
     </script>
   </head>
-  <body data-board="pitching">
+  <body data-board="hitting">
     <div class="app-shell">
       <aside class="rail" aria-label="Primary">
         <div class="brand-mark" aria-hidden="true">Statline</div>
         <nav class="rail-nav">
           <a href="index.html">Home</a>
-          <a href="batting.html">Batting</a>
-          <a class="active" href="pitching.html">Pitching</a>
+          <a class="active" href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
           <a href="advanced.html">Advanced</a>
           <a href="statcast.html">Statcast</a>
           <a href="matchups.html">Matchups</a>
@@ -63,8 +63,16 @@
       <main id="dashboard">
         <header class="topbar">
           <div>
-            <p class="eyebrow">MLB Statline</p>
-            <h1>Pitching intelligence across every era.</h1>
+            <p class="eyebrow">Batting</p>
+            <h1>Batting leaders by season, team, league, and era.</h1>
+            <div class="hero-search">
+              <label for="hero-player-search">Search Player Or Club</label>
+              <div class="search-action">
+                <input id="hero-player-search" type="search" list="player-search-options" placeholder="Try Aaron Judge, Red Sox, Dodgers..." aria-label="Search player or club" />
+                <button type="button" id="hero-search-submit">View</button>
+              </div>
+              <datalist id="player-search-options"></datalist>
+            </div>
           </div>
           <div class="season-control" aria-label="Historical season">
             <label for="season-select">Choose Season</label>
@@ -72,35 +80,12 @@
           </div>
         </header>
 
-        <section class="score-strip" aria-label="League summary">
-          <article>
-            <span id="run-summary-label">League ERA</span>
-            <strong id="run-environment">4.52</strong>
-            <small id="run-context">earned runs per nine innings</small>
-          </article>
-          <article>
-            <span id="ops-summary-label">League WHIP</span>
-            <strong id="league-ops">.724</strong>
-            <small id="ops-context">walks plus hits per inning</small>
-          </article>
-          <article>
-            <span>Strikeout Rate</span>
-            <strong id="k-rate">22.1%</strong>
-            <small id="k-context">of all plate appearances</small>
-          </article>
-          <article>
-            <span>Save Conversion</span>
-            <strong id="save-rate">66%</strong>
-            <small id="save-context">late-game pressure index</small>
-          </article>
-        </section>
-
-        <section class="panel range-panel" data-active-mode="single" aria-label="Year range tools">
+        <section class="panel range-panel" data-active-mode="single" id="history-tools" aria-label="Year range tools">
           <div class="range-toolbar">
             <div>
-              <p class="eyebrow">Historical Scope</p>
+              <p class="eyebrow">Refine Stats</p>
               <h2 id="scope-title">Single-season leaders</h2>
-              <small class="data-note" id="data-note">Pitching leaders load from MLB Stats API for the selected season.</small>
+              <small class="data-note" id="data-note">Player leaders load from MLB Stats API for the selected season.</small>
             </div>
             <div class="mode-toggle" role="group" aria-label="Leader scope">
               <button class="active" data-mode="single">Single year</button>
@@ -138,8 +123,8 @@
               <select id="position-filter" aria-label="Position filter"></select>
             </div>
             <div class="qualifier-filter">
-              <label for="qualifier-filter">Min IP</label>
-              <select id="qualifier-filter" aria-label="Minimum innings pitched"></select>
+              <label for="qualifier-filter">Min PA</label>
+              <select id="qualifier-filter" aria-label="Minimum plate appearances"></select>
             </div>
             <div class="league-toggle board-size-toggle" role="group" aria-label="Player board size">
               <button class="active" data-board-size="leaders">Top 20</button>
@@ -152,8 +137,8 @@
           <div class="panel feature-panel">
             <div class="section-head">
               <div>
-                <p class="eyebrow" id="leader-eyebrow">Run Prevention</p>
-                <h2 id="chart-title">Top pitching leaders</h2>
+                <p class="eyebrow" id="leader-eyebrow">Run Creation</p>
+                <h2 id="chart-title">Top offensive engines</h2>
               </div>
               <select id="metric-select" aria-label="Metric"></select>
             </div>
@@ -184,7 +169,7 @@
                 <small class="data-note table-note" id="table-note"></small>
               </div>
               <div class="search-action board-search-action">
-                <input id="player-search" type="search" placeholder="Search player or club" aria-label="Search players" />
+                <input id="player-search" type="search" list="player-search-options" placeholder="Search player or club" aria-label="Search players" />
                 <select id="search-scope" aria-label="Search scope">
                   <option value="all">All</option>
                   <option value="player">Player</option>
@@ -195,7 +180,8 @@
             </div>
             <div class="table-wrap">
               <table>
-                <thead id="player-head"></thead>
+                <thead id="player-head">
+                </thead>
                 <tbody id="player-table"></tbody>
               </table>
             </div>
@@ -213,6 +199,29 @@
           </div>
         </section>
 
+        <section class="score-strip" aria-label="League summary">
+          <article>
+            <span id="run-summary-label">Run Environment</span>
+            <strong id="run-environment">4.52</strong>
+            <small id="run-context">runs per team game</small>
+          </article>
+          <article>
+            <span id="ops-summary-label">League OPS</span>
+            <strong id="league-ops">.724</strong>
+            <small id="ops-context">weighted by plate appearances</small>
+          </article>
+          <article>
+            <span>Strikeout Rate</span>
+            <strong id="k-rate">22.1%</strong>
+            <small id="k-context">of all plate appearances</small>
+          </article>
+          <article>
+            <span>Save Conversion</span>
+            <strong id="save-rate">66%</strong>
+            <small id="save-context">late-game pressure index</small>
+          </article>
+        </section>
+
         <section class="panel park-panel" id="parks">
           <div class="section-head">
             <div>
@@ -222,6 +231,7 @@
           </div>
           <div class="park-grid" id="park-grid"></div>
         </section>
+
         <footer class="site-footer">
           <a href="about.html">About</a>
           <a href="data-sources.html">Data Sources</a>
@@ -231,6 +241,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260609-chart-player-actions"></script>
+    <script src="script.js?v=20260611-home-batting-split"></script>
   </body>
 </html>

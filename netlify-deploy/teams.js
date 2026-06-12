@@ -59,7 +59,7 @@ function renderSelectedTeam() {
   ].join("");
   document.querySelector("#team-community-links").innerHTML = club.communities.map(([label, url]) => linkButton(label, url)).join("");
   document.querySelector("#team-tool-links").innerHTML = [
-    linkButton("Batting leaders", `index.html?team=${club.id}`),
+    linkButton("Batting leaders", `batting.html?team=${club.id}`),
     linkButton("Pitching leaders", `pitching.html?team=${club.id}`),
     linkButton("Advanced board", `advanced.html?team=${club.id}`),
     linkButton("Statcast board", `statcast.html?team=${club.id}`),

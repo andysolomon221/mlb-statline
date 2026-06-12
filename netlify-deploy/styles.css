@@ -117,6 +117,10 @@ select {
 }
 
 .rail-nav a[href="index.html"]::after {
+  content: "Daily paths into matchups, leaders, team pages, news, and baseball rabbit holes.";
+}
+
+.rail-nav a[href="batting.html"]::after {
   content: "Single-season and historical range leaderboards for hitters.";
 }
 
@@ -294,6 +298,32 @@ h2 {
   background: #fff;
 }
 
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.home-hero-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  padding: 0 14px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.home-hero-actions a:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .search-action {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -334,6 +364,81 @@ h2 {
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin: 18px 0;
+}
+
+.daily-board {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 2fr);
+  gap: 14px;
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(24, 32, 43, 0.05);
+}
+
+.daily-board-copy {
+  display: grid;
+  align-content: center;
+  gap: 7px;
+}
+
+.daily-board-copy h2 {
+  max-width: 420px;
+  font-size: 22px;
+  line-height: 1.12;
+}
+
+.daily-board-copy small {
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.daily-board-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.daily-board-actions a {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 118px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px;
+  color: inherit;
+  background: #f8fafc;
+  text-decoration: none;
+}
+
+.daily-board-actions a:hover {
+  border-color: rgba(18, 53, 91, 0.42);
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(24, 32, 43, 0.08);
+}
+
+.daily-board-actions span {
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.daily-board-actions strong {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.daily-board-actions small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .quick-jump-panel {
@@ -1737,6 +1842,7 @@ td {
   }
 
   .score-strip,
+  .daily-board,
   .quick-jump-panel,
   .rabbit-hole-panel,
   .range-toolbar,
@@ -1754,6 +1860,10 @@ td {
   .news-grid,
   .team-hub-grid,
   .team-directory-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .daily-board-actions {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -1831,6 +1941,21 @@ td {
     grid-template-columns: 1fr;
     gap: 10px;
     margin: 10px 0;
+  }
+
+  .daily-board {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin: 10px 0;
+    padding: 13px;
+  }
+
+  .daily-board-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-board-actions a {
+    min-height: auto;
   }
 
   .quick-jump-card {
@@ -2156,44 +2281,48 @@ td {
     order: 1;
   }
 
-  .rail-nav a[href="pitching.html"] {
+  .rail-nav a[href="batting.html"] {
     order: 2;
   }
 
-  .rail-nav a[href="matchups.html"] {
+  .rail-nav a[href="pitching.html"] {
     order: 3;
   }
 
-  .rail-nav a[href="teams.html"] {
+  .rail-nav a[href="matchups.html"] {
     order: 4;
   }
 
-  .rail-nav a[href="news.html"] {
+  .rail-nav a[href="teams.html"] {
     order: 5;
   }
 
-  .rail-nav a[href="advanced.html"] {
+  .rail-nav a[href="news.html"] {
     order: 6;
   }
 
-  .rail-nav a[href="statcast.html"] {
+  .rail-nav a[href="advanced.html"] {
     order: 7;
   }
 
-  .rail-nav a[href="compare.html"] {
+  .rail-nav a[href="statcast.html"] {
     order: 8;
   }
 
-  .rail-nav a[href="career.html"] {
+  .rail-nav a[href="compare.html"] {
     order: 9;
   }
 
-  .rail-nav a[href="splits.html"] {
+  .rail-nav a[href="career.html"] {
     order: 10;
   }
 
-  .rail-nav a[href="fantasy.html"] {
+  .rail-nav a[href="splits.html"] {
     order: 11;
+  }
+
+  .rail-nav a[href="fantasy.html"] {
+    order: 12;
   }
 
   .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="teams.html"]):not([href="news.html"]) {
