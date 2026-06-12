@@ -124,6 +124,36 @@
               <input id="compare-career-season-end" type="number" min="1" step="1" value="4" aria-label="Career season range end" />
             </label>
           </div>
+          <div class="compare-advanced-wrap">
+            <button id="compare-advanced-toggle" type="button" aria-expanded="false">Advanced career windows</button>
+            <div class="compare-advanced-panel" id="compare-advanced-panel" hidden>
+              <small class="data-note">Compare different career-year windows for each player.</small>
+              <div class="compare-custom-window-grid">
+                <fieldset>
+                  <legend>Player 1 window</legend>
+                  <label>
+                    <span>From career year <strong id="compare-player-a-career-start-value">1</strong></span>
+                    <input id="compare-player-a-career-start" type="number" min="1" step="1" value="1" aria-label="Player 1 career year start" />
+                  </label>
+                  <label>
+                    <span>To <strong id="compare-player-a-career-end-value">4</strong></span>
+                    <input id="compare-player-a-career-end" type="number" min="1" step="1" value="4" aria-label="Player 1 career year end" />
+                  </label>
+                </fieldset>
+                <fieldset>
+                  <legend>Player 2 window</legend>
+                  <label>
+                    <span>From career year <strong id="compare-player-b-career-start-value">1</strong></span>
+                    <input id="compare-player-b-career-start" type="number" min="1" step="1" value="1" aria-label="Player 2 career year start" />
+                  </label>
+                  <label>
+                    <span>To <strong id="compare-player-b-career-end-value">4</strong></span>
+                    <input id="compare-player-b-career-end" type="number" min="1" step="1" value="4" aria-label="Player 2 career year end" />
+                  </label>
+                </fieldset>
+              </div>
+            </div>
+          </div>
           <div class="compare-action-row">
             <button id="run-comparison" type="button">Compare</button>
           </div>
@@ -188,6 +218,6 @@
       </main>
     </div>
 
-    <script src="compare.js?v=20260610-mobile-compare-stack"></script>
+    <script src="compare.js?v=20260612-advanced-career-windows"></script>
   </body>
 </html>

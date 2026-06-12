@@ -1602,11 +1602,14 @@ td {
 
 .compare-controls-panel[data-active-mode="single"] .compare-range-fields,
 .compare-controls-panel[data-active-mode="single"] .compare-career-season-fields,
+.compare-controls-panel[data-active-mode="single"] .compare-advanced-wrap,
 .compare-controls-panel[data-active-mode="range"] .compare-season-field,
 .compare-controls-panel[data-active-mode="range"] .compare-career-season-fields,
+.compare-controls-panel[data-active-mode="range"] .compare-advanced-wrap,
 .compare-controls-panel[data-active-mode="career"] .compare-season-field,
 .compare-controls-panel[data-active-mode="career"] .compare-range-fields,
 .compare-controls-panel[data-active-mode="career"] .compare-career-season-fields,
+.compare-controls-panel[data-active-mode="career"] .compare-advanced-wrap,
 .compare-controls-panel[data-active-mode="careerSeasons"] .compare-range-fields,
 .compare-controls-panel[data-active-mode="careerSeasons"] .compare-season-field {
   display: none;
@@ -1616,6 +1619,70 @@ td {
 .compare-range-fields,
 .compare-career-season-fields {
   margin-top: 14px;
+}
+
+.compare-advanced-wrap {
+  margin-top: 14px;
+}
+
+.compare-advanced-wrap > button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--navy);
+  background: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.compare-advanced-wrap > button[aria-expanded="true"] {
+  color: #fff;
+  background: var(--navy);
+}
+
+.compare-advanced-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.compare-custom-window-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.compare-custom-window-grid fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.compare-custom-window-grid legend {
+  padding: 0 6px;
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.compare-custom-window-grid label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .compare-player-grid {
@@ -2020,6 +2087,8 @@ td {
   .matchup-advanced-search,
   .browse-players-grid,
   .compare-control-grid,
+  .compare-custom-window-grid,
+  .compare-custom-window-grid fieldset,
   .compare-player-grid,
   .team-hub-grid,
   .team-directory-grid,

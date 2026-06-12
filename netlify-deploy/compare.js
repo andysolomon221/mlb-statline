@@ -9,6 +9,11 @@ let activeMode = "single";
 let activeSeason = "2026";
 let activeRange = { start: 2021, end: 2026 };
 let activeCareerSeasonRange = { start: 1, end: 4 };
+let advancedCareerWindowsOpen = false;
+let activePlayerCareerWindows = {
+  a: { start: 1, end: 4 },
+  b: { start: 1, end: 4 }
+};
 let playerA = { id: 592450, fullName: "Aaron Judge", position: "OF", mlbDebutDate: "2016-08-13" };
 let playerB = { id: 660271, fullName: "Shohei Ohtani", position: "DH", mlbDebutDate: "2018-03-29" };
 let candidatesA = [playerA];
@@ -83,8 +88,9 @@ function scopeLabel() {
   if (activeMode === "single") return activeSeason;
   if (activeMode === "career") return "Full career";
   if (activeMode === "careerSeasons") {
+    if (advancedCareerWindowsOpen) return "Custom windows";
     const range = careerSeasonRange();
-    return range.start === range.end ? `Career season ${range.start}` : `Career seasons ${range.start}-${range.end}`;
+    return careerWindowLabel(range).replace("career", "Career");
   }
   return activeRange.start === activeRange.end ? String(activeRange.start) : `${activeRange.start}-${activeRange.end}`;
 }
@@ -98,11 +104,25 @@ function firstSeasonRowsKey(player) {
 }
 
 function careerSeasonRange() {
-  const cleanStart = Math.max(1, Math.floor(toNumber(activeCareerSeasonRange.start)) || 1);
-  const cleanEnd = Math.max(1, Math.floor(toNumber(activeCareerSeasonRange.end)) || cleanStart);
+  return cleanCareerRange(activeCareerSeasonRange);
+}
+
+function cleanCareerRange(range) {
+  const cleanStart = Math.max(1, Math.floor(toNumber(range.start)) || 1);
+  const cleanEnd = Math.max(1, Math.floor(toNumber(range.end)) || cleanStart);
   const start = Math.min(cleanStart, cleanEnd);
   const end = Math.max(cleanStart, cleanEnd);
   return { start, end };
+}
+
+function careerWindowForSide(side) {
+  return advancedCareerWindowsOpen && activeMode === "careerSeasons"
+    ? cleanCareerRange(activePlayerCareerWindows[side] || activeCareerSeasonRange)
+    : careerSeasonRange();
+}
+
+function careerWindowLabel(range) {
+  return range.start === range.end ? `career season ${range.start}` : `career seasons ${range.start}-${range.end}`;
 }
 
 async function fetchJson(url) {
@@ -299,8 +319,8 @@ async function fetchFirstSeasonRows(player) {
   return rows;
 }
 
-async function playerStats(player) {
-  const range = careerSeasonRange();
+async function playerStats(player, side) {
+  const range = activeMode === "careerSeasons" ? careerWindowForSide(side) : careerSeasonRange();
   const stats = activeMode === "career"
     ? (await fetchFirstSeasonRows(player)).map((row) => row.stat)
     : activeMode === "careerSeasons"
@@ -324,7 +344,7 @@ function finalizeStats(stat) {
   return stat;
 }
 
-function playerScopeLine(player) {
+function playerScopeLine(player, side) {
   if (activeMode === "career") {
     const rows = firstSeasonRowsCache.get(firstSeasonRowsKey(player)) || [];
     const years = rows.map((row) => row.season).filter(Boolean);
@@ -332,13 +352,12 @@ function playerScopeLine(player) {
     return `Full career (${seasonText})`;
   }
   if (activeMode !== "careerSeasons") return `${scopeLabel()} ${activeGroup === "hitting" ? "batting" : "pitching"} line`;
-  const range = careerSeasonRange();
+  const range = careerWindowForSide(side);
   const rows = (firstSeasonRowsCache.get(firstSeasonRowsKey(player)) || []).slice(range.start - 1, range.end);
   const years = rows.map((row) => row.season).filter(Boolean);
   if (!years.length) return "Each player's matching career seasons";
   const seasonText = years.length === 1 ? years[0] : `${years[0]}-${years[years.length - 1]}`;
-  const careerText = range.start === range.end ? `career season ${range.start}` : `career seasons ${range.start}-${range.end}`;
-  return `${careerText} (${seasonText})`;
+  return `${careerWindowLabel(range)} (${seasonText})`;
 }
 
 function formatValue(key, value, digits) {
@@ -359,7 +378,7 @@ function renderMobileCompareStack(statsA, statsB) {
     <article class="compare-mobile-card">
       <span>${escapeHtml(player.position || "MLB")}</span>
       <strong>${escapeHtml(player.fullName)}</strong>
-      <small>${escapeHtml(playerScopeLine(player))}</small>
+      <small>${escapeHtml(playerScopeLine(player, player === playerA ? "a" : "b"))}</small>
       <div class="compare-mobile-stat-grid">
         ${mobileSummaryMetrics().map(([key, label, digits]) => `
           <div>
@@ -382,14 +401,14 @@ function renderComparison(statsA, statsB) {
   document.querySelector("#compare-player-b-note").textContent = playerB.position || "Player";
   document.querySelector("#compare-scope-card").textContent = scopeLabel();
   document.querySelector("#compare-scope-note").textContent = activeMode === "careerSeasons"
-    ? `Each player's own matching career seasons`
+    ? advancedCareerWindowsOpen ? "Custom career windows" : "Each player's own matching career seasons"
     : `${activeGroup === "hitting" ? "Batting" : "Pitching"} comparison`;
   document.querySelector("#compare-table-title").textContent = `${playerA.fullName} vs ${playerB.fullName}`;
   document.querySelector("#compare-player-grid").innerHTML = [playerA, playerB].map((player) => `
     <article class="fantasy-note-card">
       <span>${player.position || "MLB"}</span>
       <strong><a class="summary-link" href="${baseballReferenceSearchUrl(player.fullName)}" target="_blank" rel="noopener noreferrer">${escapeHtml(player.fullName)}</a></strong>
-      <small>${escapeHtml(playerScopeLine(player))}</small>
+      <small>${escapeHtml(playerScopeLine(player, player === playerA ? "a" : "b"))}</small>
     </article>
   `).join("");
   renderMobileCompareStack(statsA, statsB);
@@ -415,7 +434,7 @@ async function runComparison() {
   document.querySelector("#compare-status-card").textContent = "Loading";
   try {
     await Promise.all([hydratePlayer("a"), hydratePlayer("b")]);
-    const [statsA, statsB] = await Promise.all([playerStats(playerA), playerStats(playerB)]);
+    const [statsA, statsB] = await Promise.all([playerStats(playerA, "a"), playerStats(playerB, "b")]);
     renderComparison(statsA, statsB);
     document.querySelector("#compare-status").textContent = "Comparison loaded";
     document.querySelector("#compare-status-card").textContent = "Loaded";
@@ -444,10 +463,20 @@ function updateModeControls() {
     button.classList.toggle("active", button.dataset.compareMode === activeMode);
   });
   document.querySelector(".compare-controls-panel").setAttribute("data-active-mode", activeMode);
+  document.querySelector(".compare-controls-panel").toggleAttribute("data-advanced-career-windows", advancedCareerWindowsOpen);
+  document.querySelector("#compare-advanced-toggle").setAttribute("aria-expanded", String(advancedCareerWindowsOpen));
+  document.querySelector("#compare-advanced-panel").hidden = !advancedCareerWindowsOpen;
   document.querySelector("#compare-range-start-value").textContent = activeRange.start;
   document.querySelector("#compare-range-end-value").textContent = activeRange.end;
   document.querySelector("#compare-career-season-start-value").textContent = careerSeasonRange().start;
   document.querySelector("#compare-career-season-end-value").textContent = careerSeasonRange().end;
+  ["a", "b"].forEach((side) => {
+    const range = cleanCareerRange(activePlayerCareerWindows[side]);
+    document.querySelector(`#compare-player-${side}-career-start-value`).textContent = range.start;
+    document.querySelector(`#compare-player-${side}-career-end-value`).textContent = range.end;
+    document.querySelector(`#compare-player-${side}-career-start`).value = range.start;
+    document.querySelector(`#compare-player-${side}-career-end`).value = range.end;
+  });
 }
 
 function bindAutocomplete(side) {
@@ -479,9 +508,16 @@ function bindEvents() {
   document.querySelectorAll("[data-compare-mode]").forEach((button) => {
     button.addEventListener("click", () => {
       activeMode = button.dataset.compareMode;
+      if (activeMode !== "careerSeasons") advancedCareerWindowsOpen = false;
       updateModeControls();
       runComparison();
     });
+  });
+  document.querySelector("#compare-advanced-toggle").addEventListener("click", () => {
+    advancedCareerWindowsOpen = !advancedCareerWindowsOpen;
+    activeMode = "careerSeasons";
+    updateModeControls();
+    runComparison();
   });
   document.querySelector("#compare-range-start").addEventListener("change", (event) => {
     activeRange.start = Number(event.target.value);
@@ -495,15 +531,39 @@ function bindEvents() {
   });
   document.querySelector("#compare-career-season-start").addEventListener("change", (event) => {
     activeCareerSeasonRange.start = Number(event.target.value);
+    if (!advancedCareerWindowsOpen) {
+      activePlayerCareerWindows.a.start = Number(event.target.value);
+      activePlayerCareerWindows.b.start = Number(event.target.value);
+    }
     activeMode = "careerSeasons";
     updateModeControls();
     runComparison();
   });
   document.querySelector("#compare-career-season-end").addEventListener("change", (event) => {
     activeCareerSeasonRange.end = Number(event.target.value);
+    if (!advancedCareerWindowsOpen) {
+      activePlayerCareerWindows.a.end = Number(event.target.value);
+      activePlayerCareerWindows.b.end = Number(event.target.value);
+    }
     activeMode = "careerSeasons";
     updateModeControls();
     runComparison();
+  });
+  ["a", "b"].forEach((side) => {
+    document.querySelector(`#compare-player-${side}-career-start`).addEventListener("change", (event) => {
+      activePlayerCareerWindows[side].start = Number(event.target.value);
+      advancedCareerWindowsOpen = true;
+      activeMode = "careerSeasons";
+      updateModeControls();
+      runComparison();
+    });
+    document.querySelector(`#compare-player-${side}-career-end`).addEventListener("change", (event) => {
+      activePlayerCareerWindows[side].end = Number(event.target.value);
+      advancedCareerWindowsOpen = true;
+      activeMode = "careerSeasons";
+      updateModeControls();
+      runComparison();
+    });
   });
 }
 
