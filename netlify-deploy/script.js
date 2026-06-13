@@ -110,6 +110,7 @@ let activeSort = { key: "ops", dir: -1 };
 let activeSeason = "2026";
 let activeMode = "single";
 let activeRange = { start: 1990, end: 1999 };
+let activeDateRange = { start: "2026-06-01", end: localTodayIso() };
 let activeLeague = "all";
 let pendingTeamAbbr = new URLSearchParams(window.location.search).get("team") || "";
 let activeTeamId = "all";
@@ -133,6 +134,7 @@ const numberFormat = new Intl.NumberFormat("en-US");
 const firstSeason = 1901;
 const lastSeason = 2026;
 const seasonLeaderCache = new Map();
+const dateLeaderCache = new Map();
 const standingsCache = new Map();
 const teamStatsCache = new Map();
 const teamPitchingSummaryCache = new Map();
@@ -344,8 +346,14 @@ if (initialParams.get("mode") === "range") {
     start: Math.max(firstSeason, Math.min(lastSeason, Number(initialParams.get("start")) || activeRange.start)),
     end: Math.max(firstSeason, Math.min(lastSeason, Number(initialParams.get("end")) || activeRange.end))
   };
+} else if (initialParams.get("mode") === "date") {
+  activeMode = "date";
+  activeDateRange = {
+    start: initialParams.get("from") || activeDateRange.start,
+    end: initialParams.get("to") || activeDateRange.end
+  };
 }
-if (initialParams.get("season")) {
+if (initialParams.get("season") && activeMode !== "date") {
   activeSeason = String(Math.max(firstSeason, Math.min(lastSeason, Number(initialParams.get("season")) || Number(activeSeason))));
   activeMode = "single";
 }
@@ -412,6 +420,56 @@ function yearList(start = firstSeason, end = lastSeason) {
   return Array.from({ length: high - low + 1 }, (_, index) => low + index);
 }
 
+function localTodayIso() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function cleanIsoDate(value, fallback) {
+  const text = String(value || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return fallback;
+  const date = new Date(`${text}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? fallback : text;
+}
+
+function normalizeDateRange(start = activeDateRange.start, end = activeDateRange.end) {
+  const fallbackEnd = cleanIsoDate(activeDateRange.end, "2026-06-12");
+  const safeStart = cleanIsoDate(start, activeDateRange.start || fallbackEnd);
+  const safeEnd = cleanIsoDate(end, fallbackEnd);
+  return safeStart <= safeEnd
+    ? { start: safeStart, end: safeEnd }
+    : { start: safeEnd, end: safeStart };
+}
+
+function isoToMlbDate(value) {
+  const [year, month, day] = cleanIsoDate(value, "2026-06-12").split("-");
+  return `${month}/${day}/${year}`;
+}
+
+function shortDateLabel(value, includeYear = false) {
+  const [year, month, day] = cleanIsoDate(value, "2026-06-12").split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(includeYear ? { year: "numeric" } : {})
+  }).format(new Date(year, month - 1, day));
+}
+
+function dateRangeLabel() {
+  const range = normalizeDateRange();
+  const sameYear = range.start.slice(0, 4) === range.end.slice(0, 4);
+  return `${shortDateLabel(range.start, !sameYear)}-${shortDateLabel(range.end, true)}`;
+}
+
+function dateRangeDays() {
+  const range = normalizeDateRange();
+  const start = new Date(`${range.start}T00:00:00`);
+  const end = new Date(`${range.end}T00:00:00`);
+  return Math.max(1, Math.round((end - start) / 86400000) + 1);
+}
+
 function waitForBrowserTurn() {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
@@ -428,6 +486,7 @@ async function fetchInBatches(items, mapper, batchSize = 6) {
 
 function currentScopeLabel() {
   if (activeMode === "single") return activeSeason;
+  if (activeMode === "date") return dateRangeLabel();
   return activeRange.start === activeRange.end ? String(activeRange.start) : `${activeRange.start}-${activeRange.end}`;
 }
 
@@ -455,6 +514,24 @@ function mlbStatsUrl(year, sortMetric = activeMetric) {
     limit: "5000",
     sortStat: config.sortMap[sortMetric] || config.sortMap[config.defaultMetric],
     hydrate: "team"
+  });
+  if (activeLeague !== "all") params.set("leagueIds", leagueIds[activeLeague]);
+  if (activeTeamId !== "all") params.set("teamIds", activeTeamId);
+  return `https://statsapi.mlb.com/api/v1/stats?${params.toString()}`;
+}
+
+function mlbDateRangeStatsUrl(sortMetric = activeMetric) {
+  const range = normalizeDateRange();
+  const params = new URLSearchParams({
+    stats: "byDateRange",
+    group: config.group,
+    playerPool: "ALL",
+    sportIds: "1",
+    hydrate: "team",
+    limit: "5000",
+    sortStat: config.sortMap[sortMetric] || config.sortMap[config.defaultMetric],
+    startDate: isoToMlbDate(range.start),
+    endDate: isoToMlbDate(range.end)
   });
   if (activeLeague !== "all") params.set("leagueIds", leagueIds[activeLeague]);
   if (activeTeamId !== "all") params.set("teamIds", activeTeamId);
@@ -553,9 +630,24 @@ async function fetchSeasonLeaders(year) {
   return rows;
 }
 
+async function fetchDateRangeLeaders() {
+  activeDateRange = normalizeDateRange();
+  const cacheKey = `${boardType}:${activeLeague}:${activeTeamId}:${activeDateRange.start}:${activeDateRange.end}`;
+  if (dateLeaderCache.has(cacheKey)) return dateLeaderCache.get(cacheKey);
+  const response = await fetch(mlbDateRangeStatsUrl());
+  if (!response.ok) throw new Error(`MLB Stats API returned ${response.status}`);
+  const data = await response.json();
+  const rows = (data.stats?.[0]?.splits || []).map(mapApiPlayer).filter((player) => playerWeight(player) > 0);
+  dateLeaderCache.set(cacheKey, rows);
+  return rows;
+}
+
 async function currentPlayers() {
   if (activeMode === "single") {
     return (await fetchSeasonLeaders(Number(activeSeason))).slice();
+  }
+  if (activeMode === "date") {
+    return (await fetchDateRangeLeaders()).slice();
   }
 
   const byPlayer = new Map();
@@ -646,6 +738,14 @@ function qualifiedRows(rows, metric = activeMetric) {
   if (manualThreshold !== null) return positionRows.filter((player) => playerWeight(player) >= manualThreshold);
   if (activeTeamId !== "all") return positionRows;
   if (!config.rateMetrics.includes(metric)) return positionRows;
+  if (activeMode === "date") {
+    const days = dateRangeDays();
+    const threshold = boardType === "pitching"
+      ? Math.max(9, Math.min(90, days * 3))
+      : Math.max(10, Math.min(100, days * 2.5));
+    const filtered = positionRows.filter((player) => playerWeight(player) >= threshold);
+    return filtered.length >= 5 ? filtered : positionRows.filter((player) => playerWeight(player) >= Math.max(5, threshold * .5));
+  }
   const years = activeMode === "single" ? 1 : yearList(activeRange.start, activeRange.end).length;
   const isCurrentSeason = Number(activeSeason) === lastSeason && activeMode === "single";
   const seasonThreshold = boardType === "pitching"
@@ -837,6 +937,7 @@ function teamMetricWeight(team) {
 
 async function currentTeams() {
   if (activeMode === "single") return (await teamRowsForYear(Number(activeSeason))).slice();
+  if (activeMode === "date") return (await teamRowsForYear(Number(activeDateRange.end.slice(0, 4)) || Number(activeSeason))).slice();
 
   const byTeam = new Map();
   const years = await fetchInBatches(yearList(activeRange.start, activeRange.end), teamRowsForYear, 4);
@@ -940,6 +1041,7 @@ function currentSummary() {
 
 function estimatedSummary() {
   if (activeMode === "single") return currentSeason().summary;
+  if (activeMode === "date") return (seasons[activeDateRange.end.slice(0, 4)] || generateSeason(Number(activeDateRange.end.slice(0, 4)))).summary;
   const years = yearList(activeRange.start, activeRange.end);
   const totals = years.reduce((acc, year) => {
     const summary = (seasons[year] || generateSeason(year)).summary;
@@ -1085,6 +1187,9 @@ function populateSeasonSelect() {
   document.querySelector("#range-end").innerHTML = options;
   document.querySelector("#range-start").value = activeRange.start;
   document.querySelector("#range-end").value = activeRange.end;
+  activeDateRange = normalizeDateRange();
+  document.querySelector("#date-start").value = activeDateRange.start;
+  document.querySelector("#date-end").value = activeDateRange.end;
   updateRangeLabels();
 }
 
@@ -1114,6 +1219,17 @@ function setActiveRange(start, end) {
   updateTeams();
 }
 
+function setActiveDateRange(start = activeDateRange.start, end = activeDateRange.end) {
+  activeMode = "date";
+  activeDateRange = normalizeDateRange(start, end);
+  document.querySelector("#date-start").value = activeDateRange.start;
+  document.querySelector("#date-end").value = activeDateRange.end;
+  updateModeControls();
+  renderSummary();
+  updateLeaders();
+  updateTeams();
+}
+
 function updateRangeLabels() {
   document.querySelector("#range-start-value").textContent = activeRange.start;
   document.querySelector("#range-end-value").textContent = activeRange.end;
@@ -1134,10 +1250,16 @@ function updateModeControls() {
     button.classList.toggle("active", button.dataset.boardSize === activeBoardSize);
   });
   document.querySelector(".range-panel")?.setAttribute("data-active-mode", activeMode);
-  document.querySelector("#scope-title").textContent = activeMode === "single" ? `${activeSeason} single-season leaders` : `${activeRange.start}-${activeRange.end} cumulative leaders`;
+  document.querySelector("#scope-title").textContent = activeMode === "single"
+    ? `${activeSeason} single-season leaders`
+    : activeMode === "date"
+      ? `${dateRangeLabel()} leaders`
+      : `${activeRange.start}-${activeRange.end} cumulative leaders`;
   document.querySelector("#data-note").textContent = activeMode === "single"
     ? `${config.label[0].toUpperCase()}${config.label.slice(1)} ${activeTeamId === "all" ? "leaders" : "players"} load from MLB Stats API for the selected season${activeTeamId === "all" ? "" : " and team"}.`
-    : `Range mode aggregates ${config.label} seasons from MLB Stats API across the selected years${activeTeamId === "all" ? "" : " for every selected-team player"}.`;
+    : activeMode === "date"
+      ? `Date range mode loads ${config.label} stats from MLB Stats API between the selected dates${activeTeamId === "all" ? "" : " for the selected team"}.`
+      : `Range mode aggregates ${config.label} seasons from MLB Stats API across the selected years${activeTeamId === "all" ? "" : " for every selected-team player"}.`;
 }
 
 function renderSummary() {
@@ -1148,23 +1270,27 @@ function renderSummary() {
     document.querySelector("#ops-summary-label").textContent = "League WHIP";
     document.querySelector("#run-environment").textContent = summary.runs.toFixed(2);
     document.querySelector("#league-ops").textContent = summary.ops.toFixed(2);
-    document.querySelector("#run-context").textContent = activeMode === "single" ? "earned runs per nine innings" : "average ERA across selected years";
-    document.querySelector("#ops-context").textContent = activeMode === "single" ? "walks plus hits per inning" : "average WHIP across selected years";
+    document.querySelector("#run-context").textContent = activeMode === "single" ? "earned runs per nine innings" : activeMode === "date" ? "season context for selected date range" : "average ERA across selected years";
+    document.querySelector("#ops-context").textContent = activeMode === "single" ? "walks plus hits per inning" : activeMode === "date" ? "season context for selected date range" : "average WHIP across selected years";
   } else {
     document.querySelector("#run-summary-label").textContent = "Run Environment";
     document.querySelector("#ops-summary-label").textContent = "League OPS";
     document.querySelector("#run-environment").textContent = summary.runs.toFixed(2);
     document.querySelector("#league-ops").textContent = summary.ops.toFixed(3).replace(/^0/, "");
-    document.querySelector("#run-context").textContent = activeMode === "single" ? "runs per team game" : "average runs per team game";
-    document.querySelector("#ops-context").textContent = activeMode === "single" ? "weighted by plate appearances" : "average league OPS";
+    document.querySelector("#run-context").textContent = activeMode === "single" ? "runs per team game" : activeMode === "date" ? "season context for selected date range" : "average runs per team game";
+    document.querySelector("#ops-context").textContent = activeMode === "single" ? "weighted by plate appearances" : activeMode === "date" ? "season context for selected date range" : "average league OPS";
   }
   document.querySelector("#k-rate").textContent = `${summary.k.toFixed(1)}%`;
   document.querySelector("#save-rate").textContent = `${summary.saves}%`;
   document.querySelector("#chart-title").textContent = `${label} ${config.chartNoun} leaders`;
   document.querySelector("#compare-title").textContent = `${label} club comparison`;
   const tableNoun = activeTeamId === "all" ? "leaders" : "players";
-  document.querySelector("#table-title").textContent = activeMode === "single" ? `${label} ${config.label} ${tableNoun}` : `${label} cumulative ${config.label} ${tableNoun}`;
-  document.querySelector("#save-context").textContent = activeMode === "single" ? "late-game pressure index" : "average conversion rate";
+  document.querySelector("#table-title").textContent = activeMode === "single"
+    ? `${label} ${config.label} ${tableNoun}`
+    : activeMode === "date"
+      ? `${label} ${config.label} ${tableNoun}`
+      : `${label} cumulative ${config.label} ${tableNoun}`;
+  document.querySelector("#save-context").textContent = activeMode === "single" ? "late-game pressure index" : activeMode === "date" ? "season context for selected date range" : "average conversion rate";
 }
 
 function renderChart() {
@@ -1306,7 +1432,7 @@ function submitPlayerSearch(sourceInput) {
 }
 
 function playerSearchLabel(player) {
-  const context = [player.position || "MLB", player.teamName || player.team, activeMode === "range" ? currentScopeLabel() : ""]
+  const context = [player.position || "MLB", player.teamName || player.team, activeMode !== "single" ? currentScopeLabel() : ""]
     .filter(Boolean)
     .join(" - ");
   return `${player.name} - ${context}`;
@@ -1620,10 +1746,20 @@ function bindEvents() {
     button.addEventListener("click", () => {
       if (button.dataset.mode === "single") {
         setActiveSeason(activeSeason);
+      } else if (button.dataset.mode === "date") {
+        setActiveDateRange(activeDateRange.start, activeDateRange.end);
       } else {
         setActiveRange(activeRange.start, activeRange.end);
       }
     });
+  });
+
+  document.querySelector("#date-start").addEventListener("change", (event) => {
+    setActiveDateRange(event.target.value, activeDateRange.end);
+  });
+
+  document.querySelector("#date-end").addEventListener("change", (event) => {
+    setActiveDateRange(activeDateRange.start, event.target.value);
   });
 
   document.querySelector("#range-start").addEventListener("change", (event) => {

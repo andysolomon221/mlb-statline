@@ -576,7 +576,8 @@ h2 {
   background: var(--navy);
 }
 
-.range-fields {
+.range-fields,
+.date-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -585,7 +586,11 @@ h2 {
 }
 
 .range-panel[data-active-mode="single"] .range-fields,
-.range-panel[data-active-mode="single"] .quick-ranges {
+.range-panel[data-active-mode="single"] .quick-ranges,
+.range-panel[data-active-mode="single"] .date-fields,
+.range-panel[data-active-mode="date"] .range-fields,
+.range-panel[data-active-mode="date"] .quick-ranges,
+.range-panel:not([data-active-mode="date"]) .date-fields {
   display: none;
 }
 
@@ -634,7 +639,8 @@ h2 {
   text-transform: uppercase;
 }
 
-.range-fields label {
+.range-fields label,
+.date-fields label {
   display: grid;
   gap: 8px;
   color: var(--muted);
@@ -643,7 +649,8 @@ h2 {
   text-transform: uppercase;
 }
 
-.range-fields span {
+.range-fields span,
+.date-fields span {
   display: flex;
   justify-content: space-between;
   gap: 10px;

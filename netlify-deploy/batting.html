@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Batting" />
     <meta name="twitter:description" content="Explore MLB batting leaders by season, team, league, position, player, and custom year range." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260611-home-batting-split" />
+    <link rel="stylesheet" href="styles.css?v=20260612-date-range" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -90,6 +90,7 @@
             <div class="mode-toggle" role="group" aria-label="Leader scope">
               <button class="active" data-mode="single">Single year</button>
               <button data-mode="range">Year range</button>
+              <button data-mode="date">Date range</button>
             </div>
             <div class="range-fields">
               <label>
@@ -99,6 +100,16 @@
               <label>
                 <span>To <strong id="range-end-value">1999</strong></span>
                 <select id="range-end" aria-label="Range end year"></select>
+              </label>
+            </div>
+            <div class="date-fields">
+              <label>
+                <span>From</span>
+                <input id="date-start" type="date" aria-label="Date range start" />
+              </label>
+              <label>
+                <span>To</span>
+                <input id="date-end" type="date" aria-label="Date range end" />
               </label>
             </div>
             <div class="quick-ranges" role="group" aria-label="Quick ranges">
@@ -241,6 +252,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260612-games-column"></script>
+    <script src="script.js?v=20260612-date-range"></script>
   </body>
 </html>
