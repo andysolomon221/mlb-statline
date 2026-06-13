@@ -1346,9 +1346,19 @@ function renderTable() {
     const qualifierText = activeQualifier === "auto"
       ? ""
       : ` Minimum ${boardType === "pitching" ? "IP" : "PA"} filter is active.`;
-    note.textContent = hasSearch
-      ? `Showing all ${rows.length} matching ${config.label} ${rows.length === 1 ? "player" : "players"} in ${currentSearchScope()} search. Clear search to return to ${activeBoardSize === "leaders" ? "Top 20" : "the full board"}.${qualifierText}`
-      : qualifierText.trim();
+    if (hasSearch) {
+      const label = rows.length === 1 ? rows[0].name : cleanSearchInput(document.querySelector("#player-search")?.value || query);
+      note.innerHTML = `
+        <span class="active-search-chip">
+          <span>Showing ${escapeHtml(label)}</span>
+          <button type="button" id="clear-player-search">Clear</button>
+        </span>
+        <span>${rows.length} matching ${config.label} ${rows.length === 1 ? "player" : "players"} in ${escapeHtml(currentSearchScope())} search.${escapeHtml(qualifierText)}</span>
+      `;
+      note.querySelector("#clear-player-search")?.addEventListener("click", clearPlayerSearch);
+    } else {
+      note.textContent = qualifierText.trim();
+    }
   }
 
   document.querySelector("#player-table").innerHTML = visibleRows.map((player) => `
@@ -1423,12 +1433,30 @@ function revealPlayerBoardFromHero() {
 function submitPlayerSearch(sourceInput) {
   const playerSearch = document.querySelector("#player-search");
   const heroPlayerSearch = document.querySelector("#hero-player-search");
-  const value = sourceInput?.value || playerSearch?.value || heroPlayerSearch?.value || "";
+  const rawValue = sourceInput?.value || playerSearch?.value || heroPlayerSearch?.value || "";
+  const value = resolvedSearchValue(rawValue);
   if (playerSearch) playerSearch.value = value;
   if (heroPlayerSearch) heroPlayerSearch.value = value;
   renderChart();
   renderTable();
   revealPlayerBoardFromHero();
+}
+
+function clearPlayerSearch() {
+  const playerSearch = document.querySelector("#player-search");
+  const heroPlayerSearch = document.querySelector("#hero-player-search");
+  if (playerSearch) playerSearch.value = "";
+  if (heroPlayerSearch) heroPlayerSearch.value = "";
+  renderChart();
+  renderTable();
+}
+
+function resolvedSearchValue(value) {
+  const query = cleanSearchInput(value);
+  if (!query || currentSearchScope() === "team") return query;
+  const matches = positionFilteredRows(leaderRows).filter((player) => matchesPlayerSearch(player, query.toLowerCase()));
+  const names = Array.from(new Set(matches.map((player) => player.name)));
+  return names.length === 1 ? names[0] : query;
 }
 
 function playerSearchLabel(player) {

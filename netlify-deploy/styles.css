@@ -545,6 +545,27 @@ h2 {
   font-weight: 650;
 }
 
+.active-search-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 10px;
+  color: var(--navy);
+  font-weight: 900;
+}
+
+.active-search-chip button {
+  min-height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 9px;
+  color: var(--red);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .mode-toggle,
 .quick-ranges,
 .league-toggle {
