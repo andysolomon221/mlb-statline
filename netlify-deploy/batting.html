@@ -68,7 +68,7 @@
             <div class="hero-search">
               <label for="hero-player-search">Search Player Or Club</label>
               <div class="search-action">
-                <input id="hero-player-search" type="search" list="player-search-options" placeholder="Try Aaron Judge, Red Sox, Dodgers..." aria-label="Search player or club" />
+                <input id="hero-player-search" type="search" list="player-search-options" spellcheck="false" autocorrect="off" autocapitalize="none" placeholder="Try Aaron Judge, Red Sox, Dodgers..." aria-label="Search player or club" />
                 <button type="button" id="hero-search-submit">View</button>
               </div>
               <datalist id="player-search-options"></datalist>
@@ -169,7 +169,7 @@
                 <small class="data-note table-note" id="table-note"></small>
               </div>
               <div class="search-action board-search-action">
-                <input id="player-search" type="search" list="player-search-options" placeholder="Search player or club" aria-label="Search players" />
+              <input id="player-search" type="search" list="player-search-options" spellcheck="false" autocorrect="off" autocapitalize="none" placeholder="Search player or club" aria-label="Search players" />
                 <select id="search-scope" aria-label="Search scope">
                   <option value="all">All</option>
                   <option value="player">Player</option>
