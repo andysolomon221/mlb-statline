@@ -567,7 +567,31 @@ function bindEvents() {
   });
 }
 
-populateYears();
-updateModeControls();
-bindEvents();
-runComparison();
+function applyUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const requestedGroup = params.get("group");
+  if (requestedGroup === "hitting" || requestedGroup === "pitching") {
+    activeGroup = requestedGroup;
+    document.querySelector("#compare-group").value = activeGroup;
+  }
+
+  const requestedMode = params.get("mode");
+  if (["single", "range", "career", "careerSeasons"].includes(requestedMode)) {
+    activeMode = requestedMode;
+  }
+
+  const requestedPlayerA = params.get("playerA") || params.get("a");
+  const requestedPlayerB = params.get("playerB") || params.get("b");
+  if (requestedPlayerA) document.querySelector("#compare-player-a").value = requestedPlayerA;
+  if (requestedPlayerB) document.querySelector("#compare-player-b").value = requestedPlayerB;
+}
+
+function initializeComparePage() {
+  populateYears();
+  applyUrlParams();
+  updateModeControls();
+  bindEvents();
+  runComparison();
+}
+
+initializeComparePage();
