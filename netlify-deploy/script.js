@@ -136,6 +136,7 @@ const lastSeason = 2026;
 const seasonLeaderCache = new Map();
 const dateLeaderCache = new Map();
 const standingsCache = new Map();
+const scheduleRecordCache = new Map();
 const teamStatsCache = new Map();
 const teamPitchingSummaryCache = new Map();
 const boardType = document.body.dataset.board || "hitting";
@@ -495,6 +496,10 @@ function leaderScopeLabel() {
   return activeTeamId === "all" ? scope : `${activeTeamName}, ${scope}`;
 }
 
+function teamScopeLabel() {
+  return currentScopeLabel();
+}
+
 function playerWeight(player) {
   return Math.max(1, Number(player[config.weightKey]) || 1);
 }
@@ -844,12 +849,89 @@ async function fetchStandings(year) {
   return rows;
 }
 
+function scheduleUrlForDateRange() {
+  const range = normalizeDateRange();
+  const params = new URLSearchParams({
+    sportId: "1",
+    startDate: range.start,
+    endDate: range.end
+  });
+  return `https://statsapi.mlb.com/api/v1/schedule?${params.toString()}`;
+}
+
+async function fetchDateRangeTeamRecords() {
+  activeDateRange = normalizeDateRange();
+  const cacheKey = `${activeLeague}:${activeDateRange.start}:${activeDateRange.end}`;
+  if (scheduleRecordCache.has(cacheKey)) return scheduleRecordCache.get(cacheKey);
+  const response = await fetch(scheduleUrlForDateRange());
+  if (!response.ok) throw new Error(`MLB schedule returned ${response.status}`);
+  const data = await response.json();
+  const records = new Map();
+  const games = (data.dates || []).flatMap((date) => date.games || []);
+  games.forEach((game) => {
+    const status = String(game.status?.detailedState || "").toLowerCase();
+    if (!status.includes("final")) return;
+    const away = game.teams?.away;
+    const home = game.teams?.home;
+    const awayScore = Number(away?.score);
+    const homeScore = Number(home?.score);
+    if (!Number.isFinite(awayScore) || !Number.isFinite(homeScore) || awayScore === homeScore) return;
+    [away, home].forEach((side, index) => {
+      const team = side?.team || {};
+      const id = team.id || team.name;
+      const name = normalizeTeamName(team.name || "Unknown");
+      const runs = index === 0 ? awayScore : homeScore;
+      const runsAllowed = index === 0 ? homeScore : awayScore;
+      const existing = records.get(String(id)) || {
+        id,
+        name,
+        abbr: abbreviationFor(name),
+        wins: 0,
+        losses: 0,
+        runs: 0,
+        runsAllowed: 0,
+        runDifferential: 0,
+        pct: 0,
+        color: generatedTeams.find((generated) => generated[1] === abbreviationFor(name))?.[2] || "#12355b"
+      };
+      existing.wins += runs > runsAllowed ? 1 : 0;
+      existing.losses += runs < runsAllowed ? 1 : 0;
+      existing.runs += runs;
+      existing.runsAllowed += runsAllowed;
+      existing.runDifferential = existing.runs - existing.runsAllowed;
+      existing.pct = existing.wins / Math.max(1, existing.wins + existing.losses);
+      records.set(String(id), existing);
+    });
+  });
+  let rows = Array.from(records.values());
+  if (activeLeague !== "all") {
+    const standings = await fetchStandings(Number(activeDateRange.end.slice(0, 4)) || Number(activeSeason));
+    const allowedIds = new Set(standings.map((team) => String(team.id)));
+    rows = rows.filter((team) => allowedIds.has(String(team.id)));
+  }
+  scheduleRecordCache.set(cacheKey, rows);
+  return rows;
+}
+
 function teamStatsUrl(year) {
   const params = new URLSearchParams({
     season: String(year),
     group: config.group,
     stats: "season",
     sportIds: "1"
+  });
+  return `https://statsapi.mlb.com/api/v1/teams/stats?${params.toString()}`;
+}
+
+function teamDateRangeStatsUrl(group = config.group) {
+  const range = normalizeDateRange();
+  const params = new URLSearchParams({
+    season: range.end.slice(0, 4),
+    group,
+    stats: "byDateRange",
+    sportIds: "1",
+    startDate: isoToMlbDate(range.start),
+    endDate: isoToMlbDate(range.end)
   });
   return `https://statsapi.mlb.com/api/v1/teams/stats?${params.toString()}`;
 }
@@ -902,6 +984,18 @@ async function fetchTeamStats(year) {
   return rows;
 }
 
+async function fetchDateRangeTeamStats() {
+  activeDateRange = normalizeDateRange();
+  const cacheKey = `${boardType}:${activeDateRange.start}:${activeDateRange.end}`;
+  if (teamStatsCache.has(cacheKey)) return teamStatsCache.get(cacheKey);
+  const response = await fetch(teamDateRangeStatsUrl());
+  if (!response.ok) throw new Error(`MLB team stats returned ${response.status}`);
+  const data = await response.json();
+  const rows = (data.stats?.[0]?.splits || []).map(mapTeamStat);
+  teamStatsCache.set(cacheKey, rows);
+  return rows;
+}
+
 async function fetchTeamPitchingSummary(year) {
   const cacheKey = `pitching-summary:${year}`;
   if (teamPitchingSummaryCache.has(cacheKey)) return teamPitchingSummaryCache.get(cacheKey);
@@ -923,8 +1017,31 @@ async function fetchTeamPitchingSummary(year) {
   return rows;
 }
 
+async function fetchDateRangeTeamPitchingSummary() {
+  activeDateRange = normalizeDateRange();
+  const cacheKey = `pitching-summary:${activeDateRange.start}:${activeDateRange.end}`;
+  if (teamPitchingSummaryCache.has(cacheKey)) return teamPitchingSummaryCache.get(cacheKey);
+  const response = await fetch(teamDateRangeStatsUrl("pitching"));
+  if (!response.ok) throw new Error(`MLB pitching stats returned ${response.status}`);
+  const data = await response.json();
+  const rows = (data.stats?.[0]?.splits || []).map((split) => ({
+    id: split.team?.id || split.team?.name,
+    saves: toNumber(split.stat?.saves),
+    saveOpportunities: toNumber(split.stat?.saveOpportunities)
+  }));
+  teamPitchingSummaryCache.set(cacheKey, rows);
+  return rows;
+}
+
 async function teamRowsForYear(year) {
   const [standings, stats, pitchingSummary] = await Promise.all([fetchStandings(year), fetchTeamStats(year), fetchTeamPitchingSummary(year)]);
+  const statsById = new Map(stats.map((team) => [String(team.id), team]));
+  const pitchingById = new Map(pitchingSummary.map((team) => [String(team.id), team]));
+  return standings.map((team) => ({ ...team, ...(statsById.get(String(team.id)) || {}), ...(pitchingById.get(String(team.id)) || {}) }));
+}
+
+async function teamRowsForDateRange() {
+  const [standings, stats, pitchingSummary] = await Promise.all([fetchDateRangeTeamRecords(), fetchDateRangeTeamStats(), fetchDateRangeTeamPitchingSummary()]);
   const statsById = new Map(stats.map((team) => [String(team.id), team]));
   const pitchingById = new Map(pitchingSummary.map((team) => [String(team.id), team]));
   return standings.map((team) => ({ ...team, ...(statsById.get(String(team.id)) || {}), ...(pitchingById.get(String(team.id)) || {}) }));
@@ -937,7 +1054,7 @@ function teamMetricWeight(team) {
 
 async function currentTeams() {
   if (activeMode === "single") return (await teamRowsForYear(Number(activeSeason))).slice();
-  if (activeMode === "date") return (await teamRowsForYear(Number(activeDateRange.end.slice(0, 4)) || Number(activeSeason))).slice();
+  if (activeMode === "date") return (await teamRowsForDateRange()).slice();
 
   const byTeam = new Map();
   const years = await fetchInBatches(yearList(activeRange.start, activeRange.end), teamRowsForYear, 4);
@@ -1283,7 +1400,7 @@ function renderSummary() {
   document.querySelector("#k-rate").textContent = `${summary.k.toFixed(1)}%`;
   document.querySelector("#save-rate").textContent = `${summary.saves}%`;
   document.querySelector("#chart-title").textContent = `${label} ${config.chartNoun} leaders`;
-  document.querySelector("#compare-title").textContent = `${label} club comparison`;
+  document.querySelector("#compare-title").textContent = `${teamScopeLabel()} club comparison`;
   const tableNoun = activeTeamId === "all" ? "leaders" : "players";
   document.querySelector("#table-title").textContent = activeMode === "single"
     ? `${label} ${config.label} ${tableNoun}`
@@ -1644,7 +1761,7 @@ function renderClubs() {
   if (teamsLoading) return;
   if (teamError) return renderTeamError();
   const direction = config.teamLowerBetter.includes(activeTeamMetric) ? 1 : -1;
-  document.querySelector("#team-list-title").textContent = `${currentScopeLabel()} team ${teamMetricLabel(activeTeamMetric)} leaders`;
+  document.querySelector("#team-list-title").textContent = `${teamScopeLabel()} team ${teamMetricLabel(activeTeamMetric)} leaders`;
   document.querySelector("#club-list").innerHTML = teamRows
     .slice()
     .sort((a, b) => (a[activeTeamMetric] - b[activeTeamMetric]) * direction)
