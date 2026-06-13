@@ -231,6 +231,7 @@ const boardConfig = {
     eyebrow: "Run Creation",
     defaultMetric: "ops",
     columns: [
+      ["games", "G"],
       ["ab", "AB"],
       ["avg", "AVG"],
       ["ops", "OPS"],
@@ -283,6 +284,7 @@ const boardConfig = {
     eyebrow: "Run Prevention",
     defaultMetric: "era",
     columns: [
+      ["games", "G"],
       ["ipOuts", "IP"],
       ["era", "ERA"],
       ["wins", "W"],
@@ -499,6 +501,7 @@ function mapApiPlayer(split) {
     team: split.team?.abbreviation || split.team?.teamName || "MLB",
     teamName: split.team?.teamName || split.team?.name || split.team?.abbreviation || "MLB",
     position: normalizePosition(split.position?.abbreviation || split.position?.type || ""),
+    games: toNumber(stat.gamesPlayed),
     seasons: 1
   };
   if (boardType === "pitching") {
@@ -507,6 +510,7 @@ function mapApiPlayer(split) {
     return {
       ...common,
       position: gamesStarted >= Math.max(1, gamesPitched / 2) ? "SP" : "RP",
+      games: gamesPitched,
       era: toNumber(stat.era),
       wins: toNumber(stat.wins),
       losses: toNumber(stat.losses),
@@ -662,14 +666,14 @@ function positionFilteredRows(rows) {
 function renderLoadingLeaders() {
   document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">Loading real MLB leader data...</div>`;
   document.querySelector("#player-table").innerHTML = `
-    <tr><td colspan="7" class="empty-row">Loading real MLB leader data...</td></tr>
+    <tr><td colspan="${config.columns.length + 2}" class="empty-row">Loading real MLB leader data...</td></tr>
   `;
 }
 
 function renderLeaderError(message) {
   document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">${message}</div>`;
   document.querySelector("#player-table").innerHTML = `
-    <tr><td colspan="7" class="empty-row">${message}</td></tr>
+    <tr><td colspan="${config.columns.length + 2}" class="empty-row">${message}</td></tr>
   `;
 }
 
@@ -1188,7 +1192,7 @@ function renderChart() {
           <a class="chart-player-link" href="${baseballReferenceSearchUrl(player.name)}" target="_blank" rel="noopener noreferrer">
             <strong>${player.name}</strong>
           </a>
-          <span>${player.team}</span>
+          <span>${player.team}${player.games ? ` | ${fmtStat("games", player.games)} G` : ""}</span>
           <div class="player-row-actions chart-player-actions" aria-label="Statline player links">
             <a href="${statlinePlayerUrl("career.html", player.name)}">Career</a>
             <a href="${statlinePlayerUrl("splits.html", player.name)}">Splits</a>
