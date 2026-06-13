@@ -521,7 +521,14 @@ async function initializeCareerPage() {
   renderCandidates([selectedPlayer]);
   document.querySelector("#career-reference-link").href = baseballReferenceSearchUrl(selectedPlayer.fullName);
   bindEvents();
-  const requestedPlayer = new URLSearchParams(window.location.search).get("player");
+  const params = new URLSearchParams(window.location.search);
+  const requestedGroup = params.get("group");
+  if (["hitting", "pitching"].includes(requestedGroup)) {
+    activeGroup = requestedGroup;
+    document.querySelector("#career-group").value = activeGroup;
+    activeSort = "season";
+  }
+  const requestedPlayer = params.get("player");
   if (requestedPlayer) {
     document.querySelector("#career-player-query").value = requestedPlayer;
     await submitCareerSearch();

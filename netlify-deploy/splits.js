@@ -455,11 +455,17 @@ function updateSplitModeControls() {
 }
 
 async function initializeSplitsPage() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedGroup = urlParams.get("group");
+  if (requestedGroup === "pitching" || requestedGroup === "hitting") {
+    activeGroup = requestedGroup;
+    document.querySelector("#split-group").value = activeGroup;
+  }
   populateSeasonSelect();
   updateSplitModeControls();
   renderPlayerAutocomplete([{ ...selectedPlayer, position: "DH" }]);
   bindEvents();
-  const requestedPlayer = new URLSearchParams(window.location.search).get("player");
+  const requestedPlayer = urlParams.get("player");
   if (requestedPlayer) {
     document.querySelector("#player-query").value = requestedPlayer;
     await handleSearch({ preventDefault() {} });

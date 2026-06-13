@@ -398,7 +398,9 @@ function baseballReferenceSearchUrl(name) {
 }
 
 function statlinePlayerUrl(page, name) {
-  return `${page}?player=${encodeURIComponent(name)}`;
+  const params = new URLSearchParams({ player: name });
+  if (page === "career.html" || page === "splits.html") params.set("group", boardType === "pitching" ? "pitching" : "hitting");
+  return `${page}?${params.toString()}`;
 }
 
 function escapeHtml(value) {
