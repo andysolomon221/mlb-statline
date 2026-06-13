@@ -63,8 +63,15 @@
       <main id="dashboard">
         <header class="topbar">
           <div>
-            <p class="eyebrow">MLB Statline</p>
+            <p class="eyebrow">Pitching</p>
             <h1>Pitching intelligence across every era.</h1>
+            <div class="hero-search">
+              <label for="hero-player-search">Search Player Or Club</label>
+              <div class="search-action">
+                <input id="hero-player-search" type="search" list="player-search-options" spellcheck="false" autocorrect="off" autocapitalize="none" placeholder="Try Paul Skenes, Red Sox, Dodgers..." aria-label="Search player or club" />
+                <button type="button" id="hero-search-submit">View</button>
+              </div>
+            </div>
           </div>
           <div class="season-control" aria-label="Historical season">
             <label for="season-select">Choose Season</label>
