@@ -398,9 +398,10 @@ function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
-function statlinePlayerUrl(page, name) {
+function statlinePlayerUrl(page, name, groupOverride = "") {
   const params = new URLSearchParams({ player: name });
-  if (page === "career.html" || page === "splits.html") params.set("group", boardType === "pitching" ? "pitching" : "hitting");
+  const group = groupOverride || (boardType === "pitching" ? "pitching" : "hitting");
+  if (page === "career.html" || page === "splits.html") params.set("group", group);
   return `${page}?${params.toString()}`;
 }
 
@@ -1596,6 +1597,7 @@ async function submitPlayerSearch(sourceInput) {
   const playerSearch = document.querySelector("#player-search");
   const heroPlayerSearch = document.querySelector("#hero-player-search");
   const rawValue = sourceInput?.value || playerSearch?.value || heroPlayerSearch?.value || "";
+  const isHeroSearch = sourceInput?.id === "hero-player-search";
   const value = resolvedSearchValue(rawValue);
   if (playerSearch) playerSearch.value = value;
   if (heroPlayerSearch) heroPlayerSearch.value = value;
@@ -1603,10 +1605,13 @@ async function submitPlayerSearch(sourceInput) {
   const currentMatches = query
     ? positionFilteredRows(leaderRows).filter((player) => matchesPlayerSearch(player, query))
     : [];
-  if (query && !currentMatches.length && currentSearchScope() !== "team") {
+  if (query && !currentMatches.length && (currentSearchScope() !== "team" || isHeroSearch)) {
     const historicalPlayer = await searchHistoricalPlayer(value);
     if (historicalPlayer) {
-      window.location.href = statlinePlayerUrl("career.html", historicalPlayer.fullName);
+      const group = personMatchesBoard(historicalPlayer)
+        ? boardType === "pitching" ? "pitching" : "hitting"
+        : historicalPlayer.primaryPosition?.abbreviation === "P" ? "pitching" : "hitting";
+      window.location.href = statlinePlayerUrl("career.html", historicalPlayer.fullName, group);
       return;
     }
   }
