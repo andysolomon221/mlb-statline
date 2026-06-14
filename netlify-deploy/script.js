@@ -135,6 +135,7 @@ const firstSeason = 1901;
 const lastSeason = 2026;
 const seasonLeaderCache = new Map();
 const dateLeaderCache = new Map();
+const peopleSearchCache = new Map();
 const standingsCache = new Map();
 const scheduleRecordCache = new Map();
 const teamStatsCache = new Map();
@@ -1533,6 +1534,46 @@ function normalizeSearchText(value) {
     .trim();
 }
 
+function looksLikePlayerName(query) {
+  const normalized = normalizeSearchText(cleanSearchInput(query));
+  return normalized.split(" ").filter(Boolean).length >= 2;
+}
+
+function personMatchesBoard(person) {
+  const position = person.primaryPosition?.abbreviation || person.position || "";
+  return boardType === "pitching" ? position === "P" : position !== "P";
+}
+
+function personSearchRank(person, query) {
+  const cleanQuery = normalizeSearchText(query);
+  const name = normalizeSearchText(person.fullName);
+  let rank = 0;
+  if (name === cleanQuery) rank += 100;
+  if (name.includes(cleanQuery)) rank += 30;
+  if (person.mlbDebutDate) rank += 20;
+  if (personMatchesBoard(person)) rank += 20;
+  return rank;
+}
+
+async function searchHistoricalPlayer(query) {
+  const clean = cleanSearchInput(query);
+  if (!looksLikePlayerName(clean)) return null;
+  const cacheKey = `${boardType}:${normalizeSearchText(clean)}`;
+  if (peopleSearchCache.has(cacheKey)) return peopleSearchCache.get(cacheKey);
+  try {
+    const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(clean)}`);
+    const people = (data.people || [])
+      .filter((person) => person.id && person.fullName)
+      .sort((a, b) => personSearchRank(b, clean) - personSearchRank(a, clean));
+    const match = people.find(personMatchesBoard) || people[0] || null;
+    peopleSearchCache.set(cacheKey, match);
+    return match;
+  } catch (error) {
+    peopleSearchCache.set(cacheKey, null);
+    return null;
+  }
+}
+
 function searchNeedles(query) {
   const normalized = normalizeSearchText(query);
   const parts = normalized.split(" ");
@@ -1549,13 +1590,24 @@ function revealPlayerBoardFromHero() {
   document.querySelector("#leaders")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function submitPlayerSearch(sourceInput) {
+async function submitPlayerSearch(sourceInput) {
   const playerSearch = document.querySelector("#player-search");
   const heroPlayerSearch = document.querySelector("#hero-player-search");
   const rawValue = sourceInput?.value || playerSearch?.value || heroPlayerSearch?.value || "";
   const value = resolvedSearchValue(rawValue);
   if (playerSearch) playerSearch.value = value;
   if (heroPlayerSearch) heroPlayerSearch.value = value;
+  const query = cleanSearchInput(value).toLowerCase();
+  const currentMatches = query
+    ? positionFilteredRows(leaderRows).filter((player) => matchesPlayerSearch(player, query))
+    : [];
+  if (query && !currentMatches.length && currentSearchScope() !== "team") {
+    const historicalPlayer = await searchHistoricalPlayer(value);
+    if (historicalPlayer) {
+      window.location.href = statlinePlayerUrl("career.html", historicalPlayer.fullName);
+      return;
+    }
+  }
   renderChart();
   renderTable();
   revealPlayerBoardFromHero();

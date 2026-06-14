@@ -2,6 +2,7 @@ const firstSplitSeason = 1901;
 const lastSplitSeason = 2026;
 const splitCache = new Map();
 const peopleCache = new Map();
+const playerSeasonCache = new Map();
 const splitCodes = {
   common: ["h", "a", "vl", "vr", "d", "n"],
   location: ["h", "a"],
@@ -130,6 +131,43 @@ function cleanPlayerInput(value) {
   return value.replace(/\s+-\s+[^()]+(?:\s+\([^)]+\))?$/, "").replace(/\s+\([^)]+\)$/, "").trim();
 }
 
+function hasUsefulStat(stat = {}) {
+  if (activeGroup === "pitching") return toNumber(stat.outs) > 0 || inningsToOuts(stat.inningsPitched) > 0 || toNumber(stat.gamesPlayed) > 0;
+  return toNumber(stat.plateAppearances) > 0 || toNumber(stat.atBats) > 0 || toNumber(stat.gamesPlayed) > 0;
+}
+
+async function seasonsWithStatsForSelectedPlayer() {
+  const cacheKey = `${selectedPlayer.id}:${activeGroup}:seasons`;
+  if (playerSeasonCache.has(cacheKey)) return playerSeasonCache.get(cacheKey);
+  try {
+    const params = new URLSearchParams({ stats: "yearByYear", group: activeGroup, sportId: "1" });
+    const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${selectedPlayer.id}/stats?${params.toString()}`);
+    const seasons = Array.from(new Set((data.stats?.[0]?.splits || [])
+      .filter((split) => split.season && hasUsefulStat(split.stat || {}))
+      .map((split) => Number(split.season))
+      .filter((season) => Number.isFinite(season) && season >= firstSplitSeason && season <= lastSplitSeason)))
+      .sort((a, b) => b - a);
+    playerSeasonCache.set(cacheKey, seasons);
+    return seasons;
+  } catch (error) {
+    playerSeasonCache.set(cacheKey, []);
+    return [];
+  }
+}
+
+async function switchToUsefulSeasonIfNeeded(payload) {
+  if (activeMode !== "single" || payload.rows.length || payload.total) return null;
+  const seasons = await seasonsWithStatsForSelectedPlayer();
+  const fallbackSeason = seasons.find((season) => String(season) !== String(activeSeason));
+  if (!fallbackSeason) return null;
+  activeSeason = String(fallbackSeason);
+  document.querySelector("#split-season").value = activeSeason;
+  updateSplitModeControls();
+  const fallbackPayload = await fetchYearPayload(fallbackSeason);
+  setStatus(`Showing ${fallbackSeason}, the most recent ${activeGroup} season found for ${selectedPlayer.fullName}.`);
+  return fallbackPayload;
+}
+
 async function loadSplits() {
   const requestId = ++activeRequestId;
   setStatus("Loading MLB splits...");
@@ -139,10 +177,12 @@ async function loadSplits() {
   try {
     const years = activeMode === "single" ? [Number(activeSeason)] : yearList(activeRange.start, activeRange.end);
     const payloads = await Promise.all(years.map(fetchYearPayload));
-    const payload = activeMode === "single" ? payloads[0] : aggregatePayloads(payloads);
+    let payload = activeMode === "single" ? payloads[0] : aggregatePayloads(payloads);
+    payload = await switchToUsefulSeasonIfNeeded(payload) || payload;
     if (requestId !== activeRequestId) return;
     renderSplits(payload.rows, payload.total);
-    setStatus(payload.rows.length ? `${payload.rows.length} splits loaded for ${currentScopeLabel()}` : "No splits found");
+    if (!payload.rows.length) setStatus("No splits found");
+    else if (!document.querySelector("#split-status").textContent.startsWith("Showing ")) setStatus(`${payload.rows.length} splits loaded for ${currentScopeLabel()}`);
   } catch (error) {
     if (requestId !== activeRequestId) return;
     document.querySelector("#split-table").innerHTML = `<tr><td colspan="12" class="empty-row">Could not load MLB split data. Check the player, season, or connection and try again.</td></tr>`;
