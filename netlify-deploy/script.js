@@ -128,6 +128,7 @@ let teamRows = [];
 let teamsLoading = true;
 let teamError = "";
 let teamRequestId = 0;
+let playerSearchTimer = 0;
 const initialParams = new URLSearchParams(window.location.search);
 
 const numberFormat = new Intl.NumberFormat("en-US");
@@ -1540,11 +1541,6 @@ function normalizeSearchText(value) {
     .trim();
 }
 
-function looksLikePlayerName(query) {
-  const normalized = normalizeSearchText(cleanSearchInput(query));
-  return normalized.split(" ").filter(Boolean).length >= 2;
-}
-
 function personMatchesBoard(person) {
   const position = person.primaryPosition?.abbreviation || person.position || "";
   return boardType === "pitching" ? position === "P" : position !== "P";
@@ -1563,7 +1559,7 @@ function personSearchRank(person, query) {
 
 async function searchHistoricalPlayer(query) {
   const clean = cleanSearchInput(query);
-  if (!looksLikePlayerName(clean)) return null;
+  if (!clean || clean.length < 2) return null;
   const cacheKey = `${boardType}:${normalizeSearchText(clean)}`;
   if (peopleSearchCache.has(cacheKey)) return peopleSearchCache.get(cacheKey);
   try {
@@ -1577,6 +1573,37 @@ async function searchHistoricalPlayer(query) {
   } catch (error) {
     peopleSearchCache.set(cacheKey, null);
     return null;
+  }
+}
+
+function displayPersonOption(person) {
+  const position = person.primaryPosition?.abbreviation || person.position || "MLB";
+  const debut = person.mlbDebutDate ? `MLB debut ${String(person.mlbDebutDate).slice(0, 4)}` : "";
+  return `${person.fullName} - ${[position, debut].filter(Boolean).join(" - ")}`;
+}
+
+async function appendHistoricalSearchOptions(query) {
+  const clean = cleanSearchInput(query);
+  if (clean.length < 2 || currentSearchScope() === "team") return;
+  const datalist = document.querySelector("#player-search-options");
+  if (!datalist) return;
+  try {
+    const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(clean)}`);
+    const people = (data.people || [])
+      .filter((person) => person.id && person.fullName)
+      .sort((a, b) => personSearchRank(b, clean) - personSearchRank(a, clean))
+      .slice(0, 12);
+    const existing = new Set(Array.from(datalist.options).map((option) => option.value));
+    people.forEach((person) => {
+      const value = displayPersonOption(person);
+      if (existing.has(value)) return;
+      const option = document.createElement("option");
+      option.value = value;
+      option.label = person.fullName;
+      datalist.appendChild(option);
+    });
+  } catch (error) {
+    // Autocomplete is optional; keep the board usable if player search is unavailable.
   }
 }
 
@@ -1724,7 +1751,6 @@ async function submitPlayerSearch(sourceInput) {
   const playerSearch = document.querySelector("#player-search");
   const heroPlayerSearch = document.querySelector("#hero-player-search");
   const rawValue = sourceInput?.value || playerSearch?.value || heroPlayerSearch?.value || "";
-  const isHeroSearch = sourceInput?.id === "hero-player-search";
   const value = resolvedSearchValue(rawValue);
   if (playerSearch) playerSearch.value = value;
   if (heroPlayerSearch) heroPlayerSearch.value = value;
@@ -1732,7 +1758,7 @@ async function submitPlayerSearch(sourceInput) {
   const currentMatches = query
     ? positionFilteredRows(leaderRows).filter((player) => matchesPlayerSearch(player, query))
     : [];
-  if (query && !currentMatches.length && (currentSearchScope() !== "team" || isHeroSearch)) {
+  if (query && !currentMatches.length) {
     const historicalPlayer = await searchHistoricalPlayer(value);
     if (historicalPlayer) {
       const opened = await openHistoricalPlayerRange(historicalPlayer, value);
@@ -1985,6 +2011,8 @@ function bindEvents() {
   const heroPlayerSearch = document.querySelector("#hero-player-search");
   playerSearch.addEventListener("input", () => {
     if (heroPlayerSearch && heroPlayerSearch.value !== playerSearch.value) heroPlayerSearch.value = playerSearch.value;
+    clearTimeout(playerSearchTimer);
+    playerSearchTimer = setTimeout(() => appendHistoricalSearchOptions(playerSearch.value), 220);
     renderChart();
     renderTable();
   });
@@ -1996,6 +2024,8 @@ function bindEvents() {
   });
   heroPlayerSearch?.addEventListener("input", () => {
     playerSearch.value = heroPlayerSearch.value;
+    clearTimeout(playerSearchTimer);
+    playerSearchTimer = setTimeout(() => appendHistoricalSearchOptions(heroPlayerSearch.value), 220);
     renderChart();
     renderTable();
   });
