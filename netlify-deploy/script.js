@@ -602,6 +602,8 @@ function mapApiPlayer(split) {
       wins: toNumber(stat.wins),
       losses: toNumber(stat.losses),
       hits: toNumber(stat.hits),
+      earnedRuns: toNumber(stat.earnedRuns),
+      walks: toNumber(stat.baseOnBalls),
       strikeouts: toNumber(stat.strikeOuts),
       whip: toNumber(stat.whip),
       saves: toNumber(stat.saves),
@@ -1578,35 +1580,105 @@ async function searchHistoricalPlayer(query) {
   }
 }
 
-async function historicalPlayerSeasons(person) {
+function splitHasUsefulPlayerStat(split) {
+  return boardType === "pitching"
+    ? inningsToOuts(split.stat?.inningsPitched) > 0 || toNumber(split.stat?.gamesPlayed) > 0
+    : toNumber(split.stat?.plateAppearances) > 0 || toNumber(split.stat?.atBats) > 0 || toNumber(split.stat?.gamesPlayed) > 0;
+}
+
+async function historicalPlayerSplits(person) {
   if (!person?.id) return [];
-  const cacheKey = `${person.id}:${boardType}:${activeTeamId}:seasons`;
+  const cacheKey = `${person.id}:${boardType}:${activeTeamId}:splits`;
   if (playerSeasonSearchCache.has(cacheKey)) return playerSeasonSearchCache.get(cacheKey);
   try {
     const params = new URLSearchParams({ stats: "yearByYear", group: config.group, sportId: "1", hydrate: "team" });
     const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${person.id}/stats?${params.toString()}`);
-    const splits = (data.stats?.[0]?.splits || [])
+    const rawSplits = data.stats?.[0]?.splits || [];
+    const aggregateSeasons = new Set(rawSplits.filter((split) => split.numTeams && !split.team).map((split) => String(split.season)));
+    const splits = rawSplits
       .filter((split) => {
         if (!split.season) return false;
         if (activeTeamId !== "all" && String(split.team?.id) !== String(activeTeamId)) return false;
-        return boardType === "pitching"
-          ? inningsToOuts(split.stat?.inningsPitched) > 0 || toNumber(split.stat?.gamesPlayed) > 0
-          : toNumber(split.stat?.plateAppearances) > 0 || toNumber(split.stat?.atBats) > 0 || toNumber(split.stat?.gamesPlayed) > 0;
+        if (activeTeamId === "all" && aggregateSeasons.has(String(split.season)) && split.team) return false;
+        return splitHasUsefulPlayerStat(split);
       });
-    const seasons = Array.from(new Set(splits.map((split) => Number(split.season)).filter(Number.isFinite))).sort((a, b) => a - b);
-    playerSeasonSearchCache.set(cacheKey, seasons);
-    return seasons;
+    playerSeasonSearchCache.set(cacheKey, splits);
+    return splits;
   } catch (error) {
     playerSeasonSearchCache.set(cacheKey, []);
     return [];
   }
 }
 
+function aggregateHistoricalPlayerRow(rows, person) {
+  if (!rows.length) return null;
+  const teams = new Map();
+  const positions = new Map();
+  const seasons = new Set();
+  const totals = {};
+  const weightedTotals = {};
+  const componentTotals = { hits: 0, ab: 0, walks: 0, hbp: 0, sacFlies: 0, totalBases: 0, earnedRuns: 0, ipOuts: 0 };
+  let weight = 0;
+
+  rows.forEach((row) => {
+    const rowWeight = playerWeight(row);
+    seasons.add(row.season || "");
+    teams.set(row.team, (teams.get(row.team) || 0) + rowWeight);
+    positions.set(row.position, (positions.get(row.position) || 0) + rowWeight);
+    config.columns.forEach(([metric]) => {
+      if (config.rateMetrics.includes(metric)) {
+        weightedTotals[metric] = (weightedTotals[metric] || 0) + row[metric] * rowWeight;
+      } else {
+        totals[metric] = (totals[metric] || 0) + row[metric];
+      }
+    });
+    componentTotals.hits += toNumber(row.hits);
+    componentTotals.ab += toNumber(row.ab);
+    componentTotals.walks += toNumber(row.walks);
+    componentTotals.hbp += toNumber(row.hbp);
+    componentTotals.sacFlies += toNumber(row.sacFlies);
+    componentTotals.totalBases += toNumber(row.totalBases);
+    componentTotals.earnedRuns += toNumber(row.earnedRuns);
+    componentTotals.ipOuts += toNumber(row.ipOuts);
+    weight += rowWeight;
+  });
+
+  const row = {
+    id: person.id,
+    name: person.fullName,
+    team: Array.from(teams.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "MLB",
+    teamName: activeTeamName || "Selected team",
+    position: Array.from(positions.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || (boardType === "pitching" ? "RP" : "UTIL"),
+    seasons: seasons.size,
+    qualifier: weight
+  };
+  config.columns.forEach(([metric]) => {
+    row[metric] = config.rateMetrics.includes(metric)
+      ? weightedTotals[metric] / Math.max(1, weight)
+      : totals[metric];
+  });
+  if (boardType === "pitching") {
+    row.era = componentTotals.ipOuts ? (componentTotals.earnedRuns * 27) / componentTotals.ipOuts : row.era;
+    row.whip = componentTotals.ipOuts ? ((componentTotals.hits + componentTotals.walks) * 3) / componentTotals.ipOuts : row.whip;
+  } else {
+    const obpDenominator = componentTotals.ab + componentTotals.walks + componentTotals.hbp + componentTotals.sacFlies;
+    row.avg = safeRate(componentTotals.hits, componentTotals.ab);
+    row.slg = safeRate(componentTotals.totalBases, componentTotals.ab);
+    row.ops = safeRate(componentTotals.hits + componentTotals.walks + componentTotals.hbp, obpDenominator) + row.slg;
+  }
+  row[config.weightKey] = weight;
+  return row;
+}
+
 async function openHistoricalPlayerRange(person, searchValue) {
-  const seasons = await historicalPlayerSeasons(person);
-  if (!seasons.length) return false;
+  const splits = await historicalPlayerSplits(person);
+  if (!splits.length) return false;
+  const seasons = Array.from(new Set(splits.map((split) => Number(split.season)).filter(Number.isFinite))).sort((a, b) => a - b);
   const start = seasons[0];
   const end = seasons[seasons.length - 1];
+  const rows = splits.map((split) => ({ ...mapApiPlayer(split), season: split.season }));
+  const historicalRow = aggregateHistoricalPlayerRow(rows, person);
+  if (!historicalRow) return false;
   activeMode = "range";
   activeRange = { start, end };
   activeBoardSize = "all";
@@ -1621,7 +1693,12 @@ async function openHistoricalPlayerRange(person, searchValue) {
   updateRangeLabels();
   updateModeControls();
   renderSummary();
-  await updateLeaders();
+  leadersLoading = false;
+  leaderError = "";
+  leaderRows = [historicalRow];
+  renderChart();
+  renderTable();
+  renderSearchOptions();
   updateTeams();
   revealPlayerBoardFromHero();
   return true;
