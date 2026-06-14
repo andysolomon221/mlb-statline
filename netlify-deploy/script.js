@@ -138,6 +138,7 @@ const seasonLeaderCache = new Map();
 const dateLeaderCache = new Map();
 const peopleSearchCache = new Map();
 const playerSeasonSearchCache = new Map();
+let historicalPlayerCandidates = [];
 const standingsCache = new Map();
 const scheduleRecordCache = new Map();
 const teamStatsCache = new Map();
@@ -547,6 +548,12 @@ function mlbDateRangeStatsUrl(sortMetric = activeMetric) {
   if (activeLeague !== "all") params.set("leagueIds", leagueIds[activeLeague]);
   if (activeTeamId !== "all") params.set("teamIds", activeTeamId);
   return `https://statsapi.mlb.com/api/v1/stats?${params.toString()}`;
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`MLB Stats API returned ${response.status}`);
+  return response.json();
 }
 
 function toNumber(value) {
@@ -1557,9 +1564,9 @@ function personSearchRank(person, query) {
   return rank;
 }
 
-async function searchHistoricalPlayer(query) {
+async function searchHistoricalPeople(query) {
   const clean = cleanSearchInput(query);
-  if (!clean || clean.length < 2) return null;
+  if (!clean || clean.length < 2) return [];
   const cacheKey = `${boardType}:${normalizeSearchText(clean)}`;
   if (peopleSearchCache.has(cacheKey)) return peopleSearchCache.get(cacheKey);
   try {
@@ -1567,13 +1574,31 @@ async function searchHistoricalPlayer(query) {
     const people = (data.people || [])
       .filter((person) => person.id && person.fullName)
       .sort((a, b) => personSearchRank(b, clean) - personSearchRank(a, clean));
-    const match = people.find(personMatchesBoard) || people[0] || null;
-    peopleSearchCache.set(cacheKey, match);
-    return match;
+    peopleSearchCache.set(cacheKey, people);
+    return people;
   } catch (error) {
-    peopleSearchCache.set(cacheKey, null);
-    return null;
+    peopleSearchCache.set(cacheKey, []);
+    return [];
   }
+}
+
+async function resolveHistoricalPlayer(query) {
+  const clean = cleanSearchInput(query);
+  const normalizedClean = normalizeSearchText(clean);
+  if (!normalizedClean || normalizedClean.length < 2) return null;
+  const normalizedRaw = normalizeSearchText(query);
+  const candidates = historicalPlayerCandidates.length
+    ? historicalPlayerCandidates
+    : await searchHistoricalPeople(clean);
+  const exactOption = candidates.find((person) => normalizeSearchText(displayPersonOption(person)) === normalizedRaw);
+  if (exactOption) return exactOption;
+  const exactName = candidates.find((person) => normalizeSearchText(person.fullName) === normalizedClean);
+  if (exactName) return exactName;
+  const boardMatches = candidates.filter(personMatchesBoard);
+  if (boardMatches.length === 1) return boardMatches[0];
+  const hasFirstAndLast = normalizedClean.split(" ").length >= 2;
+  if (!hasFirstAndLast) return null;
+  return boardMatches[0] || candidates[0] || null;
 }
 
 function displayPersonOption(person) {
@@ -1584,15 +1609,13 @@ function displayPersonOption(person) {
 
 async function appendHistoricalSearchOptions(query) {
   const clean = cleanSearchInput(query);
+  historicalPlayerCandidates = [];
   if (clean.length < 2 || currentSearchScope() === "team") return;
   const datalist = document.querySelector("#player-search-options");
   if (!datalist) return;
   try {
-    const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(clean)}`);
-    const people = (data.people || [])
-      .filter((person) => person.id && person.fullName)
-      .sort((a, b) => personSearchRank(b, clean) - personSearchRank(a, clean))
-      .slice(0, 12);
+    const people = (await searchHistoricalPeople(clean)).slice(0, 12);
+    historicalPlayerCandidates = people;
     const existing = new Set(Array.from(datalist.options).map((option) => option.value));
     people.forEach((person) => {
       const value = displayPersonOption(person);
@@ -1759,7 +1782,7 @@ async function submitPlayerSearch(sourceInput) {
     ? positionFilteredRows(leaderRows).filter((player) => matchesPlayerSearch(player, query))
     : [];
   if (query && !currentMatches.length) {
-    const historicalPlayer = await searchHistoricalPlayer(value);
+    const historicalPlayer = await resolveHistoricalPlayer(value);
     if (historicalPlayer) {
       const opened = await openHistoricalPlayerRange(historicalPlayer, value);
       if (opened) return;
