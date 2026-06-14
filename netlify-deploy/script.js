@@ -2072,12 +2072,20 @@ function bindEvents() {
     renderClubs();
   });
 
-  document.querySelector("#team-filter").addEventListener("change", (event) => {
+  document.querySelector("#team-filter").addEventListener("change", async (event) => {
     activeTeamId = event.target.value;
     activeTeamName = event.target.selectedOptions[0]?.textContent || "All teams";
     updateModeControls();
     renderSummary();
     renderComparison();
+    const activeQuery = cleanSearchInput(document.querySelector("#player-search")?.value || document.querySelector("#hero-player-search")?.value || "");
+    if (activeQuery && currentSearchScope() === "player") {
+      const historicalPlayer = await resolveHistoricalPlayer(activeQuery);
+      if (historicalPlayer) {
+        const opened = await openHistoricalPlayerRange(historicalPlayer, activeQuery);
+        if (opened) return;
+      }
+    }
     updateLeaders();
   });
 
