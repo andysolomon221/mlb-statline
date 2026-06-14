@@ -1614,6 +1614,10 @@ async function submitPlayerSearch(sourceInput) {
       window.location.href = statlinePlayerUrl("career.html", historicalPlayer.fullName, group);
       return;
     }
+    if (looksLikePlayerName(value)) {
+      window.location.href = statlinePlayerUrl("career.html", cleanSearchInput(value));
+      return;
+    }
   }
   renderChart();
   renderTable();
