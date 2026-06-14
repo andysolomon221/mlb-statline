@@ -136,6 +136,7 @@ const lastSeason = 2026;
 const seasonLeaderCache = new Map();
 const dateLeaderCache = new Map();
 const peopleSearchCache = new Map();
+const playerSeasonSearchCache = new Map();
 const standingsCache = new Map();
 const scheduleRecordCache = new Map();
 const teamStatsCache = new Map();
@@ -1577,6 +1578,55 @@ async function searchHistoricalPlayer(query) {
   }
 }
 
+async function historicalPlayerSeasons(person) {
+  if (!person?.id) return [];
+  const cacheKey = `${person.id}:${boardType}:${activeTeamId}:seasons`;
+  if (playerSeasonSearchCache.has(cacheKey)) return playerSeasonSearchCache.get(cacheKey);
+  try {
+    const params = new URLSearchParams({ stats: "yearByYear", group: config.group, sportId: "1", hydrate: "team" });
+    const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${person.id}/stats?${params.toString()}`);
+    const splits = (data.stats?.[0]?.splits || [])
+      .filter((split) => {
+        if (!split.season) return false;
+        if (activeTeamId !== "all" && String(split.team?.id) !== String(activeTeamId)) return false;
+        return boardType === "pitching"
+          ? inningsToOuts(split.stat?.inningsPitched) > 0 || toNumber(split.stat?.gamesPlayed) > 0
+          : toNumber(split.stat?.plateAppearances) > 0 || toNumber(split.stat?.atBats) > 0 || toNumber(split.stat?.gamesPlayed) > 0;
+      });
+    const seasons = Array.from(new Set(splits.map((split) => Number(split.season)).filter(Number.isFinite))).sort((a, b) => a - b);
+    playerSeasonSearchCache.set(cacheKey, seasons);
+    return seasons;
+  } catch (error) {
+    playerSeasonSearchCache.set(cacheKey, []);
+    return [];
+  }
+}
+
+async function openHistoricalPlayerRange(person, searchValue) {
+  const seasons = await historicalPlayerSeasons(person);
+  if (!seasons.length) return false;
+  const start = seasons[0];
+  const end = seasons[seasons.length - 1];
+  activeMode = "range";
+  activeRange = { start, end };
+  activeBoardSize = "all";
+  activeSearchScope = "player";
+  const playerSearch = document.querySelector("#player-search");
+  const heroPlayerSearch = document.querySelector("#hero-player-search");
+  if (playerSearch) playerSearch.value = person.fullName || searchValue;
+  if (heroPlayerSearch) heroPlayerSearch.value = person.fullName || searchValue;
+  document.querySelector("#range-start").value = start;
+  document.querySelector("#range-end").value = end;
+  document.querySelector("#search-scope").value = "player";
+  updateRangeLabels();
+  updateModeControls();
+  renderSummary();
+  await updateLeaders();
+  updateTeams();
+  revealPlayerBoardFromHero();
+  return true;
+}
+
 function searchNeedles(query) {
   const normalized = normalizeSearchText(query);
   const parts = normalized.split(" ");
@@ -1608,15 +1658,8 @@ async function submitPlayerSearch(sourceInput) {
   if (query && !currentMatches.length && (currentSearchScope() !== "team" || isHeroSearch)) {
     const historicalPlayer = await searchHistoricalPlayer(value);
     if (historicalPlayer) {
-      const group = personMatchesBoard(historicalPlayer)
-        ? boardType === "pitching" ? "pitching" : "hitting"
-        : historicalPlayer.primaryPosition?.abbreviation === "P" ? "pitching" : "hitting";
-      window.location.href = statlinePlayerUrl("career.html", historicalPlayer.fullName, group);
-      return;
-    }
-    if (looksLikePlayerName(value)) {
-      window.location.href = statlinePlayerUrl("career.html", cleanSearchInput(value));
-      return;
+      const opened = await openHistoricalPlayerRange(historicalPlayer, value);
+      if (opened) return;
     }
   }
   renderChart();
