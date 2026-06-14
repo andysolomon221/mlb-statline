@@ -1079,6 +1079,7 @@ async function currentTeams() {
       saves: 0,
       saveOpportunities: 0,
       pa: 0,
+      ipOuts: 0,
       battersFaced: 0,
       weightedTotals: {},
       weight: 0,
@@ -1100,6 +1101,7 @@ async function currentTeams() {
     existing.saves += team.saves || 0;
     existing.saveOpportunities += team.saveOpportunities || 0;
     existing.pa += team.pa || 0;
+    existing.ipOuts += team.ipOuts || 0;
     existing.battersFaced += team.battersFaced || 0;
     config.teamRateMetrics.forEach((metric) => {
       existing.weightedTotals[metric] = (existing.weightedTotals[metric] || 0) + (team[metric] || 0) * weight;
