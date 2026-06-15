@@ -299,7 +299,8 @@ const boardConfig = {
       ["hits", "H"],
       ["strikeouts", "SO"],
       ["whip", "WHIP"],
-      ["saves", "SV"]
+      ["saves", "SV"],
+      ["blownSaves", "BS"]
     ],
     metrics: [
       ["era", "ERA"],
@@ -308,9 +309,10 @@ const boardConfig = {
       ["wins", "Wins"],
       ["losses", "Losses"],
       ["whip", "WHIP"],
-      ["saves", "Saves"]
+      ["saves", "Saves"],
+      ["blownSaves", "Blown Saves"]
     ],
-    sortMap: { era: "era", wins: "wins", losses: "losses", hits: "hits", strikeouts: "strikeOuts", whip: "whip", saves: "saves" },
+    sortMap: { era: "era", wins: "wins", losses: "losses", hits: "hits", strikeouts: "strikeOuts", whip: "whip", saves: "saves", blownSaves: "blownSaves" },
     rateMetrics: ["era", "whip"],
     weightKey: "ipOuts",
     qualifierLabel: "Min IP",
@@ -615,6 +617,7 @@ function mapApiPlayer(split) {
       strikeouts: toNumber(stat.strikeOuts),
       whip: toNumber(stat.whip),
       saves: toNumber(stat.saves),
+      blownSaves: toNumber(stat.blownSaves),
       gamesStarted,
       gamesPitched,
       ipOuts: inningsToOuts(stat.inningsPitched)
