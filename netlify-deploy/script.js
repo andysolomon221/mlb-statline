@@ -293,6 +293,7 @@ const boardConfig = {
     defaultMetric: "era",
     columns: [
       ["games", "G"],
+      ["gamesStarted", "GS"],
       ["ipOuts", "IP"],
       ["era", "ERA"],
       ["wins", "W"],
@@ -309,11 +310,12 @@ const boardConfig = {
       ["hits", "Hits Allowed"],
       ["wins", "Wins"],
       ["losses", "Losses"],
+      ["gamesStarted", "Games Started"],
       ["whip", "WHIP"],
       ["saves", "Saves"],
       ["blownSaves", "Blown Saves"]
     ],
-    sortMap: { era: "era", wins: "wins", losses: "losses", hits: "hits", strikeouts: "strikeOuts", whip: "whip", saves: "saves", blownSaves: "blownSaves" },
+    sortMap: { era: "era", wins: "wins", losses: "losses", gamesStarted: "gamesStarted", hits: "hits", strikeouts: "strikeOuts", whip: "whip", saves: "saves", blownSaves: "blownSaves" },
     rateMetrics: ["era", "whip"],
     weightKey: "ipOuts",
     qualifierLabel: "Min IP",
@@ -2042,12 +2044,18 @@ function renderClubs() {
   if (teamError) return renderTeamError();
   const direction = config.teamLowerBetter.includes(activeTeamMetric) ? 1 : -1;
   document.querySelector("#team-list-title").textContent = `${teamScopeLabel()} team ${teamMetricLabel(activeTeamMetric)} leaders`;
-  document.querySelector("#club-list").innerHTML = teamRows
+  const sortedTeams = teamRows
     .slice()
-    .sort((a, b) => (a[activeTeamMetric] - b[activeTeamMetric]) * direction)
-    .map((team) => {
+    .sort((a, b) => (a[activeTeamMetric] - b[activeTeamMetric]) * direction);
+  document.querySelector("#club-list").innerHTML = sortedTeams
+    .map((team, index) => {
+      const previous = sortedTeams[index - 1];
+      const rank = previous && toNumber(previous[activeTeamMetric]) === toNumber(team[activeTeamMetric])
+        ? sortedTeams.findIndex((row) => toNumber(row[activeTeamMetric]) === toNumber(team[activeTeamMetric])) + 1
+        : index + 1;
       return `
         <article class="club-card">
+          <div class="club-rank">${rank}</div>
           <div class="club-badge" style="background:${team.color}">${team.abbr}</div>
           <div>
             <strong>${team.name}</strong>
