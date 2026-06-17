@@ -1815,8 +1815,11 @@ function clearPlayerSearch() {
   const heroPlayerSearch = document.querySelector("#hero-player-search");
   if (playerSearch) playerSearch.value = "";
   if (heroPlayerSearch) heroPlayerSearch.value = "";
-  renderChart();
-  renderTable();
+  activeSearchScope = "all";
+  activeBoardSize = "leaders";
+  const searchScope = document.querySelector("#search-scope");
+  if (searchScope) searchScope.value = "all";
+  setActiveSeason(lastSeason);
 }
 
 function resolvedSearchValue(value) {
