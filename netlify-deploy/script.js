@@ -1177,6 +1177,13 @@ function currentSummary() {
   return estimatedSummary();
 }
 
+function summaryScopeLabel() {
+  if (activeTeamId !== "all") return activeTeamName || "Selected Team";
+  if (activeLeague === "al") return "American League";
+  if (activeLeague === "nl") return "National League";
+  return "MLB";
+}
+
 function estimatedSummary() {
   if (activeMode === "single") return currentSeason().summary;
   if (activeMode === "date") return (seasons[activeDateRange.end.slice(0, 4)] || generateSeason(Number(activeDateRange.end.slice(0, 4)))).summary;
@@ -1406,21 +1413,27 @@ function updateModeControls() {
 function renderSummary() {
   const summary = currentSummary();
   const label = leaderScopeLabel();
+  const summaryLabel = summaryScopeLabel();
+  const hasScopedSummary = activeTeamId !== "all" || activeLeague !== "all";
   if (boardType === "pitching") {
-    document.querySelector("#run-summary-label").textContent = "League ERA";
-    document.querySelector("#ops-summary-label").textContent = "League WHIP";
+    document.querySelector("#run-summary-label").textContent = `${summaryLabel} ERA`;
+    document.querySelector("#ops-summary-label").textContent = `${summaryLabel} WHIP`;
     document.querySelector("#run-environment").textContent = summary.runs.toFixed(2);
     document.querySelector("#league-ops").textContent = summary.ops.toFixed(2);
-    document.querySelector("#run-context").textContent = activeMode === "single" ? "earned runs per nine innings" : activeMode === "date" ? "season context for selected date range" : "average ERA across selected years";
-    document.querySelector("#ops-context").textContent = activeMode === "single" ? "walks plus hits per inning" : activeMode === "date" ? "season context for selected date range" : "average WHIP across selected years";
+    document.querySelector("#run-context").textContent = activeMode === "single" ? "earned runs per nine innings" : activeMode === "date" ? "selected date range context" : "average ERA across selected years";
+    document.querySelector("#ops-context").textContent = activeMode === "single" ? "walks plus hits per inning" : activeMode === "date" ? "selected date range context" : "average WHIP across selected years";
   } else {
-    document.querySelector("#run-summary-label").textContent = "Run Environment";
-    document.querySelector("#ops-summary-label").textContent = "League OPS";
+    document.querySelector("#run-summary-label").textContent = hasScopedSummary ? `${summaryLabel} R/G` : "Run Environment";
+    document.querySelector("#ops-summary-label").textContent = hasScopedSummary ? `${summaryLabel} OPS` : "League OPS";
     document.querySelector("#run-environment").textContent = summary.runs.toFixed(2);
     document.querySelector("#league-ops").textContent = summary.ops.toFixed(3).replace(/^0/, "");
-    document.querySelector("#run-context").textContent = activeMode === "single" ? "runs per team game" : activeMode === "date" ? "season context for selected date range" : "average runs per team game";
-    document.querySelector("#ops-context").textContent = activeMode === "single" ? "weighted by plate appearances" : activeMode === "date" ? "season context for selected date range" : "average league OPS";
+    document.querySelector("#run-context").textContent = activeMode === "single" ? "runs per team game" : activeMode === "date" ? "selected date range context" : "average runs per team game";
+    document.querySelector("#ops-context").textContent = activeMode === "single" ? "weighted by plate appearances" : activeMode === "date" ? "selected date range context" : hasScopedSummary ? "average OPS across selected years" : "average league OPS";
   }
+  const strikeoutLabel = document.querySelector(".score-strip article:nth-child(3) span");
+  const saveLabel = document.querySelector(".score-strip article:nth-child(4) span");
+  if (strikeoutLabel) strikeoutLabel.textContent = hasScopedSummary ? `${summaryLabel} K%` : "Strikeout Rate";
+  if (saveLabel) saveLabel.textContent = hasScopedSummary ? `${summaryLabel} Save Rate` : "Save Conversion";
   document.querySelector("#k-rate").textContent = `${summary.k.toFixed(1)}%`;
   document.querySelector("#save-rate").textContent = `${summary.saves}%`;
   document.querySelector("#chart-title").textContent = `${label} ${config.chartNoun} leaders`;
