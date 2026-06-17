@@ -129,6 +129,7 @@ let teamsLoading = true;
 let teamError = "";
 let teamRequestId = 0;
 let playerSearchTimer = 0;
+let historicalPlayerSearchActive = false;
 const initialParams = new URLSearchParams(window.location.search);
 
 const numberFormat = new Intl.NumberFormat("en-US");
@@ -1331,6 +1332,7 @@ function populateSeasonSelect() {
 }
 
 function setActiveSeason(year) {
+  historicalPlayerSearchActive = false;
   activeSeason = String(year);
   activeMode = "single";
   updateModeControls();
@@ -1342,6 +1344,7 @@ function setActiveSeason(year) {
 }
 
 function setActiveRange(start, end) {
+  historicalPlayerSearchActive = false;
   activeMode = "range";
   activeRange = {
     start: Math.min(Number(start), Number(end)),
@@ -1357,6 +1360,7 @@ function setActiveRange(start, end) {
 }
 
 function setActiveDateRange(start = activeDateRange.start, end = activeDateRange.end) {
+  historicalPlayerSearchActive = false;
   activeMode = "date";
   activeDateRange = normalizeDateRange(start, end);
   document.querySelector("#date-start").value = activeDateRange.start;
@@ -1732,6 +1736,7 @@ async function openHistoricalPlayerRange(person, searchValue) {
   const rows = splits.map((split) => ({ ...mapApiPlayer(split), season: split.season }));
   const historicalRow = aggregateHistoricalPlayerRow(rows, person);
   if (!historicalRow) return false;
+  historicalPlayerSearchActive = true;
   activeMode = "range";
   activeRange = { start, end };
   activeBoardSize = "all";
@@ -1820,6 +1825,14 @@ function clearPlayerSearch() {
   const searchScope = document.querySelector("#search-scope");
   if (searchScope) searchScope.value = "all";
   setActiveSeason(lastSeason);
+}
+
+function maybeResetHistoricalPlayerSearch() {
+  if (!historicalPlayerSearchActive) return false;
+  const hasSearchText = Boolean(cleanSearchInput(document.querySelector("#player-search")?.value || document.querySelector("#hero-player-search")?.value || ""));
+  if (hasSearchText) return false;
+  clearPlayerSearch();
+  return true;
 }
 
 function resolvedSearchValue(value) {
@@ -2054,6 +2067,7 @@ function bindEvents() {
   const heroPlayerSearch = document.querySelector("#hero-player-search");
   playerSearch.addEventListener("input", () => {
     if (heroPlayerSearch && heroPlayerSearch.value !== playerSearch.value) heroPlayerSearch.value = playerSearch.value;
+    if (maybeResetHistoricalPlayerSearch()) return;
     clearTimeout(playerSearchTimer);
     playerSearchTimer = setTimeout(() => appendHistoricalSearchOptions(playerSearch.value), 220);
     renderChart();
@@ -2067,6 +2081,7 @@ function bindEvents() {
   });
   heroPlayerSearch?.addEventListener("input", () => {
     playerSearch.value = heroPlayerSearch.value;
+    if (maybeResetHistoricalPlayerSearch()) return;
     clearTimeout(playerSearchTimer);
     playerSearchTimer = setTimeout(() => appendHistoricalSearchOptions(heroPlayerSearch.value), 220);
     renderChart();
