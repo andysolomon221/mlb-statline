@@ -978,6 +978,7 @@ function mapTeamStat(split) {
       strikeouts: toNumber(stat.strikeOuts),
       whip: toNumber(stat.whip),
       saves: toNumber(stat.saves),
+      blownSaves: toNumber(stat.blownSaves),
       saveOpportunities: toNumber(stat.saveOpportunities),
       battersFaced: toNumber(stat.battersFaced),
       ipOuts: toNumber(stat.outs) || inningsToOuts(stat.inningsPitched)
@@ -1098,6 +1099,7 @@ async function currentTeams() {
       rbi: 0,
       strikeouts: 0,
       saves: 0,
+      blownSaves: 0,
       saveOpportunities: 0,
       pa: 0,
       ipOuts: 0,
@@ -1120,6 +1122,7 @@ async function currentTeams() {
     existing.rbi += team.rbi || 0;
     existing.strikeouts += team.strikeouts || 0;
     existing.saves += team.saves || 0;
+    existing.blownSaves += team.blownSaves || 0;
     existing.saveOpportunities += team.saveOpportunities || 0;
     existing.pa += team.pa || 0;
     existing.ipOuts += team.ipOuts || 0;
@@ -1989,14 +1992,7 @@ function renderComparison() {
   const a = teamRows.find((team) => String(team.id) === document.querySelector("#team-a").value) || teamRows[0];
   const b = teamRows.find((team) => String(team.id) === document.querySelector("#team-b").value) || teamRows[1] || teamRows[0];
   if (!a || !b) return;
-  const metrics = [
-    ["wins", "Wins", false],
-    ["losses", "Losses", true],
-    ["runs", "Runs", false],
-    ["runsAllowed", "Runs Allowed", true],
-    ["runDifferential", "Run Diff", false],
-    ["pct", "Win %", false]
-  ];
+  const metrics = comparisonMetrics();
 
   const teamHeader = `
     <div class="comparison-header">
@@ -2006,11 +2002,13 @@ function renderComparison() {
     </div>
   `;
   document.querySelector("#compare-grid").innerHTML = teamHeader + metrics.map(([key, label, lowerBetter]) => {
-    const rawA = a[key];
-    const rawB = b[key];
-    const floor = Math.min(rawA, rawB, 0);
-    let av = rawA - floor + 1;
-    let bv = rawB - floor + 1;
+    const rawA = Number(a[key]);
+    const rawB = Number(b[key]);
+    const valueA = Number.isFinite(rawA) ? rawA : 0;
+    const valueB = Number.isFinite(rawB) ? rawB : 0;
+    const floor = Math.min(valueA, valueB, 0);
+    let av = valueA - floor + 1;
+    let bv = valueB - floor + 1;
     if (lowerBetter) {
       const max = Math.max(av, bv);
       const min = Math.min(av, bv);
@@ -2024,7 +2022,7 @@ function renderComparison() {
       <div class="comparison">
         <div class="comparison-value">
           <span>${escapeHtml(a.abbr)}</span>
-          <strong>${fmtStat(key, rawA)}</strong>
+          <strong>${fmtStat(key, valueA)}</strong>
         </div>
         <div>
           <span>${label}</span>
@@ -2035,11 +2033,37 @@ function renderComparison() {
         </div>
         <div class="comparison-value comparison-value-right">
           <span>${escapeHtml(b.abbr)}</span>
-          <strong>${fmtStat(key, rawB)}</strong>
+          <strong>${fmtStat(key, valueB)}</strong>
         </div>
       </div>
     `;
   }).join("");
+}
+
+function comparisonMetrics() {
+  if (boardType === "pitching") {
+    return [
+      ["wins", "Wins", false],
+      ["losses", "Losses", true],
+      ["era", "ERA", true],
+      ["whip", "WHIP", true],
+      ["strikeouts", "SO", false],
+      ["saves", "SV", false],
+      ["blownSaves", "BS", true],
+      ["runsAllowed", "Runs Allowed", true],
+      ["runDifferential", "Run Diff", false]
+    ];
+  }
+  return [
+    ["wins", "Wins", false],
+    ["losses", "Losses", true],
+    ["runs", "Runs", false],
+    ["hr", "HR", false],
+    ["sb", "SB", false],
+    ["avg", "AVG", false],
+    ["ops", "OPS", false],
+    ["runDifferential", "Run Diff", false]
+  ];
 }
 
 function renderClubs() {
