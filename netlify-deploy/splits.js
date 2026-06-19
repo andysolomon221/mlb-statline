@@ -17,6 +17,7 @@ const columns = {
     ["hits", "H"],
     ["homeRuns", "HR"],
     ["rbi", "RBI"],
+    ["strikeOuts", "SO"],
     ["avg", "AVG"],
     ["obp", "OBP"],
     ["slg", "SLG"],

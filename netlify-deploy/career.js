@@ -20,6 +20,7 @@ const careerColumns = {
     ["homeRuns", "HR"],
     ["stolenBases", "SB"],
     ["rbi", "RBI"],
+    ["strikeOuts", "SO"],
     ["avg", "AVG"],
     ["obp", "OBP"],
     ["slg", "SLG"],
@@ -381,7 +382,7 @@ function updateSortOptions() {
   const sort = document.querySelector("#career-sort");
   const options = activeGroup === "pitching"
     ? [["season", "Season"], ["era", "ERA"], ["whip", "WHIP"], ["strikeOuts", "SO"], ["wins", "W"], ["saves", "SV"], ["blownSaves", "BS"]]
-    : [["season", "Season"], ["ops", "OPS"], ["homeRuns", "HR"], ["stolenBases", "SB"], ["hits", "H"], ["rbi", "RBI"], ["avg", "AVG"]];
+    : [["season", "Season"], ["ops", "OPS"], ["homeRuns", "HR"], ["stolenBases", "SB"], ["hits", "H"], ["rbi", "RBI"], ["strikeOuts", "SO"], ["avg", "AVG"]];
   sort.innerHTML = options.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
   if (!options.some(([value]) => value === activeSort)) activeSort = "season";
   sort.value = activeSort;
