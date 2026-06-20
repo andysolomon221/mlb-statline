@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statline Baseball Age Leaders</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/age" />
+    <meta name="description" content="Find MLB batting and pitching leaders before or through a selected age across any season range." />
+    <meta property="og:title" content="Statline Baseball Age Leaders" />
+    <meta property="og:description" content="Find MLB batting and pitching leaders before or through a selected age across any season range." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/age" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Statline Baseball Age Leaders" />
+    <meta name="twitter:description" content="Find MLB batting and pitching leaders before or through a selected age across any season range." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260620-age-leaders" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="age">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a class="active" href="age.html">Age Leaders</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="age-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Age Leaders</p>
+            <h1>Find leaders before or through any age.</h1>
+          </div>
+        </header>
+
+        <section class="panel age-controls-panel" aria-label="Age leader controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Milestone Finder</p>
+              <h2>Ask an age-based baseball question</h2>
+              <small class="data-note">Age filters use MLB season-level age. “Before age 25” is 24 or younger; “age 40 or older” includes age-40 seasons.</small>
+            </div>
+          </div>
+          <div class="age-control-grid">
+            <label>
+              <span>Player Type</span>
+              <select id="age-group" aria-label="Player type">
+                <option value="pitching">Pitchers</option>
+                <option value="hitting">Hitters</option>
+              </select>
+            </label>
+            <label>
+              <span>Stat</span>
+              <select id="age-stat" aria-label="Age leader stat"></select>
+            </label>
+            <label>
+              <span>Age Rule</span>
+              <select id="age-rule" aria-label="Age rule">
+                <option value="before">Before age</option>
+                <option value="through">Through age</option>
+                <option value="older">Age or older</option>
+                <option value="after">After age</option>
+              </select>
+            </label>
+            <label>
+              <span>Age</span>
+              <select id="age-cutoff" aria-label="Age cutoff"></select>
+            </label>
+            <label>
+              <span>From Season</span>
+              <select id="age-start" aria-label="Start season"></select>
+            </label>
+            <label>
+              <span>To Season</span>
+              <select id="age-end" aria-label="End season"></select>
+            </label>
+            <label>
+              <span>Minimum</span>
+              <select id="age-minimum" aria-label="Minimum sample"></select>
+            </label>
+            <button type="button" id="age-run">View</button>
+          </div>
+          <div class="quick-ranges age-examples" role="group" aria-label="Age leader examples">
+            <button type="button" data-age-example="pitcher-so-25">Most SO Before 25</button>
+            <button type="button" data-age-example="hitter-hr-25">Most HR Before 25</button>
+            <button type="button" data-age-example="hitter-hits-30">Most Hits Through 30</button>
+            <button type="button" data-age-example="hitter-hr-40">Most HR Age 40+</button>
+            <button type="button" data-age-example="pitcher-saves-28">Most Saves Before 28</button>
+          </div>
+        </section>
+
+        <section class="score-strip age-summary" aria-label="Age leader summary">
+          <article>
+            <span>Question</span>
+            <strong id="age-question">Most SO before age 25</strong>
+            <small id="age-question-note">Pitchers, 1901-2026</small>
+          </article>
+          <article>
+            <span>Players</span>
+            <strong id="age-player-count">--</strong>
+            <small>qualified result pool</small>
+          </article>
+          <article>
+            <span>Leader</span>
+            <strong id="age-leader-name">--</strong>
+            <small id="age-leader-note">Run a search to load leaders</small>
+          </article>
+          <article>
+            <span>Data</span>
+            <strong id="age-progress">Ready</strong>
+            <small id="age-progress-note">MLB Stats API season data</small>
+          </article>
+        </section>
+
+        <section class="panel leaderboard age-table-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Leaderboard</p>
+              <h2 id="age-table-title">Age leaders</h2>
+            </div>
+            <div class="split-status" id="age-status">Choose a question, then hit View.</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="age-head"></thead>
+              <tbody id="age-table"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="age.js?v=20260620-age-rules"></script>
+  </body>
+</html>

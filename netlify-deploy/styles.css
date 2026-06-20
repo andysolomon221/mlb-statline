@@ -1673,7 +1673,8 @@ td {
   margin: 0 0 18px;
 }
 
-.compare-control-grid {
+.compare-control-grid,
+.age-control-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(220px, 1fr));
   gap: 14px;
@@ -1682,13 +1683,32 @@ td {
 
 .compare-control-grid label,
 .compare-range-fields label,
-.compare-career-season-fields label {
+.compare-career-season-fields label,
+.age-control-grid label {
   display: grid;
   gap: 8px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.age-control-grid button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 18px;
+  color: #fff;
+  background: var(--navy);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.age-examples {
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  margin-top: 16px;
 }
 
 .compare-action-row {
@@ -2035,6 +2055,7 @@ td {
   .matchup-advanced-search,
   .browse-players-grid,
   .compare-control-grid,
+  .age-control-grid,
   .compare-player-grid,
   .news-grid,
   .team-hub-grid,
@@ -2203,6 +2224,7 @@ td {
   .matchup-advanced-search,
   .browse-players-grid,
   .compare-control-grid,
+  .age-control-grid,
   .compare-custom-window-grid,
   .compare-custom-window-grid fieldset,
   .compare-player-grid,
