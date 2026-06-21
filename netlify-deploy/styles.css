@@ -1711,6 +1711,14 @@ td {
   margin-top: 16px;
 }
 
+.age-range-fields {
+  display: none;
+}
+
+.age-controls-panel[data-advanced-age-range] .age-range-fields {
+  display: grid;
+}
+
 .compare-action-row {
   display: flex;
   justify-content: flex-start;

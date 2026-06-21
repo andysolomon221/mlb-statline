@@ -7,6 +7,8 @@ let activeGroup = "pitching";
 let activeMetric = "strikeOuts";
 let activeRule = "before";
 let activeAge = 25;
+let activeAdvancedAgeRange = false;
+let activeAgeRange = { start: 25, end: 30 };
 let activeRange = { start: 1901, end: 2026 };
 let activeMinimum = "auto";
 let activeRequestId = 0;
@@ -168,6 +170,10 @@ function populateControls() {
   }
   document.querySelector("#age-cutoff").innerHTML = ages.join("");
   document.querySelector("#age-cutoff").value = activeAge;
+  document.querySelector("#age-range-start").innerHTML = ages.join("");
+  document.querySelector("#age-range-end").innerHTML = ages.join("");
+  document.querySelector("#age-range-start").value = activeAgeRange.start;
+  document.querySelector("#age-range-end").value = activeAgeRange.end;
   updateMetricControls();
 }
 
@@ -186,6 +192,11 @@ function readControls() {
   activeMetric = document.querySelector("#age-stat").value;
   activeRule = document.querySelector("#age-rule").value;
   activeAge = Number(document.querySelector("#age-cutoff").value);
+  activeAdvancedAgeRange = document.querySelector(".age-controls-panel").hasAttribute("data-advanced-age-range");
+  activeAgeRange = {
+    start: Number(document.querySelector("#age-range-start").value),
+    end: Number(document.querySelector("#age-range-end").value)
+  };
   activeRange = {
     start: Number(document.querySelector("#age-start").value),
     end: Number(document.querySelector("#age-end").value)
@@ -195,6 +206,11 @@ function readControls() {
 
 function ageMatches(age) {
   if (!Number.isFinite(age)) return false;
+  if (activeAdvancedAgeRange) {
+    const low = Math.min(activeAgeRange.start, activeAgeRange.end);
+    const high = Math.max(activeAgeRange.start, activeAgeRange.end);
+    return age >= low && age <= high;
+  }
   if (activeRule === "before") return age < activeAge;
   if (activeRule === "through") return age <= activeAge;
   if (activeRule === "older") return age >= activeAge;
@@ -213,6 +229,11 @@ function metricLabel(metric = activeMetric) {
 }
 
 function questionLabel() {
+  if (activeAdvancedAgeRange) {
+    const low = Math.min(activeAgeRange.start, activeAgeRange.end);
+    const high = Math.max(activeAgeRange.start, activeAgeRange.end);
+    return `Most ${metricLabel()} from age ${low} through ${high}`;
+  }
   const rules = {
     before: `before age ${activeAge}`,
     through: `through age ${activeAge}`,
@@ -459,7 +480,10 @@ function applyExample(name) {
   activeMetric = example.metric;
   activeRule = example.rule;
   activeAge = example.age;
+  activeAdvancedAgeRange = false;
   activeMinimum = example.min;
+  document.querySelector(".age-controls-panel").removeAttribute("data-advanced-age-range");
+  document.querySelector("#age-advanced-toggle").textContent = "Advanced age range";
   document.querySelector("#age-group").value = activeGroup;
   updateMetricControls();
   document.querySelector("#age-stat").value = activeMetric;
@@ -479,6 +503,12 @@ function init() {
     renderHead();
   });
   document.querySelector("#age-run").addEventListener("click", runAgeSearch);
+  document.querySelector("#age-advanced-toggle").addEventListener("click", () => {
+    const panel = document.querySelector(".age-controls-panel");
+    const enabled = panel.toggleAttribute("data-advanced-age-range");
+    activeAdvancedAgeRange = enabled;
+    document.querySelector("#age-advanced-toggle").textContent = enabled ? "Use single age" : "Advanced age range";
+  });
   document.querySelectorAll("[data-age-example]").forEach((button) => {
     button.addEventListener("click", () => applyExample(button.dataset.ageExample));
   });

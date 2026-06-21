@@ -116,6 +116,19 @@
             </label>
             <button type="button" id="age-run">View</button>
           </div>
+          <div class="compare-advanced-wrap age-advanced-wrap">
+            <button type="button" id="age-advanced-toggle">Advanced age range</button>
+            <div class="compare-custom-window-grid age-range-fields">
+              <label>
+                <span>From Age</span>
+                <select id="age-range-start" aria-label="Age range start"></select>
+              </label>
+              <label>
+                <span>To Age</span>
+                <select id="age-range-end" aria-label="Age range end"></select>
+              </label>
+            </div>
+          </div>
           <div class="quick-ranges age-examples" role="group" aria-label="Age leader examples">
             <button type="button" data-age-example="pitcher-so-25">Most SO Before 25</button>
             <button type="button" data-age-example="hitter-hr-25">Most HR Before 25</button>
@@ -173,6 +186,6 @@
       </main>
     </div>
 
-    <script src="age.js?v=20260620-age-rules"></script>
+    <script src="age.js?v=20260620-age-range"></script>
   </body>
 </html>
