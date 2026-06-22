@@ -144,6 +144,14 @@ select {
   content: "Put two players side by side for single-season or historical range comparisons.";
 }
 
+.rail-nav a[href="age.html"]::after {
+  content: "Ask who led before, through, or after a selected age.";
+}
+
+.rail-nav a[href="starts.html"]::after {
+  content: "Find leaders across the first seasons of a player's career.";
+}
+
 .rail-nav a[href="career.html"]::after {
   content: "Pick one player and scan their year-by-year batting or pitching career log.";
 }
@@ -2536,8 +2544,16 @@ td {
     order: 11;
   }
 
-  .rail-nav a[href="fantasy.html"] {
+  .rail-nav a[href="age.html"] {
     order: 12;
+  }
+
+  .rail-nav a[href="starts.html"] {
+    order: 13;
+  }
+
+  .rail-nav a[href="fantasy.html"] {
+    order: 14;
   }
 
   .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="teams.html"]):not([href="news.html"]) {

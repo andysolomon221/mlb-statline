@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statline Baseball First Seasons</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/starts" />
+    <meta name="description" content="Find MLB leaders across the first seasons of a player's career, with optional team and era filters." />
+    <meta property="og:title" content="Statline Baseball First Seasons" />
+    <meta property="og:description" content="Find MLB leaders across the first seasons of a player's career, with optional team and era filters." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/starts" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Statline Baseball First Seasons" />
+    <meta name="twitter:description" content="Find MLB leaders across the first seasons of a player's career, with optional team and era filters." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260622-career-starts" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="starts">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="age.html">Age Leaders</a>
+          <a class="active" href="starts.html">First Seasons</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="starts-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">First Seasons</p>
+            <h1>Find leaders across the first seasons of a career.</h1>
+          </div>
+        </header>
+
+        <section class="panel age-controls-panel" aria-label="Career start controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Career Window Finder</p>
+              <h2>Ask a first-seasons baseball question</h2>
+              <small class="data-note">For team filters, totals use the counted early-career seasons tied to that club or franchise.</small>
+            </div>
+          </div>
+          <div class="age-control-grid">
+            <label>
+              <span>Player Type</span>
+              <select id="starts-group" aria-label="Player type">
+                <option value="hitting">Hitters</option>
+                <option value="pitching">Pitchers</option>
+              </select>
+            </label>
+            <label>
+              <span>Stat</span>
+              <select id="starts-stat" aria-label="Career start stat"></select>
+            </label>
+            <label>
+              <span>First Seasons</span>
+              <select id="starts-count" aria-label="Number of first career seasons"></select>
+            </label>
+            <label>
+              <span>Team</span>
+              <select id="starts-team" aria-label="Team filter"></select>
+            </label>
+            <label>
+              <span>Career Start From</span>
+              <select id="starts-start" aria-label="Start season"></select>
+            </label>
+            <label>
+              <span>Career Start To</span>
+              <select id="starts-end" aria-label="End season"></select>
+            </label>
+            <button type="button" id="starts-run">View</button>
+          </div>
+          <div class="quick-ranges age-examples" role="group" aria-label="Career start examples">
+            <button type="button" data-starts-example="athletics-hr-2">A's HR First 2</button>
+            <button type="button" data-starts-example="redsox-hits-3">Red Sox Hits First 3</button>
+            <button type="button" data-starts-example="mlb-hr-2">MLB HR First 2</button>
+            <button type="button" data-starts-example="pitcher-so-5">Pitcher SO First 5</button>
+          </div>
+        </section>
+
+        <section class="score-strip age-summary" aria-label="Career start summary">
+          <article>
+            <span>Question</span>
+            <strong id="starts-question">Most HR in first 2 career seasons</strong>
+            <small id="starts-question-note">Hitters, all teams, 1901-2026</small>
+          </article>
+          <article>
+            <span>Players</span>
+            <strong id="starts-player-count">--</strong>
+            <small>qualified result pool</small>
+          </article>
+          <article>
+            <span>Leader</span>
+            <strong id="starts-leader-name">--</strong>
+            <small id="starts-leader-note">Run a search to load leaders</small>
+          </article>
+          <article>
+            <span>Data</span>
+            <strong id="starts-progress">Ready</strong>
+            <small id="starts-progress-note">MLB Stats API season data</small>
+          </article>
+        </section>
+
+        <section class="panel leaderboard age-table-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Leaderboard</p>
+              <h2 id="starts-table-title">First-season leaders</h2>
+            </div>
+            <div class="split-status" id="starts-status">Choose a question, then hit View.</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="starts-head"></thead>
+              <tbody id="starts-table"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="starts.js?v=20260622-career-starts"></script>
+  </body>
+</html>
