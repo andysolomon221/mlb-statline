@@ -299,7 +299,11 @@ function teamMatches(split) {
   if (activeTeam === "all") return true;
   const aliases = teamAliases[activeTeam] || [activeTeam];
   const tokens = splitTeamTokens(split);
-  return tokens.some((token) => aliases.some((alias) => token === alias || token.includes(alias)));
+  return tokens.some((token) => aliases.some((alias) => {
+    const normalizedAlias = String(alias).toUpperCase();
+    if (token === normalizedAlias) return true;
+    return normalizedAlias.length > 3 && token.includes(normalizedAlias);
+  }));
 }
 
 function teamAbbr(split) {
@@ -331,8 +335,9 @@ function emptySeason(split) {
 
 function addSplitToSeason(row, split, includeStats) {
   const stat = split.stat || {};
-  row.teams.add(teamAbbr(split));
-  if (teamMatches(split)) row.matchedTeam = true;
+  const isTeamMatch = teamMatches(split);
+  if (includeStats) row.teams.add(teamAbbr(split));
+  if (isTeamMatch) row.matchedTeam = true;
   if (!includeStats) return;
   row.gamesPlayed += toNumber(stat.gamesPlayed);
   row.gamesStarted += toNumber(stat.gamesStarted);
