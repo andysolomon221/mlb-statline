@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Age Leaders" />
     <meta name="twitter:description" content="Find MLB batting and pitching leaders before or through a selected age across any season range." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260620-age-leaders" />
+    <link rel="stylesheet" href="styles.css?v=20260623-age-chart" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -163,6 +163,22 @@
           </article>
         </section>
 
+        <section class="panel feature-panel age-visual-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Age Leaderboard</p>
+              <h2 id="age-chart-title">Age leaders</h2>
+            </div>
+            <select id="age-chart-size" aria-label="Age leaderboard size">
+              <option value="10">Top 10</option>
+              <option value="20">Top 20</option>
+            </select>
+          </div>
+          <div class="bar-chart age-bar-chart" id="age-bar-chart" aria-label="Age leaderboard chart">
+            <div class="empty-state">Choose an age question, then hit View.</div>
+          </div>
+        </section>
+
         <section class="panel leaderboard age-table-panel">
           <div class="section-head">
             <div>
@@ -188,6 +204,6 @@
       </main>
     </div>
 
-    <script src="age.js?v=20260620-age-range"></script>
+    <script src="age.js?v=20260623-age-chart"></script>
   </body>
 </html>

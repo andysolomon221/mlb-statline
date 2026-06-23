@@ -12,6 +12,7 @@ let activeAgeRange = { start: 25, end: 30 };
 let activeRange = { start: 1901, end: 2026 };
 let activeMinimum = "auto";
 let activeRequestId = 0;
+let lastRenderedRows = [];
 
 const metricConfig = {
   hitting: {
@@ -422,6 +423,50 @@ function renderRows(rows) {
   `).join("") || `<tr><td colspan="${columns.length}" class="empty-row">No players match this age question.</td></tr>`;
 }
 
+function chartMeta(row) {
+  const pieces = [row.teams, row.ageLabel && `Age ${row.ageLabel}`, row.seasonLabel].filter(Boolean);
+  return pieces.join(" | ");
+}
+
+function renderAgeChart(rows) {
+  lastRenderedRows = rows;
+  const chart = document.querySelector("#age-bar-chart");
+  const title = document.querySelector("#age-chart-title");
+  if (!chart || !title) return;
+  title.textContent = `${questionLabel()} leaders`;
+  if (!rows.length) {
+    chart.innerHTML = `<div class="empty-state">No players match this age question.</div>`;
+    return;
+  }
+  const limit = Number(document.querySelector("#age-chart-size")?.value || 10);
+  const visibleRows = rows.slice(0, limit);
+  const values = visibleRows.map((row) => toNumber(row[activeMetric]));
+  const lower = metricConfig[activeGroup].lowerBetter.includes(activeMetric);
+  const maxValue = Math.max(...values.map((value) => Math.abs(value)), 1);
+  const minValue = Math.min(...values);
+  const range = Math.max(maxValue - minValue, 1);
+  chart.innerHTML = visibleRows.map((row) => {
+    const value = toNumber(row[activeMetric]);
+    const percent = lower
+      ? Math.max(8, 100 - ((value - minValue) / range) * 92)
+      : Math.max(8, (Math.abs(value) / maxValue) * 100);
+    return `
+      <div class="bar-row age-bar-row">
+        <div class="bar-label">
+          <a class="chart-player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer">
+            <strong>${escapeHtml(row.name)}</strong>
+            <span>${escapeHtml(chartMeta(row))}</span>
+          </a>
+        </div>
+        <div class="bar-track" aria-hidden="true">
+          <div class="bar-fill" style="width:${percent.toFixed(1)}%"></div>
+        </div>
+        <div class="bar-value">${fmtStat(activeMetric, row[activeMetric])}</div>
+      </div>
+    `;
+  }).join("");
+}
+
 function renderSummary(rows, allRows = rows) {
   const leader = rows[0];
   document.querySelector("#age-question").textContent = questionLabel();
@@ -441,6 +486,7 @@ async function runAgeSearch() {
   status.textContent = `Loading ${years.length} seasons from MLB Stats API...`;
   renderHead();
   document.querySelector("#age-table").innerHTML = `<tr><td colspan="${metricConfig[activeGroup].columns.length}" class="empty-row">Loading age leaders...</td></tr>`;
+  document.querySelector("#age-bar-chart").innerHTML = `<div class="empty-state">Loading age leaders...</div>`;
 
   try {
     const payloads = await fetchInBatches(years, fetchSeason, 4, (done, total) => {
@@ -452,6 +498,7 @@ async function runAgeSearch() {
     const allRows = aggregateRows(payloads);
     const rows = sortRows(qualifiedRows(allRows));
     renderRows(rows);
+    renderAgeChart(rows);
     renderSummary(rows, allRows);
     document.querySelector("#age-table-title").textContent = `${questionLabel()} leaders`;
     document.querySelector("#age-progress").textContent = "Done";
@@ -463,6 +510,7 @@ async function runAgeSearch() {
     document.querySelector("#age-progress-note").textContent = "Could not load MLB data";
     status.textContent = "Could not load age leaders. Try a smaller season range or try again.";
     document.querySelector("#age-table").innerHTML = `<tr><td colspan="${metricConfig[activeGroup].columns.length}" class="empty-row">Could not load age leaders.</td></tr>`;
+    document.querySelector("#age-bar-chart").innerHTML = `<div class="empty-state">Could not load age leaders.</div>`;
   }
 }
 
@@ -503,6 +551,7 @@ function init() {
     renderHead();
   });
   document.querySelector("#age-run").addEventListener("click", runAgeSearch);
+  document.querySelector("#age-chart-size").addEventListener("change", () => renderAgeChart(lastRenderedRows));
   document.querySelector("#age-advanced-toggle").addEventListener("click", () => {
     const panel = document.querySelector(".age-controls-panel");
     const enabled = panel.toggleAttribute("data-advanced-age-range");

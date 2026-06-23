@@ -1897,6 +1897,27 @@ td {
   display: grid;
 }
 
+.age-visual-panel {
+  margin-top: 26px;
+}
+
+.age-bar-chart {
+  min-height: 260px;
+}
+
+.age-bar-row {
+  grid-template-columns: 230px minmax(120px, 1fr) 74px;
+  min-height: 48px;
+}
+
+.age-bar-row .bar-label strong {
+  font-size: 16px;
+}
+
+.age-bar-row .bar-value {
+  font-size: 18px;
+}
+
 .compare-action-row {
   display: flex;
   justify-content: flex-start;
