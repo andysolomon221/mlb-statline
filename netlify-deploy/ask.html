@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Ask</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <meta name="description" content="Ask Statline prototype for plain-English baseball stat questions." />
+    <link rel="stylesheet" href="styles.css?v=20260616-sticky-headers" />
+  </head>
+  <body data-board="ask">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="age.html">Age Leaders</a>
+          <a href="starts.html">First Seasons</a>
+          <a href="span.html">Span Finder</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="ask-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Ask Statline Prototype</p>
+            <h1>Ask a baseball question in plain English.</h1>
+            <small class="data-note">Testing only: this answers a few controlled question types from MLB Stats API data.</small>
+          </div>
+        </header>
+
+        <section class="panel ask-panel" aria-label="Ask Statline">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Question</p>
+              <h2>Start with a player and date range</h2>
+            </div>
+          </div>
+          <form class="ask-form" id="ask-form">
+            <label for="ask-query">Ask Statline</label>
+            <div class="ask-input-row">
+              <input id="ask-query" type="search" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none" value="What is Wilyer Abreu's slash line since May 20?" aria-label="Ask a baseball stat question" />
+              <button type="submit">Ask</button>
+            </div>
+          </form>
+          <div class="ask-examples" aria-label="Example questions">
+            <button type="button" data-question="What is Wilyer Abreu's slash line since May 20?">Wilyer since May 20</button>
+            <button type="button" data-question="What is Aaron Judge's slash line from June 1?">Judge from June 1</button>
+            <button type="button" data-question="Show Rafael Devers' slash line since May 1">Devers since May 1</button>
+          </div>
+        </section>
+
+        <section class="score-strip ask-answer-summary" aria-label="Ask answer summary">
+          <article>
+            <span>Player</span>
+            <strong id="ask-player">--</strong>
+            <small id="ask-player-note">Waiting for a question</small>
+          </article>
+          <article>
+            <span>Date Range</span>
+            <strong id="ask-range">--</strong>
+            <small>Current-season date range</small>
+          </article>
+          <article>
+            <span>Slash Line</span>
+            <strong id="ask-slash">--</strong>
+            <small>AVG / OBP / SLG</small>
+          </article>
+          <article>
+            <span>OPS</span>
+            <strong id="ask-ops">--</strong>
+            <small>From MLB Stats API</small>
+          </article>
+        </section>
+
+        <section class="panel ask-result-panel" aria-label="Ask answer">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Answer</p>
+              <h2 id="ask-answer-title">Ask a supported question</h2>
+            </div>
+          </div>
+          <div id="ask-answer" class="ask-answer empty-state">
+            Try: What is Wilyer Abreu's slash line since May 20?
+          </div>
+          <div class="table-wrap ask-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>G</th>
+                  <th>PA</th>
+                  <th>AB</th>
+                  <th>H</th>
+                  <th>HR</th>
+                  <th>RBI</th>
+                  <th>BB</th>
+                  <th>SO</th>
+                  <th>SB</th>
+                </tr>
+              </thead>
+              <tbody id="ask-stat-row">
+                <tr><td colspan="9" class="empty-row">No answer yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel ask-support-panel" aria-label="Supported questions">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Supported Right Now</p>
+              <h2>Small, honest question set</h2>
+            </div>
+          </div>
+          <div class="start-grid">
+            <article class="start-card">
+              <span>Works</span>
+              <strong>Player slash line since a date</strong>
+              <small>Example: What is Wilyer Abreu's slash line since May 20?</small>
+            </article>
+            <article class="start-card">
+              <span>Soon</span>
+              <strong>Team leaders over custom years</strong>
+              <small>Example: Who led the Red Sox in HR from 1975 to 1985?</small>
+            </article>
+            <article class="start-card">
+              <span>Soon</span>
+              <strong>Pitcher date-range lines</strong>
+              <small>Example: What is Jacob Misiorowski's ERA since May 1?</small>
+            </article>
+          </div>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="ask.js?v=20260615-ask-prototype"></script>
+  </body>
+</html>

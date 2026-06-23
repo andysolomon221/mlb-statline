@@ -51,6 +51,7 @@ select {
   padding: 22px 16px;
   background: #102a45;
   color: #fff;
+  overflow: hidden;
 }
 
 .brand-mark {
@@ -72,6 +73,14 @@ select {
 .rail-nav {
   display: grid;
   gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0;
+  scrollbar-width: none;
+}
+
+.rail-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .rail-nav a {
@@ -150,6 +159,10 @@ select {
 
 .rail-nav a[href="starts.html"]::after {
   content: "Find leaders across the first seasons of a player's career.";
+}
+
+.rail-nav a[href="span.html"]::after {
+  content: "Find a player's best rolling game spans for home runs, strikeouts, hits, and more.";
 }
 
 .rail-nav a[href="career.html"]::after {
@@ -902,6 +915,163 @@ input[type="search"] {
 
 .ask-table-wrap {
   margin-top: 1rem;
+}
+
+.helper-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.helper-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.helper-grid label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.helper-grid input,
+.helper-grid textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  text-transform: none;
+  resize: vertical;
+}
+
+.helper-grid textarea {
+  min-height: 118px;
+}
+
+.helper-wide {
+  grid-column: 1 / -1;
+}
+
+.helper-grid button {
+  min-height: 48px;
+  align-self: end;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 18px;
+  color: #fff;
+  background: var(--navy);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.helper-examples {
+  margin-top: 4px;
+}
+
+.helper-stat-finder {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #f7f9fb;
+}
+
+.helper-stat-finder .eyebrow {
+  margin-bottom: 4px;
+}
+
+.helper-stat-ideas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.helper-stat-idea {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.helper-stat-idea p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 850;
+  line-height: 1.4;
+}
+
+.helper-stat-idea button {
+  justify-self: start;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--navy);
+  background: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.helper-drafts {
+  display: grid;
+  gap: 14px;
+}
+
+.helper-draft {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.helper-draft > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.helper-draft span {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.helper-draft button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--navy);
+  background: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.helper-draft textarea {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--ink);
+  background: #f7f9fb;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 750;
+  line-height: 1.45;
+  resize: vertical;
 }
 
 .split-summary strong {
@@ -2033,10 +2203,13 @@ td {
     height: auto;
     flex-direction: row;
     justify-content: space-between;
+    overflow: visible;
   }
 
   .rail-nav {
     grid-auto-flow: column;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .rail-nav a {
@@ -2072,6 +2245,8 @@ td {
   .browse-players-grid,
   .compare-control-grid,
   .age-control-grid,
+  .helper-grid,
+  .helper-stat-ideas,
   .compare-player-grid,
   .news-grid,
   .team-hub-grid,
@@ -2241,6 +2416,8 @@ td {
   .browse-players-grid,
   .compare-control-grid,
   .age-control-grid,
+  .helper-grid,
+  .helper-stat-ideas,
   .compare-custom-window-grid,
   .compare-custom-window-grid fieldset,
   .compare-player-grid,
@@ -2552,8 +2729,12 @@ td {
     order: 13;
   }
 
-  .rail-nav a[href="fantasy.html"] {
+  .rail-nav a[href="span.html"] {
     order: 14;
+  }
+
+  .rail-nav a[href="fantasy.html"] {
+    order: 15;
   }
 
   .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="teams.html"]):not([href="news.html"]) {

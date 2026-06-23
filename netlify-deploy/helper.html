@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statline Baseball Game Thread Helper</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/helper" />
+    <meta name="description" content="Draft useful baseball replies from a stat angle, screenshot, or game thread topic." />
+    <meta property="og:title" content="Statline Baseball Game Thread Helper" />
+    <meta property="og:description" content="Draft useful baseball replies from a stat angle, screenshot, or game thread topic." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/helper" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Statline Baseball Game Thread Helper" />
+    <meta name="twitter:description" content="Draft useful baseball replies from a stat angle, screenshot, or game thread topic." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260622-helper" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="helper">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="age.html">Age Leaders</a>
+          <a href="starts.html">First Seasons</a>
+          <a href="span.html">Span Finder</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="helper-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Game Thread Helper</p>
+            <h1>Turn a baseball thought into a useful stat reply.</h1>
+            <small class="data-note">Draft only. You choose the stat, screenshot, and final wording before posting.</small>
+          </div>
+        </header>
+
+        <section class="panel helper-panel" aria-label="Game thread reply builder">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Reply Builder</p>
+              <h2>Start with the post, then add the stat angle</h2>
+            </div>
+          </div>
+          <div class="helper-grid">
+            <label class="helper-wide">
+              <span>What are you replying to?</span>
+              <textarea id="helper-topic" rows="4" spellcheck="false" placeholder="Example: Someone says the Red Sox offense has been lifeless, or a pitcher just had a huge game."></textarea>
+            </label>
+            <label>
+              <span>Reply Type</span>
+              <select id="helper-tone">
+                <option value="x-reply">X reply</option>
+                <option value="forum">Forum reply</option>
+                <option value="caption">Screenshot caption</option>
+                <option value="debate">Debate starter</option>
+              </select>
+            </label>
+            <label>
+              <span>Statline Link</span>
+              <select id="helper-link">
+                <option value="batting">Batting leaders</option>
+                <option value="pitching">Pitching leaders</option>
+                <option value="matchups">Matchups</option>
+                <option value="compare">Player compare</option>
+                <option value="career">Career log</option>
+                <option value="age">Age leaders</option>
+                <option value="starts">First seasons</option>
+                <option value="">No link</option>
+              </select>
+            </label>
+            <label>
+              <span>Player / Team</span>
+              <input id="helper-subject" type="search" autocomplete="off" spellcheck="false" autocorrect="off" placeholder="Example: Jacob Misiorowski, Red Sox, Ozzie Albies" />
+            </label>
+            <button type="button" id="helper-find-stats">Find Stat Angles</button>
+            <label>
+              <span>Stat to cite</span>
+              <input id="helper-stat" type="search" autocomplete="off" spellcheck="false" autocorrect="off" placeholder="Example: 0.17 ERA since May 1, 12 HR in June, .949 OPS" />
+            </label>
+            <label class="helper-wide">
+              <span>Extra context</span>
+              <input id="helper-context" type="search" autocomplete="off" spellcheck="false" autocorrect="off" placeholder="Optional: opponent, date range, screenshot note, or why the stat matters" />
+            </label>
+            <button type="button" id="helper-generate">Draft Replies</button>
+          </div>
+          <div class="helper-stat-finder" aria-live="polite">
+            <div>
+              <p class="eyebrow">Stat Angles</p>
+              <small id="helper-stat-status">Search a player to get a few numbers worth citing.</small>
+            </div>
+            <div class="helper-stat-ideas" id="helper-stat-ideas"></div>
+          </div>
+          <div class="quick-ranges helper-examples" role="group" aria-label="Reply examples">
+            <button type="button" data-helper-example="pitcher-run">Pitcher run</button>
+            <button type="button" data-helper-example="team-offense">Team offense</button>
+            <button type="button" data-helper-example="hot-hitter">Hot hitter</button>
+            <button type="button" data-helper-example="comparison">Player comp</button>
+          </div>
+        </section>
+
+        <section class="score-strip helper-summary" aria-label="Reply helper summary">
+          <article>
+            <span>Best Use</span>
+            <strong>Human reply</strong>
+            <small>Use this to draft, not automate.</small>
+          </article>
+          <article>
+            <span>Link Style</span>
+            <strong id="helper-link-preview">/batting</strong>
+            <small>Direct links beat the homepage for stat posts.</small>
+          </article>
+          <article>
+            <span>Posting Pace</span>
+            <strong>Vary it</strong>
+            <small>Do not paste the same wording everywhere.</small>
+          </article>
+          <article>
+            <span>Screenshot</span>
+            <strong>Useful</strong>
+            <small>Lead with the stat, then include the link when relevant.</small>
+          </article>
+        </section>
+
+        <section class="panel helper-output-panel" aria-label="Drafted replies">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Drafts</p>
+              <h2>Copy, tweak, then post manually</h2>
+            </div>
+          </div>
+          <div class="helper-drafts" id="helper-drafts"></div>
+        </section>
+
+        <section class="panel ask-support-panel" aria-label="How to use the helper">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Guardrails</p>
+              <h2>Keep it useful, not spammy</h2>
+            </div>
+          </div>
+          <div class="start-grid">
+            <article class="start-card">
+              <span>Good</span>
+              <strong>Reply to the actual baseball point</strong>
+              <small>Use the stat as support, not as a billboard.</small>
+            </article>
+            <article class="start-card">
+              <span>Better</span>
+              <strong>Use direct page links</strong>
+              <small>If the screenshot is pitching, link to /pitching instead of the homepage.</small>
+            </article>
+            <article class="start-card">
+              <span>Avoid</span>
+              <strong>Repeating the same promo sentence</strong>
+              <small>X and people both react better when the reply feels specific.</small>
+            </article>
+          </div>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="helper.js?v=20260622-helper"></script>
+  </body>
+</html>

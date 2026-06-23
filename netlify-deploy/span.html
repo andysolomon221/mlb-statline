@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statline Baseball Span Finder</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/span" />
+    <meta name="description" content="Find a player's best rolling game spans for home runs, hits, strikeouts, RBI, saves, and more." />
+    <meta property="og:title" content="Statline Baseball Span Finder" />
+    <meta property="og:description" content="Find a player's best rolling game spans for home runs, hits, strikeouts, RBI, saves, and more." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/span" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Statline Baseball Span Finder" />
+    <meta name="twitter:description" content="Find a player's best rolling game spans for home runs, hits, strikeouts, RBI, saves, and more." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260622-span-finder" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="span">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <div class="brand-mark" aria-hidden="true">Statline</div>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="compare.html">Compare</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="age.html">Age Leaders</a>
+          <a href="starts.html">First Seasons</a>
+          <a class="active" href="span.html">Span Finder</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="span-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Span Finder</p>
+            <h1>Find a player's hottest rolling stretch.</h1>
+            <small class="data-note">This first version uses player game logs. League-wide span leaderboards will need heavier cached data.</small>
+          </div>
+        </header>
+
+        <section class="panel age-controls-panel" aria-label="Span finder controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Rolling Game Finder</p>
+              <h2>Ask a span question</h2>
+              <small class="data-note">Example: Kyle Schwarber, HR, 5 games, 2026. Spans are rolling player games, not calendar days.</small>
+            </div>
+          </div>
+          <div class="age-control-grid">
+            <label>
+              <span>Player Type</span>
+              <select id="span-group" aria-label="Player type">
+                <option value="hitting">Hitter</option>
+                <option value="pitching">Pitcher</option>
+              </select>
+            </label>
+            <label>
+              <span>Player</span>
+              <input id="span-player" type="search" list="span-player-options" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none" placeholder="Kyle Schwarber" />
+              <datalist id="span-player-options"></datalist>
+            </label>
+            <label>
+              <span>Season</span>
+              <select id="span-season" aria-label="Season"></select>
+            </label>
+            <label>
+              <span>Stat</span>
+              <select id="span-stat" aria-label="Span stat"></select>
+            </label>
+            <label>
+              <span>Span Length</span>
+              <select id="span-length" aria-label="Span length"></select>
+            </label>
+            <label>
+              <span>Minimum Total</span>
+              <input id="span-min" type="number" min="0" step="1" placeholder="Optional" />
+            </label>
+            <button type="button" id="span-run">View</button>
+          </div>
+          <div class="quick-ranges age-examples" role="group" aria-label="Span examples">
+            <button type="button" data-span-example="schwarber-hr">Schwarber 5-game HR</button>
+            <button type="button" data-span-example="judge-hr">Judge 10-game HR</button>
+            <button type="button" data-span-example="misiorowski-so">Misiorowski SO</button>
+            <button type="button" data-span-example="sale-so">Sale SO</button>
+          </div>
+        </section>
+
+        <section class="score-strip age-summary" aria-label="Span summary">
+          <article>
+            <span>Question</span>
+            <strong id="span-question">Best HR spans</strong>
+            <small id="span-question-note">Choose a player and run a search</small>
+          </article>
+          <article>
+            <span>Spans</span>
+            <strong id="span-count">--</strong>
+            <small id="span-count-note">matching rolling windows</small>
+          </article>
+          <article>
+            <span>Best Stretch</span>
+            <strong id="span-leader">--</strong>
+            <small id="span-leader-note">No span loaded yet</small>
+          </article>
+          <article>
+            <span>Data</span>
+            <strong id="span-progress">Ready</strong>
+            <small id="span-progress-note">MLB Stats API game logs</small>
+          </article>
+        </section>
+
+        <section class="panel leaderboard age-table-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Leaderboard</p>
+              <h2 id="span-table-title">Rolling spans</h2>
+            </div>
+            <div class="split-status" id="span-status">Choose a player, then hit View.</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="span-head"></thead>
+              <tbody id="span-table"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="span.js?v=20260622-span-finder"></script>
+  </body>
+</html>

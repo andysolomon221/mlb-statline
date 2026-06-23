@@ -1193,8 +1193,16 @@ function summaryScopeLabel() {
 }
 
 function estimatedSummary() {
-  if (activeMode === "single") return currentSeason().summary;
-  if (activeMode === "date") return (seasons[activeDateRange.end.slice(0, 4)] || generateSeason(Number(activeDateRange.end.slice(0, 4)))).summary;
+  if (activeMode === "single") {
+    const year = Number(activeSeason);
+    const summary = currentSeason().summary;
+    return { ...summary, power: summary.power || eraForYear(year).power };
+  }
+  if (activeMode === "date") {
+    const year = Number(activeDateRange.end.slice(0, 4));
+    const summary = (seasons[year] || generateSeason(year)).summary;
+    return { ...summary, power: summary.power || eraForYear(year).power };
+  }
   const years = yearList(activeRange.start, activeRange.end);
   const totals = years.reduce((acc, year) => {
     const summary = (seasons[year] || generateSeason(year)).summary;
@@ -1202,13 +1210,15 @@ function estimatedSummary() {
     acc.ops += summary.ops;
     acc.k += summary.k;
     acc.saves += summary.saves;
+    acc.power += summary.power || eraForYear(year).power;
     return acc;
-  }, { runs: 0, ops: 0, k: 0, saves: 0 });
+  }, { runs: 0, ops: 0, k: 0, saves: 0, power: 0 });
   return {
     runs: totals.runs / years.length,
     ops: totals.ops / years.length,
     k: totals.k / years.length,
-    saves: Math.round(totals.saves / years.length)
+    saves: Math.round(totals.saves / years.length),
+    power: totals.power / years.length
   };
 }
 
@@ -1225,6 +1235,7 @@ function currentTeamSummary() {
     const kDenominator = boardType === "pitching" ? Number(team.battersFaced) || Number(team.ipOuts) || 0 : Number(team.pa) || 0;
     acc.games += games;
     acc.runs += Number(team.runs) || 0;
+    acc.homeRuns += Number(team.hr) || 0;
     acc.earnedRuns += Number(team.earnedRuns) || 0;
     acc.walks += Number(team.walks) || 0;
     acc.hits += Number(team.hits) || 0;
@@ -1236,7 +1247,7 @@ function currentTeamSummary() {
     acc.saves += Number(team.saves) || 0;
     acc.saveOpportunities += Number(team.saveOpportunities) || 0;
     return acc;
-  }, { games: 0, runs: 0, earnedRuns: 0, walks: 0, hits: 0, ipOuts: 0, opsTotal: 0, opsWeight: 0, strikeouts: 0, kDenominator: 0, saves: 0, saveOpportunities: 0 });
+  }, { games: 0, runs: 0, homeRuns: 0, earnedRuns: 0, walks: 0, hits: 0, ipOuts: 0, opsTotal: 0, opsWeight: 0, strikeouts: 0, kDenominator: 0, saves: 0, saveOpportunities: 0 });
 
   const fallback = estimatedSummary();
   if (boardType === "pitching") {
@@ -1251,7 +1262,8 @@ function currentTeamSummary() {
     runs: totals.games ? totals.runs / totals.games : fallback?.runs || 0,
     ops: totals.opsWeight ? totals.opsTotal / totals.opsWeight : fallback?.ops || 0,
     k: totals.kDenominator ? (totals.strikeouts / totals.kDenominator) * 100 : fallback?.k || 0,
-    saves: totals.saveOpportunities ? Math.round((totals.saves / totals.saveOpportunities) * 100) : fallback?.saves || 0
+    saves: totals.saveOpportunities ? Math.round((totals.saves / totals.saveOpportunities) * 100) : fallback?.saves || 0,
+    power: totals.games ? totals.homeRuns / totals.games : fallback?.power || eraForYear(Number(activeSeason)).power
   };
 }
 
@@ -1278,7 +1290,8 @@ function generateSeason(year) {
     runs: Math.max(3.1, era.runs + wave(year, 1, .24)),
     ops: Math.max(.590, era.ops + wave(year, 7, .018)),
     k: Math.max(7.5, era.k + wave(year, 13, 1.1)),
-    saves: Math.max(25, Math.round(era.saves + wave(year, 19, 5)))
+    saves: Math.max(25, Math.round(era.saves + wave(year, 19, 5))),
+    power: era.power
   };
   const players = Array.from({ length: 6 }, (_, index) => {
     const playerPool = generatedPlayersByEra[era.key];
@@ -1441,9 +1454,13 @@ function renderSummary() {
   const strikeoutLabel = document.querySelector(".score-strip article:nth-child(3) span");
   const saveLabel = document.querySelector(".score-strip article:nth-child(4) span");
   if (strikeoutLabel) strikeoutLabel.textContent = hasScopedSummary ? `${summaryLabel} K%` : "Strikeout Rate";
-  if (saveLabel) saveLabel.textContent = hasScopedSummary ? `${summaryLabel} Save Rate` : "Save Conversion";
+  if (saveLabel) {
+    saveLabel.textContent = boardType === "pitching"
+      ? hasScopedSummary ? `${summaryLabel} Save Rate` : "Save Conversion"
+      : hasScopedSummary ? `${summaryLabel} HR/G` : "HR Rate";
+  }
   document.querySelector("#k-rate").textContent = `${summary.k.toFixed(1)}%`;
-  document.querySelector("#save-rate").textContent = `${summary.saves}%`;
+  document.querySelector("#save-rate").textContent = boardType === "pitching" ? `${summary.saves}%` : summary.power.toFixed(2);
   document.querySelector("#chart-title").textContent = `${label} ${config.chartNoun} leaders`;
   document.querySelector("#compare-title").textContent = `${teamScopeLabel()} club comparison`;
   const tableNoun = activeTeamId === "all" ? "leaders" : "players";
@@ -1452,7 +1469,9 @@ function renderSummary() {
     : activeMode === "date"
       ? `${label} ${config.label} ${tableNoun}`
       : `${label} cumulative ${config.label} ${tableNoun}`;
-  document.querySelector("#save-context").textContent = activeMode === "single" ? "late-game pressure index" : activeMode === "date" ? "season context for selected date range" : "average conversion rate";
+  document.querySelector("#save-context").textContent = boardType === "pitching"
+    ? activeMode === "single" ? "late-game pressure index" : activeMode === "date" ? "season context for selected date range" : "average conversion rate"
+    : activeMode === "single" ? "home runs per team game" : activeMode === "date" ? "selected date range context" : "average home runs per team game";
 }
 
 function renderChart() {
