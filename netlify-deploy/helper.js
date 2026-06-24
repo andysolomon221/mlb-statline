@@ -30,8 +30,8 @@ const examples = {
   "hot-hitter": {
     topic: "A player just homered and fans are talking about whether he is heating up.",
     subject: "Ozzie Albies",
-    stat: "best offensive stretch since 2023",
-    context: "current-season batting board",
+    stat: "one of the hottest bats on the current-season board",
+    context: "use a June or date-range batting screenshot if that is the angle",
     link: "batting",
     tone: "caption"
   },
