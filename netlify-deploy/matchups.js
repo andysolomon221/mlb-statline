@@ -5,6 +5,7 @@ const statsCache = new Map();
 const headToHeadCache = new Map();
 const rosterCache = new Map();
 const vsTeamCache = new Map();
+const scheduleCache = new Map();
 
 const teams = [
   ["ARI", "Arizona Diamondbacks", 109],
@@ -87,6 +88,16 @@ let activeTeamOffenseSort = { key: "pa", dir: -1 };
 let batterCandidates = [];
 let pitcherCandidates = [];
 let matchupSearchTimer;
+let activeGameDayDate = localDateValue();
+let matchupWorkspaceOpen = true;
+let gameDayOpen = false;
+
+function localDateValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 function fmt(value, digits = 3) {
   const number = Number(value);
@@ -108,6 +119,27 @@ function teamByAbbr(abbr) {
   return { abbr: row[0], name: row[1], id: row[2] };
 }
 
+function teamFromScheduleTeam(team) {
+  const id = String(team?.id || "");
+  const known = teamById.get(id);
+  if (known) return known;
+  const abbreviation = team?.abbreviation || team?.teamCode?.toUpperCase() || "";
+  const byAbbr = teams.find(([abbr]) => abbr === abbreviation);
+  if (byAbbr) return { abbr: byAbbr[0], name: byAbbr[1], id: byAbbr[2] };
+  return { abbr: abbreviation || id, name: team?.name || team?.teamName || "Team", id: team?.id || id };
+}
+
+function probablePitcherFromSchedule(person, team) {
+  if (!person?.id) return null;
+  return {
+    id: person.id,
+    fullName: person.fullName || "Probable starter",
+    position: "P",
+    team: team.abbr,
+    teamName: team.name
+  };
+}
+
 function escapeHtml(value = "") {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -121,6 +153,15 @@ async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Request returned ${response.status}`);
   return response.json();
+}
+
+async function scheduleGames(date) {
+  if (scheduleCache.has(date)) return scheduleCache.get(date);
+  const params = new URLSearchParams({ sportId: "1", date, hydrate: "probablePitcher" });
+  const data = await fetchJson(`https://statsapi.mlb.com/api/v1/schedule?${params.toString()}`);
+  const games = data.dates?.[0]?.games || [];
+  scheduleCache.set(date, games);
+  return games;
 }
 
 function displayPlayerOption(person) {
@@ -364,6 +405,102 @@ function splitForHand(stats, hand) {
 function parkContext() {
   const selected = document.querySelector("#matchup-park")?.value || "neutral";
   return parks.find(([abbr]) => abbr === selected) || parks[0];
+}
+
+function gameTimeLabel(game) {
+  if (!game.gameDate) return game.status?.detailedState || "Scheduled";
+  const date = new Date(game.gameDate);
+  if (Number.isNaN(date.getTime())) return game.status?.detailedState || "Scheduled";
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function renderGameDay(games) {
+  const grid = document.querySelector("#game-day-grid");
+  if (!grid) return;
+  if (!games.length) {
+    grid.innerHTML = `<div class="empty-state">No MLB games found for this date.</div>`;
+    return;
+  }
+  grid.innerHTML = games.map((game) => {
+    const awayTeam = teamFromScheduleTeam(game.teams?.away?.team);
+    const homeTeam = teamFromScheduleTeam(game.teams?.home?.team);
+    const awayPitcher = game.teams?.away?.probablePitcher?.fullName || "TBA";
+    const homePitcher = game.teams?.home?.probablePitcher?.fullName || "TBA";
+    const venue = game.venue?.name || "Ballpark";
+    return `
+      <article class="game-day-card">
+        <div class="game-day-card-head">
+          <span>${escapeHtml(gameTimeLabel(game))}</span>
+          <strong>${escapeHtml(awayTeam.abbr)} @ ${escapeHtml(homeTeam.abbr)}</strong>
+          <small>${escapeHtml(venue)}</small>
+        </div>
+        <div class="game-day-probables">
+          <span>${escapeHtml(awayTeam.abbr)} starter: ${escapeHtml(awayPitcher)}</span>
+          <span>${escapeHtml(homeTeam.abbr)} starter: ${escapeHtml(homePitcher)}</span>
+        </div>
+        <div class="game-day-actions">
+          <button type="button" data-game-pick="${game.gamePk}" data-batting-side="away">${escapeHtml(awayTeam.abbr)} hitters vs ${escapeHtml(homeTeam.abbr)} starter</button>
+          <button type="button" data-game-pick="${game.gamePk}" data-batting-side="home">${escapeHtml(homeTeam.abbr)} hitters vs ${escapeHtml(awayTeam.abbr)} starter</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+  grid.querySelectorAll("[data-game-pick]").forEach((button) => {
+    button.addEventListener("click", () => applyGameDayMatchup(Number(button.dataset.gamePick), button.dataset.battingSide));
+  });
+}
+
+function setGameDayOpen(isOpen) {
+  gameDayOpen = isOpen;
+  document.querySelector("#game-day-grid")?.toggleAttribute("hidden", !isOpen);
+  const button = document.querySelector("#game-day-toggle");
+  if (button) button.textContent = isOpen ? "Hide games" : "Show games";
+}
+
+function setMatchupWorkspaceOpen(isOpen) {
+  matchupWorkspaceOpen = isOpen;
+  document.querySelector(".matchup-controls-panel")?.toggleAttribute("hidden", !isOpen);
+  if (isOpen) syncViewModePanels();
+  else document.querySelectorAll(".matchup-workspace:not(.matchup-controls-panel)").forEach((section) => section.hidden = true);
+}
+
+async function loadGameDay() {
+  const grid = document.querySelector("#game-day-grid");
+  if (grid) grid.innerHTML = `<div class="empty-state">Loading games...</div>`;
+  try {
+    renderGameDay(await scheduleGames(activeGameDayDate));
+  } catch (error) {
+    if (grid) grid.innerHTML = `<div class="empty-state">Could not load games for this date.</div>`;
+  }
+}
+
+async function applyGameDayMatchup(gamePk, battingSide) {
+  const games = await scheduleGames(activeGameDayDate);
+  const game = games.find((row) => Number(row.gamePk) === Number(gamePk));
+  if (!game) return;
+  const awayTeam = teamFromScheduleTeam(game.teams?.away?.team);
+  const homeTeam = teamFromScheduleTeam(game.teams?.home?.team);
+  const battingTeam = battingSide === "home" ? homeTeam : awayTeam;
+  const pitchingTeam = battingSide === "home" ? awayTeam : homeTeam;
+  const probable = battingSide === "home"
+    ? probablePitcherFromSchedule(game.teams?.away?.probablePitcher, pitchingTeam)
+    : probablePitcherFromSchedule(game.teams?.home?.probablePitcher, pitchingTeam);
+
+  activeMatchupTool = "team-pitcher";
+  setMatchupWorkspaceOpen(true);
+  activeSeason = activeGameDayDate.slice(0, 4);
+  document.querySelector("#matchup-season").value = activeSeason;
+  document.querySelector("#matchup-batting-team").value = battingTeam.abbr;
+  document.querySelector("#matchup-pitching-team").value = pitchingTeam.abbr;
+  document.querySelector("#matchup-park").value = parks.some(([abbr]) => abbr === homeTeam.abbr) ? homeTeam.abbr : "neutral";
+  if (probable) pitcher = probable;
+  await populateTeamPlayerDropdowns({ selectFirst: !probable });
+  if (probable) {
+    pitcherCandidates = uniquePeople([probable, ...pitcherCandidates]);
+    setPlayerInput("pitcher", probable);
+  }
+  await analyzeMatchup();
+  document.querySelector(".matchup-controls-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function hitterSummary(stats, pitcherHand) {
@@ -758,6 +895,7 @@ function renderCareerOnlyMatchup(payload) {
 }
 
 function syncViewModePanels() {
+  if (!matchupWorkspaceOpen) return;
   const isBatterPitcher = activeMatchupTool === "batter-pitcher";
   const isTeamPitcher = activeMatchupTool === "team-pitcher";
   const isPlayerTeam = activeMatchupTool === "player-team";
@@ -790,6 +928,7 @@ function syncViewModePanels() {
 }
 
 async function analyzeMatchup() {
+  if (!matchupWorkspaceOpen) return;
   syncViewModePanels();
   document.querySelector("#matchup-status").textContent = "Loading matchup...";
   if (activeMatchupTool === "team-pitcher") {
@@ -854,6 +993,7 @@ function populateControls() {
   document.querySelector("#matchup-view-mode").value = activeViewMode;
   document.querySelector("#matchup-park").innerHTML = parks.map(([abbr, name, factor]) => `<option value="${abbr}">${name} (${factor})</option>`).join("");
   document.querySelector("#matchup-park").value = "LAD";
+  document.querySelector("#game-day-date").value = activeGameDayDate;
   setPlayerInput("batter", batter);
   setPlayerInput("pitcher", pitcher);
 }
@@ -872,6 +1012,20 @@ function bindEvents() {
   document.querySelector("#matchup-season").addEventListener("change", (event) => {
     activeSeason = event.target.value;
     populateTeamPlayerDropdowns().then(analyzeMatchup);
+  });
+  document.querySelector("#game-day-date").addEventListener("change", (event) => {
+    activeGameDayDate = event.target.value || localDateValue();
+    setGameDayOpen(true);
+    loadGameDay();
+  });
+  document.querySelector("#game-day-toggle").addEventListener("click", () => {
+    setGameDayOpen(!gameDayOpen);
+    if (gameDayOpen) loadGameDay();
+  });
+  document.querySelector("#manual-matchup-toggle").addEventListener("click", () => {
+    setMatchupWorkspaceOpen(true);
+    analyzeMatchup();
+    document.querySelector(".matchup-controls-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   document.querySelector("#run-matchup").addEventListener("click", analyzeMatchup);
   document.querySelector("#matchup-view-mode").addEventListener("change", (event) => {
@@ -947,4 +1101,7 @@ function bindEvents() {
 
 populateControls();
 bindEvents();
-populateTeamPlayerDropdowns().then(analyzeMatchup);
+setGameDayOpen(false);
+setMatchupWorkspaceOpen(true);
+populateTeamPlayerDropdowns();
+analyzeMatchup();

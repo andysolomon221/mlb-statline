@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Matchups" />
     <meta name="twitter:description" content="Compare batter-vs-pitcher and roster-vs-pitcher matchups with career head-to-head context." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260616-sticky-headers" />
+    <link rel="stylesheet" href="styles.css?v=20260625-game-day-cards-collapsed" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -76,7 +76,28 @@
           </div>
         </header>
 
-        <section class="score-strip matchup-summary" aria-label="Matchup summary" hidden>
+        <section class="panel game-day-panel" aria-label="Game Day matchups">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Game Day</p>
+              <h2>Load today&apos;s probable matchups</h2>
+              <small class="data-note">Pick a game to fill Team vs Pitcher with that lineup and opposing starter.</small>
+            </div>
+            <div class="game-day-controls">
+              <label class="game-day-date">
+                <span>Date</span>
+                <input id="game-day-date" type="date" aria-label="Game Day date" />
+              </label>
+              <button id="game-day-toggle" type="button">Show games</button>
+              <button id="manual-matchup-toggle" type="button">Manual setup</button>
+            </div>
+          </div>
+          <div class="game-day-grid" id="game-day-grid" hidden>
+            <div class="empty-state">Loading games...</div>
+          </div>
+        </section>
+
+        <section class="score-strip matchup-summary matchup-workspace" aria-label="Matchup summary" hidden>
           <article>
             <span>Batter</span>
             <strong id="matchup-batter-card">Mookie Betts</strong>
@@ -99,7 +120,7 @@
           </article>
         </section>
 
-        <section class="panel matchup-controls-panel" aria-label="Matchup controls">
+        <section class="panel matchup-controls-panel matchup-workspace" aria-label="Matchup controls">
           <div class="section-head">
             <div>
               <p class="eyebrow">Setup</p>
@@ -172,7 +193,7 @@
           </div>
         </section>
 
-        <section class="data-grid advanced-grid" hidden>
+        <section class="data-grid advanced-grid matchup-workspace" hidden>
           <section class="panel">
             <div class="section-head">
               <div>
@@ -194,7 +215,7 @@
           </section>
         </section>
 
-        <section class="panel player-team-panel" aria-label="Player against team" hidden>
+        <section class="panel player-team-panel matchup-workspace" aria-label="Player against team" hidden>
           <div class="section-head">
             <div>
               <p class="eyebrow">Player vs Team</p>
@@ -228,7 +249,7 @@
           <small class="data-note">Player-vs-team uses MLB career regular-season vs-team history. Batter-vs-pitcher history remains in the table below.</small>
         </section>
 
-        <section class="panel matchup-offense-panel" aria-label="Roster offense against selected pitcher">
+        <section class="panel matchup-offense-panel matchup-workspace" aria-label="Roster offense against selected pitcher">
           <div class="section-head">
             <div>
               <p class="eyebrow">Roster vs Pitcher</p>
@@ -237,7 +258,7 @@
             <div class="split-status" id="team-offense-status">Loading offense...</div>
           </div>
           <div class="table-wrap">
-            <table>
+            <table class="team-offense-table">
               <thead>
                 <tr>
                   <th><button type="button" data-team-sort="name" data-label="Hitter">Hitter</button></th>
@@ -269,6 +290,6 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260611-h2h-cleanup"></script>
+    <script src="matchups.js?v=20260625-game-day-cards-collapsed"></script>
   </body>
 </html>

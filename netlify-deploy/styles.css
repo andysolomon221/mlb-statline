@@ -1840,6 +1840,104 @@ td {
   color: var(--navy);
 }
 
+.game-day-panel {
+  margin-top: 18px;
+}
+
+.game-day-date {
+  display: grid;
+  gap: 8px;
+  min-width: 180px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.game-day-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: end;
+  gap: 10px;
+}
+
+.game-day-controls button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 16px;
+  color: #fff;
+  background: var(--navy);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.game-day-controls button:hover {
+  background: #17476f;
+}
+
+.game-day-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.game-day-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.game-day-card-head {
+  display: grid;
+  gap: 3px;
+}
+
+.game-day-card-head span,
+.game-day-card-head small,
+.game-day-probables {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.game-day-card-head strong {
+  color: var(--ink);
+  font-size: 19px;
+}
+
+.game-day-probables {
+  display: grid;
+  gap: 4px;
+  line-height: 1.35;
+}
+
+.game-day-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.game-day-actions button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--navy);
+  background: #f8fafc;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.game-day-actions button:hover {
+  border-color: var(--navy);
+  background: #fff;
+}
+
 .matchup-form-grid,
 .matchup-setup-grid {
   display: grid;
