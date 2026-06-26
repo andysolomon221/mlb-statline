@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball Age Leaders" />
     <meta name="twitter:description" content="Find MLB batting and pitching leaders before or through a selected age across any season range." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260626-active-age" />
+    <link rel="stylesheet" href="styles.css?v=20260626-share-links" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -129,6 +129,10 @@
             </label>
             <button type="button" id="age-run">View</button>
           </div>
+          <div class="share-action-row">
+            <button id="copy-age-link" class="secondary-action" type="button">Copy Link</button>
+            <span class="copy-status" id="age-copy-status" aria-live="polite"></span>
+          </div>
           <div class="compare-advanced-wrap age-advanced-wrap">
             <button type="button" id="age-advanced-toggle">Advanced age range</button>
             <div class="compare-custom-window-grid age-range-fields">
@@ -215,6 +219,6 @@
       </main>
     </div>
 
-    <script src="age.js?v=20260626-active-age"></script>
+    <script src="age.js?v=20260626-share-links"></script>
   </body>
 </html>

@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball Pitching" />
     <meta name="twitter:description" content="Sort MLB pitching leaders by season, team, league, year range, ERA, WHIP, strikeouts, saves, and more." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260616-team-ranks" />
+    <link rel="stylesheet" href="styles.css?v=20260626-share-links" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -170,6 +170,10 @@
               <button class="active" data-board-size="leaders">Top 20</button>
               <button data-board-size="all">All players</button>
             </div>
+            <div class="share-action-row">
+              <button id="copy-board-link" class="secondary-action" type="button">Copy Link</button>
+              <span class="copy-status" id="board-copy-status" aria-live="polite"></span>
+            </div>
           </div>
         </section>
 
@@ -257,6 +261,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260618-club-comparison"></script>
+    <script src="script.js?v=20260626-share-links"></script>
   </body>
 </html>

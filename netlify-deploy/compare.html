@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball Compare" />
     <meta name="twitter:description" content="Put MLB players side by side across careers, selected seasons, or matching year counts." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260616-sticky-headers" />
+    <link rel="stylesheet" href="styles.css?v=20260626-share-links" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -163,6 +163,8 @@
           </div>
           <div class="compare-action-row">
             <button id="run-comparison" type="button">Compare</button>
+            <button id="copy-compare-link" class="secondary-action" type="button">Copy Link</button>
+            <span class="copy-status" id="compare-copy-status" aria-live="polite"></span>
           </div>
         </section>
 
@@ -225,6 +227,6 @@
       </main>
     </div>
 
-    <script src="compare.js?v=20260613-rabbit-hole-links"></script>
+    <script src="compare.js?v=20260626-share-links"></script>
   </body>
 </html>

@@ -3,6 +3,7 @@ const lastAgeSeason = 2026;
 const ageCache = new Map();
 const activePlayerCache = new Map();
 const numberFormat = new Intl.NumberFormat("en-US");
+const initialParams = new URLSearchParams(window.location.search);
 
 let activeGroup = "pitching";
 let activePlayerPool = "all";
@@ -15,6 +16,7 @@ let activeRange = { start: 1901, end: 2026 };
 let activeMinimum = "auto";
 let activeRequestId = 0;
 let lastRenderedRows = [];
+let ageCopyStatusTimer;
 
 const mlbTeamIds = [
   108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
@@ -113,6 +115,37 @@ const metricConfig = {
   }
 };
 
+function applyInitialAgeParams() {
+  if (["hitting", "pitching"].includes(initialParams.get("group"))) activeGroup = initialParams.get("group");
+  if (["all", "active"].includes(initialParams.get("pool"))) activePlayerPool = initialParams.get("pool");
+  if (["before", "through", "older", "after"].includes(initialParams.get("rule"))) activeRule = initialParams.get("rule");
+  const age = Number(initialParams.get("age"));
+  if (Number.isFinite(age)) activeAge = Math.min(45, Math.max(18, age));
+  const start = Number(initialParams.get("start"));
+  const end = Number(initialParams.get("end"));
+  if (Number.isFinite(start) && Number.isFinite(end)) {
+    activeRange = {
+      start: Math.min(lastAgeSeason, Math.max(firstAgeSeason, start)),
+      end: Math.min(lastAgeSeason, Math.max(firstAgeSeason, end))
+    };
+  }
+  if (initialParams.get("advanced") === "1") activeAdvancedAgeRange = true;
+  const ageStart = Number(initialParams.get("ageStart"));
+  const ageEnd = Number(initialParams.get("ageEnd"));
+  if (Number.isFinite(ageStart) && Number.isFinite(ageEnd)) {
+    activeAgeRange = {
+      start: Math.min(45, Math.max(18, ageStart)),
+      end: Math.min(45, Math.max(18, ageEnd))
+    };
+  }
+  const metric = initialParams.get("metric");
+  if (metricConfig[activeGroup].metrics.some(([value]) => value === metric)) activeMetric = metric;
+  const minimum = initialParams.get("min");
+  if (metricConfig[activeGroup].minimums.some(([value]) => value === minimum)) activeMinimum = minimum;
+}
+
+applyInitialAgeParams();
+
 function escapeHtml(value = "") {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -183,6 +216,13 @@ function populateControls() {
   document.querySelector("#age-range-end").innerHTML = ages.join("");
   document.querySelector("#age-range-start").value = activeAgeRange.start;
   document.querySelector("#age-range-end").value = activeAgeRange.end;
+  document.querySelector("#age-group").value = activeGroup;
+  document.querySelector("#age-player-pool").value = activePlayerPool;
+  document.querySelector("#age-rule").value = activeRule;
+  if (activeAdvancedAgeRange) {
+    document.querySelector(".age-controls-panel").setAttribute("data-advanced-age-range", "");
+    document.querySelector("#age-advanced-toggle").textContent = "Use single age";
+  }
   updateMetricControls();
 }
 
@@ -510,6 +550,68 @@ function renderSummary(rows, allRows = rows) {
   document.querySelector("#age-leader-note").textContent = leader ? `${metricLabel()}: ${fmtStat(activeMetric, leader[activeMetric])}` : `${numberFormat.format(allRows.length)} raw players before minimum filter`;
 }
 
+function ageShareParams() {
+  readControls();
+  const params = new URLSearchParams();
+  params.set("group", activeGroup);
+  params.set("pool", activePlayerPool);
+  params.set("metric", activeMetric);
+  params.set("rule", activeRule);
+  params.set("age", activeAge);
+  params.set("start", Math.min(activeRange.start, activeRange.end));
+  params.set("end", Math.max(activeRange.start, activeRange.end));
+  params.set("min", activeMinimum);
+  if (activeAdvancedAgeRange) {
+    params.set("advanced", "1");
+    params.set("ageStart", Math.min(activeAgeRange.start, activeAgeRange.end));
+    params.set("ageEnd", Math.max(activeAgeRange.start, activeAgeRange.end));
+  }
+  const chartSize = document.querySelector("#age-chart-size")?.value || "10";
+  if (chartSize !== "10") params.set("chart", chartSize);
+  return params;
+}
+
+function ageShareUrl() {
+  const url = new URL(window.location.href);
+  url.search = ageShareParams().toString();
+  return url.toString();
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
+function showAgeCopyStatus(message) {
+  const status = document.querySelector("#age-copy-status");
+  if (!status) return;
+  status.textContent = message;
+  clearTimeout(ageCopyStatusTimer);
+  ageCopyStatusTimer = setTimeout(() => {
+    status.textContent = "";
+  }, 2400);
+}
+
+async function copyAgeLink() {
+  try {
+    await copyText(ageShareUrl());
+    showAgeCopyStatus("Copied");
+  } catch (error) {
+    showAgeCopyStatus("Could not copy");
+  }
+}
+
 async function runAgeSearch() {
   readControls();
   const requestId = ++activeRequestId;
@@ -581,6 +683,8 @@ function applyExample(name) {
 
 function init() {
   populateControls();
+  const chartSize = initialParams.get("chart");
+  if (["10", "20"].includes(chartSize)) document.querySelector("#age-chart-size").value = chartSize;
   renderHead();
   renderSummary([], []);
   document.querySelector("#age-group").addEventListener("change", (event) => {
@@ -589,6 +693,7 @@ function init() {
     renderHead();
   });
   document.querySelector("#age-run").addEventListener("click", runAgeSearch);
+  document.querySelector("#copy-age-link")?.addEventListener("click", copyAgeLink);
   document.querySelector("#age-chart-size").addEventListener("change", () => renderAgeChart(lastRenderedRows));
   document.querySelector("#age-advanced-toggle").addEventListener("click", () => {
     const panel = document.querySelector(".age-controls-panel");
@@ -599,6 +704,7 @@ function init() {
   document.querySelectorAll("[data-age-example]").forEach((button) => {
     button.addEventListener("click", () => applyExample(button.dataset.ageExample));
   });
+  if (initialParams.toString()) runAgeSearch();
 }
 
 init();

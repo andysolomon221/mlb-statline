@@ -19,6 +19,7 @@ let playerB = { id: 660271, fullName: "Shohei Ohtani", position: "DH", mlbDebutD
 let candidatesA = [playerA];
 let candidatesB = [playerB];
 let searchTimer;
+let copyStatusTimer;
 
 const metricSets = {
   hitting: [
@@ -97,6 +98,10 @@ function scopeLabel() {
 
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
+}
+
+function compactName(name) {
+  return String(name || "").trim();
 }
 
 function firstSeasonRowsKey(player) {
@@ -434,6 +439,7 @@ async function runComparison() {
   document.querySelector("#compare-status-card").textContent = "Loading";
   try {
     await Promise.all([hydratePlayer("a"), hydratePlayer("b")]);
+    updateShareUrl();
     const [statsA, statsB] = await Promise.all([playerStats(playerA, "a"), playerStats(playerB, "b")]);
     renderComparison(statsA, statsB);
     document.querySelector("#compare-status").textContent = "Comparison loaded";
@@ -442,6 +448,76 @@ async function runComparison() {
     document.querySelector("#compare-status").textContent = "Could not load comparison";
     document.querySelector("#compare-status-card").textContent = "Error";
     document.querySelector("#compare-table").innerHTML = `<tr><td colspan="4" class="empty-row">Could not load those players. Try another name or season.</td></tr>`;
+  }
+}
+
+function compareShareParams() {
+  const params = new URLSearchParams();
+  params.set("group", activeGroup);
+  params.set("mode", activeMode);
+  params.set("a", compactName(playerA.fullName));
+  params.set("aId", playerA.id);
+  params.set("b", compactName(playerB.fullName));
+  params.set("bId", playerB.id);
+  params.set("season", activeSeason);
+  params.set("start", activeRange.start);
+  params.set("end", activeRange.end);
+  params.set("csStart", careerSeasonRange().start);
+  params.set("csEnd", careerSeasonRange().end);
+  if (advancedCareerWindowsOpen) {
+    params.set("advanced", "1");
+    params.set("aStart", cleanCareerRange(activePlayerCareerWindows.a).start);
+    params.set("aEnd", cleanCareerRange(activePlayerCareerWindows.a).end);
+    params.set("bStart", cleanCareerRange(activePlayerCareerWindows.b).start);
+    params.set("bEnd", cleanCareerRange(activePlayerCareerWindows.b).end);
+  }
+  return params;
+}
+
+function shareUrl() {
+  const url = new URL(window.location.href);
+  url.search = compareShareParams().toString();
+  return url.toString();
+}
+
+function updateShareUrl() {
+  if (!history.replaceState) return;
+  history.replaceState(null, "", shareUrl());
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const input = document.createElement("textarea");
+  input.value = value;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.left = "-9999px";
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand("copy");
+  input.remove();
+}
+
+function showCopyStatus(message) {
+  const status = document.querySelector("#compare-copy-status");
+  if (!status) return;
+  clearTimeout(copyStatusTimer);
+  status.textContent = message;
+  copyStatusTimer = setTimeout(() => { status.textContent = ""; }, 2200);
+}
+
+async function copyCompareLink() {
+  try {
+    await Promise.all([hydratePlayer("a"), hydratePlayer("b")]);
+    const url = shareUrl();
+    updateShareUrl();
+    await copyText(url);
+    showCopyStatus("Copied");
+  } catch (error) {
+    showCopyStatus("Could not copy");
   }
 }
 
@@ -495,6 +571,7 @@ function bindEvents() {
   bindAutocomplete("a");
   bindAutocomplete("b");
   document.querySelector("#run-comparison").addEventListener("click", runComparison);
+  document.querySelector("#copy-compare-link").addEventListener("click", copyCompareLink);
   document.querySelector("#compare-group").addEventListener("change", (event) => {
     activeGroup = event.target.value;
     runComparison();
@@ -582,8 +659,39 @@ function applyUrlParams() {
 
   const requestedPlayerA = params.get("playerA") || params.get("a");
   const requestedPlayerB = params.get("playerB") || params.get("b");
-  if (requestedPlayerA) document.querySelector("#compare-player-a").value = requestedPlayerA;
-  if (requestedPlayerB) document.querySelector("#compare-player-b").value = requestedPlayerB;
+  const requestedPlayerAId = params.get("aId");
+  const requestedPlayerBId = params.get("bId");
+  if (requestedPlayerA) {
+    document.querySelector("#compare-player-a").value = requestedPlayerA;
+    if (requestedPlayerAId) {
+      playerA = { ...playerA, id: Number(requestedPlayerAId), fullName: requestedPlayerA };
+      candidatesA = [playerA];
+    }
+  }
+  if (requestedPlayerB) {
+    document.querySelector("#compare-player-b").value = requestedPlayerB;
+    if (requestedPlayerBId) {
+      playerB = { ...playerB, id: Number(requestedPlayerBId), fullName: requestedPlayerB };
+      candidatesB = [playerB];
+    }
+  }
+  if (params.get("season")) activeSeason = params.get("season");
+  if (params.get("start")) activeRange.start = Number(params.get("start"));
+  if (params.get("end")) activeRange.end = Number(params.get("end"));
+  if (params.get("csStart")) activeCareerSeasonRange.start = Number(params.get("csStart"));
+  if (params.get("csEnd")) activeCareerSeasonRange.end = Number(params.get("csEnd"));
+  if (params.get("advanced") === "1") advancedCareerWindowsOpen = true;
+  ["a", "b"].forEach((side) => {
+    const start = params.get(`${side}Start`);
+    const end = params.get(`${side}End`);
+    if (start) activePlayerCareerWindows[side].start = Number(start);
+    if (end) activePlayerCareerWindows[side].end = Number(end);
+  });
+  document.querySelector("#compare-season").value = activeSeason;
+  document.querySelector("#compare-range-start").value = activeRange.start;
+  document.querySelector("#compare-range-end").value = activeRange.end;
+  document.querySelector("#compare-career-season-start").value = activeCareerSeasonRange.start;
+  document.querySelector("#compare-career-season-end").value = activeCareerSeasonRange.end;
 }
 
 function initializeComparePage() {

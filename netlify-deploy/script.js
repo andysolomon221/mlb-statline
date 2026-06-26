@@ -131,6 +131,7 @@ let teamRequestId = 0;
 let playerSearchTimer = 0;
 let historicalPlayerSearchActive = false;
 const initialParams = new URLSearchParams(window.location.search);
+let boardCopyStatusTimer;
 
 const numberFormat = new Intl.NumberFormat("en-US");
 const firstSeason = 1901;
@@ -352,6 +353,15 @@ if (config.metrics.some(([key]) => key === initialParams.get("metric"))) {
   activeMetric = initialParams.get("metric");
   activeSort = { key: activeMetric, dir: defaultSortDir(activeMetric) };
 }
+const initialSortKey = initialParams.get("sort");
+const initialSortDir = Number(initialParams.get("dir"));
+const sortableKeys = new Set(["name", "team", ...config.columns.map(([key]) => key)]);
+if (sortableKeys.has(initialSortKey)) {
+  activeSort = {
+    key: initialSortKey,
+    dir: initialSortDir === 1 || initialSortDir === -1 ? initialSortDir : defaultSortDir(initialSortKey)
+  };
+}
 if (initialParams.get("mode") === "range") {
   activeMode = "range";
   activeRange = {
@@ -369,6 +379,11 @@ if (initialParams.get("season") && activeMode !== "date") {
   activeSeason = String(Math.max(firstSeason, Math.min(lastSeason, Number(initialParams.get("season")) || Number(activeSeason))));
   activeMode = "single";
 }
+if (["all", "al", "nl"].includes(initialParams.get("league"))) activeLeague = initialParams.get("league");
+if (initialParams.get("position")) activePosition = initialParams.get("position");
+if (initialParams.get("qualifier")) activeQualifier = initialParams.get("qualifier");
+if (["leaders", "all"].includes(initialParams.get("size"))) activeBoardSize = initialParams.get("size");
+if (["all", "player", "team"].includes(initialParams.get("scope"))) activeSearchScope = initialParams.get("scope");
 const generatedPlayersByEra = {
   deadball: ["Ty Cobb", "Honus Wagner", "Nap Lajoie", "Tris Speaker", "Eddie Collins", "Sam Crawford", "Home Run Baker", "Shoeless Joe Jackson"],
   liveball: ["Babe Ruth", "Lou Gehrig", "Jimmie Foxx", "Mel Ott", "Hank Greenberg", "Joe DiMaggio", "Ted Williams", "Stan Musial"],
@@ -2123,6 +2138,83 @@ function renderParks() {
   `).join("");
 }
 
+function applyInitialBoardControlParams() {
+  const query = initialParams.get("q") || "";
+  if (!query) return;
+  const playerSearch = document.querySelector("#player-search");
+  const heroPlayerSearch = document.querySelector("#hero-player-search");
+  if (playerSearch) playerSearch.value = query;
+  if (heroPlayerSearch) heroPlayerSearch.value = query;
+}
+
+function boardShareParams() {
+  const params = new URLSearchParams();
+  params.set("metric", activeMetric);
+  params.set("mode", activeMode);
+  if (activeMode === "date") {
+    params.set("from", activeDateRange.start);
+    params.set("to", activeDateRange.end);
+  } else if (activeMode === "range") {
+    params.set("start", activeRange.start);
+    params.set("end", activeRange.end);
+  } else {
+    params.set("season", activeSeason);
+  }
+  if (activeLeague !== "all") params.set("league", activeLeague);
+  const selectedTeam = teamRows.find((team) => String(team.id) === String(activeTeamId));
+  if (selectedTeam) params.set("team", selectedTeam.abbr);
+  if (activePosition !== "all") params.set("position", activePosition);
+  if (activeQualifier !== "auto") params.set("qualifier", activeQualifier);
+  if (activeBoardSize !== "leaders") params.set("size", activeBoardSize);
+  if (activeSearchScope !== "all") params.set("scope", activeSearchScope);
+  const query = cleanSearchInput(document.querySelector("#player-search")?.value || document.querySelector("#hero-player-search")?.value || "");
+  if (query) params.set("q", query);
+  if (activeSort.key && activeSort.key !== activeMetric) params.set("sort", activeSort.key);
+  if (activeSort.dir !== defaultSortDir(activeSort.key || activeMetric)) params.set("dir", activeSort.dir);
+  return params;
+}
+
+function boardShareUrl() {
+  const url = new URL(window.location.href);
+  url.search = boardShareParams().toString();
+  return url.toString();
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
+function showBoardCopyStatus(message) {
+  const status = document.querySelector("#board-copy-status");
+  if (!status) return;
+  status.textContent = message;
+  clearTimeout(boardCopyStatusTimer);
+  boardCopyStatusTimer = setTimeout(() => {
+    status.textContent = "";
+  }, 2400);
+}
+
+async function copyBoardLink() {
+  try {
+    await copyText(boardShareUrl());
+    showBoardCopyStatus("Copied");
+  } catch (error) {
+    showBoardCopyStatus("Could not copy");
+  }
+}
+
 function bindEvents() {
   document.querySelector("#metric-select").addEventListener("change", (event) => {
     activeMetric = event.target.value;
@@ -2282,10 +2374,12 @@ function bindEvents() {
 
   document.querySelector("#team-a").addEventListener("change", renderComparison);
   document.querySelector("#team-b").addEventListener("change", renderComparison);
+  document.querySelector("#copy-board-link")?.addEventListener("click", copyBoardLink);
 }
 
 populateSeasonSelect();
 renderBoardControls();
+applyInitialBoardControlParams();
 updateModeControls();
 bindEvents();
 renderSummary();

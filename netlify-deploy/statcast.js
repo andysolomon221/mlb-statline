@@ -1,5 +1,6 @@
 const firstSeason = 2015;
 const lastSeason = 2026;
+const initialParams = new URLSearchParams(window.location.search);
 let activeType = "batter";
 let activeSeason = "2026";
 let pendingTeam = new URLSearchParams(window.location.search).get("team") || "all";
@@ -8,6 +9,7 @@ let activeMetric = "exit_velocity_avg";
 let activeSort = { key: "exit_velocity_avg", dir: -1 };
 let activeSampleMin = "auto";
 let rows = [];
+let statcastCopyStatusTimer;
 
 const metrics = {
   batter: [
@@ -37,6 +39,25 @@ const lowerBetter = {
   pitcher: ["xwoba", "exit_velocity_avg", "hard_hit_percent", "barrel_batted_rate", "xba", "xslg"]
 };
 
+function applyInitialStatcastParams() {
+  if (["batter", "pitcher"].includes(initialParams.get("type"))) activeType = initialParams.get("type");
+  const season = Number(initialParams.get("season"));
+  if (Number.isFinite(season)) activeSeason = String(clamp(season, firstSeason, lastSeason));
+  const metric = initialParams.get("metric");
+  if (metrics[activeType].some(([key]) => key === metric)) {
+    activeMetric = metric;
+    activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
+  }
+  const min = initialParams.get("min");
+  if (["auto", "all", "25", "50", "100", "250", "500"].includes(min)) activeSampleMin = min;
+  const sort = initialParams.get("sort");
+  const sortableKeys = new Set(["name", "team", "sample", ...metrics[activeType].map(([key]) => key)]);
+  if (sortableKeys.has(sort)) {
+    const dir = Number(initialParams.get("dir"));
+    activeSort = { key: sort, dir: dir === 1 || dir === -1 ? dir : sortDirection(sort) };
+  }
+}
+
 function metricLabel(key = activeMetric) {
   return metrics[activeType].find(([metric]) => metric === key)?.[1] || key;
 }
@@ -44,6 +65,8 @@ function metricLabel(key = activeMetric) {
 function sortDirection(key) {
   return lowerBetter[activeType].includes(key) ? 1 : -1;
 }
+
+applyInitialStatcastParams();
 
 function toNumber(value) {
   const number = Number(value);
@@ -175,6 +198,11 @@ function renderControls() {
   document.querySelectorAll("[data-statcast-type]").forEach((button) => button.classList.toggle("active", button.dataset.statcastType === activeType));
 }
 
+function applyInitialStatcastSearch() {
+  const query = initialParams.get("q") || "";
+  if (query) document.querySelector("#statcast-search").value = query;
+}
+
 function renderSummary() {
   const data = filteredRows();
   const leader = data[0];
@@ -245,6 +273,61 @@ function renderAll() {
   renderTable();
 }
 
+function statcastShareParams() {
+  const params = new URLSearchParams();
+  params.set("type", activeType);
+  params.set("season", activeSeason);
+  params.set("metric", activeMetric);
+  if (activeTeam !== "all") params.set("team", activeTeam);
+  if (activeSampleMin !== "auto") params.set("min", activeSampleMin);
+  const query = document.querySelector("#statcast-search")?.value.trim() || "";
+  if (query) params.set("q", query);
+  if (activeSort.key && activeSort.key !== activeMetric) params.set("sort", activeSort.key);
+  if (activeSort.dir !== sortDirection(activeSort.key || activeMetric)) params.set("dir", activeSort.dir);
+  return params;
+}
+
+function statcastShareUrl() {
+  const url = new URL(window.location.href);
+  url.search = statcastShareParams().toString();
+  return url.toString();
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
+function showStatcastCopyStatus(message) {
+  const status = document.querySelector("#statcast-copy-status");
+  if (!status) return;
+  status.textContent = message;
+  clearTimeout(statcastCopyStatusTimer);
+  statcastCopyStatusTimer = setTimeout(() => {
+    status.textContent = "";
+  }, 2400);
+}
+
+async function copyStatcastLink() {
+  try {
+    await copyText(statcastShareUrl());
+    showStatcastCopyStatus("Copied");
+  } catch (error) {
+    showStatcastCopyStatus("Could not copy");
+  }
+}
+
 async function loadStatcast() {
   document.querySelector("#statcast-status").textContent = "Loading...";
   document.querySelector("#statcast-chart").innerHTML = `<div class="empty-state">Loading Baseball Savant data...</div>`;
@@ -299,8 +382,10 @@ function bindEvents() {
   document.querySelector("#statcast-search").addEventListener("keydown", (event) => {
     if (event.key === "Enter") focusSearchResult();
   });
+  document.querySelector("#copy-statcast-link")?.addEventListener("click", copyStatcastLink);
 }
 
 renderControls();
+applyInitialStatcastSearch();
 bindEvents();
 loadStatcast();

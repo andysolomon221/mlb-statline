@@ -2022,6 +2022,9 @@ td {
 
 .compare-action-row {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
   justify-content: flex-start;
   margin-top: 14px;
 }
@@ -2035,6 +2038,35 @@ td {
   background: var(--red);
   font-weight: 900;
   cursor: pointer;
+}
+
+.share-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.share-action-row button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.compare-action-row button.secondary-action,
+.share-action-row button.secondary-action {
+  color: var(--navy);
+  background: #eef3f8;
+}
+
+.copy-status {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .compare-controls-panel[data-active-mode="single"] .compare-range-fields,

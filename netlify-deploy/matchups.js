@@ -91,6 +91,7 @@ let matchupSearchTimer;
 let activeGameDayDate = localDateValue();
 let matchupWorkspaceOpen = true;
 let gameDayOpen = false;
+let matchupCopyStatusTimer;
 
 function localDateValue(date = new Date()) {
   const year = date.getFullYear();
@@ -112,6 +113,10 @@ function num(value) {
 
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
+}
+
+function compactName(name) {
+  return String(name || "").trim();
 }
 
 function teamByAbbr(abbr) {
@@ -462,6 +467,74 @@ function setMatchupWorkspaceOpen(isOpen) {
   document.querySelector(".matchup-controls-panel")?.toggleAttribute("hidden", !isOpen);
   if (isOpen) syncViewModePanels();
   else document.querySelectorAll(".matchup-workspace:not(.matchup-controls-panel)").forEach((section) => section.hidden = true);
+}
+
+function matchupShareParams() {
+  const params = new URLSearchParams();
+  params.set("tool", activeMatchupTool);
+  params.set("season", activeSeason);
+  params.set("batTeam", document.querySelector("#matchup-batting-team")?.value || "LAD");
+  params.set("pitTeam", document.querySelector("#matchup-pitching-team")?.value || "PIT");
+  params.set("park", document.querySelector("#matchup-park")?.value || "neutral");
+  params.set("roster", activeRosterType);
+  params.set("view", activeViewMode);
+  params.set("batter", compactName(batter.fullName));
+  params.set("batterId", batter.id);
+  params.set("pitcher", compactName(pitcher.fullName));
+  params.set("pitcherId", pitcher.id);
+  params.set("playerTeamType", document.querySelector("#player-team-type")?.value || "batter");
+  params.set("opponent", document.querySelector("#player-team-opponent")?.value || "PIT");
+  return params;
+}
+
+function matchupShareUrl() {
+  const url = new URL(window.location.href);
+  url.search = matchupShareParams().toString();
+  return url.toString();
+}
+
+function updateMatchupShareUrl() {
+  if (!history.replaceState) return;
+  history.replaceState(null, "", matchupShareUrl());
+}
+
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const input = document.createElement("textarea");
+  input.value = value;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.left = "-9999px";
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand("copy");
+  input.remove();
+}
+
+function showMatchupCopyStatus(message) {
+  const status = document.querySelector("#matchup-copy-status");
+  if (!status) return;
+  clearTimeout(matchupCopyStatusTimer);
+  status.textContent = message;
+  matchupCopyStatusTimer = setTimeout(() => { status.textContent = ""; }, 2200);
+}
+
+async function copyMatchupLink() {
+  try {
+    await Promise.all([
+      activeMatchupTool === "team-pitcher" ? Promise.resolve() : resolveTypedPlayer("batter"),
+      resolveTypedPlayer("pitcher")
+    ]);
+    const url = matchupShareUrl();
+    updateMatchupShareUrl();
+    await copyText(url);
+    showMatchupCopyStatus("Copied");
+  } catch (error) {
+    showMatchupCopyStatus("Could not copy");
+  }
 }
 
 async function loadGameDay() {
@@ -935,6 +1008,7 @@ async function analyzeMatchup() {
     try {
       await resolveTypedPlayer("pitcher");
       await updateTeamOffense();
+      updateMatchupShareUrl();
       document.querySelector("#matchup-status").textContent = "Team vs pitcher loaded";
     } catch (error) {
       document.querySelector("#matchup-status").textContent = "Choose a pitcher";
@@ -946,6 +1020,7 @@ async function analyzeMatchup() {
       const type = document.querySelector("#player-team-type")?.value || "batter";
       await resolveTypedPlayer(type);
       await updatePlayerVsTeam();
+      updateMatchupShareUrl();
       document.querySelector("#matchup-status").textContent = "Player vs team loaded";
     } catch (error) {
       document.querySelector("#matchup-status").textContent = "Choose a player";
@@ -968,6 +1043,7 @@ async function analyzeMatchup() {
           headToHeadStats(batter, pitcher)
     ]);
     renderMatchup({ batter: batterStats, pitcher: pitcherStats, headToHead });
+    updateMatchupShareUrl();
     document.querySelector("#matchup-status").textContent = "Matchup loaded";
   } catch (error) {
     document.querySelector("#matchup-status").textContent = "Could not load matchup";
@@ -994,6 +1070,31 @@ function populateControls() {
   document.querySelector("#matchup-park").innerHTML = parks.map(([abbr, name, factor]) => `<option value="${abbr}">${name} (${factor})</option>`).join("");
   document.querySelector("#matchup-park").value = "LAD";
   document.querySelector("#game-day-date").value = activeGameDayDate;
+  setPlayerInput("batter", batter);
+  setPlayerInput("pitcher", pitcher);
+}
+
+function applyUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const tool = params.get("tool");
+  if (["batter-pitcher", "team-pitcher", "player-team"].includes(tool)) activeMatchupTool = tool;
+  if (params.get("season")) activeSeason = params.get("season");
+  if (params.get("roster")) activeRosterType = params.get("roster");
+  if (params.get("view")) activeViewMode = params.get("view");
+  const batterName = params.get("batter");
+  const batterId = params.get("batterId");
+  if (batterName && batterId) batter = { ...batter, id: Number(batterId), fullName: batterName };
+  const pitcherName = params.get("pitcher");
+  const pitcherId = params.get("pitcherId");
+  if (pitcherName && pitcherId) pitcher = { ...pitcher, id: Number(pitcherId), fullName: pitcherName, position: "P" };
+  document.querySelector("#matchup-season").value = activeSeason;
+  document.querySelector("#matchup-batting-team").value = params.get("batTeam") || document.querySelector("#matchup-batting-team").value;
+  document.querySelector("#matchup-pitching-team").value = params.get("pitTeam") || document.querySelector("#matchup-pitching-team").value;
+  document.querySelector("#matchup-park").value = params.get("park") || document.querySelector("#matchup-park").value;
+  document.querySelector("#matchup-roster-pool").value = activeRosterType;
+  document.querySelector("#matchup-view-mode").value = activeViewMode;
+  document.querySelector("#player-team-type").value = params.get("playerTeamType") || document.querySelector("#player-team-type").value;
+  document.querySelector("#player-team-opponent").value = params.get("opponent") || document.querySelector("#player-team-opponent").value;
   setPlayerInput("batter", batter);
   setPlayerInput("pitcher", pitcher);
 }
@@ -1028,6 +1129,7 @@ function bindEvents() {
     document.querySelector(".matchup-controls-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   document.querySelector("#run-matchup").addEventListener("click", analyzeMatchup);
+  document.querySelector("#copy-matchup-link").addEventListener("click", copyMatchupLink);
   document.querySelector("#matchup-view-mode").addEventListener("change", (event) => {
     activeViewMode = event.target.value;
     analyzeMatchup();
@@ -1100,6 +1202,7 @@ function bindEvents() {
 }
 
 populateControls();
+applyUrlParams();
 bindEvents();
 setGameDayOpen(false);
 setMatchupWorkspaceOpen(true);
