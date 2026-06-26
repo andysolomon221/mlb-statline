@@ -1582,22 +1582,28 @@ table {
 
 .team-offense-table {
   table-layout: fixed;
-  min-width: 820px;
+  min-width: 760px;
+}
+
+.team-offense-table th,
+.team-offense-table td {
+  padding-right: 6px;
+  padding-left: 6px;
 }
 
 .team-offense-table th:first-child,
 .team-offense-table td:first-child {
-  width: 190px;
+  width: 180px;
 }
 
 .team-offense-table th:nth-child(2),
 .team-offense-table td:nth-child(2) {
-  width: 56px;
+  width: 44px;
 }
 
 .team-offense-table th:not(:first-child):not(:nth-child(2)),
 .team-offense-table td:not(:first-child):not(:nth-child(2)) {
-  width: 74px;
+  width: 58px;
 }
 
 th,
