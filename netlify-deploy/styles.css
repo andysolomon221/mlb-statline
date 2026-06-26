@@ -1568,9 +1568,10 @@ input[type="search"] {
 }
 
 .table-wrap {
-  overflow: auto;
-  min-height: 378px;
-  max-height: min(72vh, 780px);
+  overflow-x: auto;
+  overflow-y: visible;
+  min-height: 0;
+  max-height: none;
   position: relative;
 }
 
