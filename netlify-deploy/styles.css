@@ -1606,6 +1606,13 @@ table {
   width: 56px;
 }
 
+.matchup-offense-panel .table-wrap {
+  min-height: 0;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
 th,
 td {
   padding: 14px 12px;
