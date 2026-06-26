@@ -1582,7 +1582,7 @@ table {
 
 .team-offense-table {
   table-layout: fixed;
-  min-width: 760px;
+  min-width: 720px;
 }
 
 .team-offense-table th,
@@ -1593,7 +1593,7 @@ table {
 
 .team-offense-table th:first-child,
 .team-offense-table td:first-child {
-  width: 180px;
+  width: 150px;
 }
 
 .team-offense-table th:nth-child(2),
@@ -1603,7 +1603,7 @@ table {
 
 .team-offense-table th:not(:first-child):not(:nth-child(2)),
 .team-offense-table td:not(:first-child):not(:nth-child(2)) {
-  width: 58px;
+  width: 56px;
 }
 
 th,
