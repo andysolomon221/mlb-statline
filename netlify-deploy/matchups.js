@@ -252,7 +252,20 @@ async function headToHeadStats(batterPlayer, pitcherPlayer) {
     sportId: 1
   });
   const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${batterPlayer.id}/stats?${params.toString()}`);
-  const rows = (data.stats?.[0]?.splits || []).map((split) => ({
+  const matchesSelectedPair = (split) => (
+    Number(split.batter?.id) === Number(batterPlayer.id)
+    && Number(split.pitcher?.id) === Number(pitcherPlayer.id)
+  );
+  const detailRows = (data.stats || [])
+    .find((entry) => entry.type?.displayName === "vsPlayer")
+    ?.splits
+    ?.filter(matchesSelectedPair) || [];
+  const totalRows = (data.stats || [])
+    .find((entry) => entry.type?.displayName === "vsPlayerTotal")
+    ?.splits
+    ?.filter(matchesSelectedPair) || [];
+  const sourceRows = detailRows.length ? detailRows : totalRows;
+  const rows = sourceRows.map((split) => ({
     season: split.season || "Career",
     team: split.team?.name || "",
     opponent: split.opponent?.name || "",
