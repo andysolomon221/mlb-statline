@@ -705,14 +705,13 @@ function renderTeamOffense(rows, teamName, pitcherName) {
         <td>${total.ab}</td>
         <td>${total.h}</td>
         <td>${total.hr}</td>
-        <td>${total.rbi}</td>
         <td>${total.bb}</td>
         <td>${total.so}</td>
         <td>${row.headToHead.length ? fmt(total.avg) : "-"}</td>
         <td>${row.headToHead.length ? fmt(total.ops) : "-"}</td>
       </tr>
     `;
-  }).join("") || `<tr><td colspan="11" class="empty-row">No active hitters found for this team.</td></tr>`;
+  }).join("") || `<tr><td colspan="10" class="empty-row">No active hitters found for this team.</td></tr>`;
 }
 
 function statLine(stat = {}, keys = []) {
@@ -833,7 +832,7 @@ async function updateTeamOffense() {
   const [teamAbbr, teamName] = selectedBattingTeam();
   document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcher.fullName}`;
   document.querySelector("#team-offense-status").textContent = "Loading offense...";
-  document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="11" class="empty-row">Loading team offense...</td></tr>`;
+  document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="10" class="empty-row">Loading team offense...</td></tr>`;
   try {
     const hitters = await teamRosterHitters(teamAbbr);
     const rows = await Promise.all(hitters.map(async (hitter) => ({
@@ -843,7 +842,7 @@ async function updateTeamOffense() {
     renderTeamOffense(rows, teamName, pitcher.fullName);
   } catch (error) {
     document.querySelector("#team-offense-status").textContent = "Could not load offense";
-    document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="11" class="empty-row">Could not load this team's head-to-head history.</td></tr>`;
+    document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="10" class="empty-row">Could not load this team's head-to-head history.</td></tr>`;
   }
 }
 

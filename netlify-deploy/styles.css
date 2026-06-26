@@ -1582,7 +1582,7 @@ table {
 
 .team-offense-table {
   table-layout: fixed;
-  min-width: 720px;
+  min-width: 680px;
 }
 
 .team-offense-table th,
