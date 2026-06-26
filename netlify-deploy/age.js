@@ -1,9 +1,11 @@
 const firstAgeSeason = 1901;
 const lastAgeSeason = 2026;
 const ageCache = new Map();
+const activePlayerCache = new Map();
 const numberFormat = new Intl.NumberFormat("en-US");
 
 let activeGroup = "pitching";
+let activePlayerPool = "all";
 let activeMetric = "strikeOuts";
 let activeRule = "before";
 let activeAge = 25;
@@ -13,6 +15,12 @@ let activeRange = { start: 1901, end: 2026 };
 let activeMinimum = "auto";
 let activeRequestId = 0;
 let lastRenderedRows = [];
+
+const mlbTeamIds = [
+  108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
+  118, 119, 120, 121, 133, 134, 135, 136, 137, 138,
+  139, 140, 141, 142, 143, 144, 145, 146, 147, 158
+];
 
 const metricConfig = {
   hitting: {
@@ -190,6 +198,7 @@ function updateMetricControls() {
 
 function readControls() {
   activeGroup = document.querySelector("#age-group").value;
+  activePlayerPool = document.querySelector("#age-player-pool").value;
   activeMetric = document.querySelector("#age-stat").value;
   activeRule = document.querySelector("#age-rule").value;
   activeAge = Number(document.querySelector("#age-cutoff").value);
@@ -230,10 +239,11 @@ function metricLabel(metric = activeMetric) {
 }
 
 function questionLabel() {
+  const poolPrefix = activePlayerPool === "active" ? "Active players: " : "";
   if (activeAdvancedAgeRange) {
     const low = Math.min(activeAgeRange.start, activeAgeRange.end);
     const high = Math.max(activeAgeRange.start, activeAgeRange.end);
-    return `Most ${metricLabel()} from age ${low} through ${high}`;
+    return `${poolPrefix}Most ${metricLabel()} from age ${low} through ${high}`;
   }
   const rules = {
     before: `before age ${activeAge}`,
@@ -241,7 +251,7 @@ function questionLabel() {
     older: `age ${activeAge} or older`,
     after: `after age ${activeAge}`
   };
-  return `Most ${metricLabel()} ${rules[activeRule] || `before age ${activeAge}`}`;
+  return `${poolPrefix}Most ${metricLabel()} ${rules[activeRule] || `before age ${activeAge}`}`;
 }
 
 function searchUrl(year) {
@@ -262,6 +272,23 @@ async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`MLB Stats API returned ${response.status}`);
   return response.json();
+}
+
+async function fetchActivePlayerIds() {
+  const cacheKey = String(lastAgeSeason);
+  if (activePlayerCache.has(cacheKey)) return activePlayerCache.get(cacheKey);
+  const rosterParams = (teamId, rosterType) => new URLSearchParams({
+    rosterType,
+    season: String(lastAgeSeason)
+  });
+  const rosterUrls = mlbTeamIds.flatMap((teamId) => [
+    `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?${rosterParams(teamId, "active").toString()}`,
+    `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?${rosterParams(teamId, "40Man").toString()}`
+  ]);
+  const payloads = await fetchInBatches(rosterUrls, fetchJson, 8);
+  const ids = new Set(payloads.flatMap((payload) => (payload.roster || []).map((row) => String(row.person?.id || "")).filter(Boolean)));
+  activePlayerCache.set(cacheKey, ids);
+  return ids;
 }
 
 async function fetchSeason(year) {
@@ -392,6 +419,12 @@ function qualifiedRows(rows) {
   return rows.filter((row) => toNumber(row[config.minimumKey]) >= threshold);
 }
 
+async function applyPlayerPool(rows) {
+  if (activePlayerPool !== "active") return rows;
+  const activeIds = await fetchActivePlayerIds();
+  return rows.filter((row) => activeIds.has(String(row.id)));
+}
+
 function sortRows(rows) {
   const lower = metricConfig[activeGroup].lowerBetter.includes(activeMetric);
   const direction = lower ? 1 : -1;
@@ -470,7 +503,8 @@ function renderAgeChart(rows) {
 function renderSummary(rows, allRows = rows) {
   const leader = rows[0];
   document.querySelector("#age-question").textContent = questionLabel();
-  document.querySelector("#age-question-note").textContent = `${activeGroup === "pitching" ? "Pitchers" : "Hitters"}, ${Math.min(activeRange.start, activeRange.end)}-${Math.max(activeRange.start, activeRange.end)}`;
+  const poolLabel = activePlayerPool === "active" ? "Active " : "";
+  document.querySelector("#age-question-note").textContent = `${poolLabel}${activeGroup === "pitching" ? "Pitchers" : "Hitters"}, ${Math.min(activeRange.start, activeRange.end)}-${Math.max(activeRange.start, activeRange.end)}`;
   document.querySelector("#age-player-count").textContent = numberFormat.format(rows.length);
   document.querySelector("#age-leader-name").textContent = leader?.name || "--";
   document.querySelector("#age-leader-note").textContent = leader ? `${metricLabel()}: ${fmtStat(activeMetric, leader[activeMetric])}` : `${numberFormat.format(allRows.length)} raw players before minimum filter`;
@@ -496,13 +530,16 @@ async function runAgeSearch() {
     });
     if (requestId !== activeRequestId) return;
     const allRows = aggregateRows(payloads);
-    const rows = sortRows(qualifiedRows(allRows));
+    status.textContent = activePlayerPool === "active" ? "Filtering to active MLB players..." : "Filtering leaders...";
+    const poolRows = await applyPlayerPool(allRows);
+    if (requestId !== activeRequestId) return;
+    const rows = sortRows(qualifiedRows(poolRows));
     renderRows(rows);
     renderAgeChart(rows);
-    renderSummary(rows, allRows);
+    renderSummary(rows, poolRows);
     document.querySelector("#age-table-title").textContent = `${questionLabel()} leaders`;
     document.querySelector("#age-progress").textContent = "Done";
-    document.querySelector("#age-progress-note").textContent = `${numberFormat.format(allRows.length)} raw players checked`;
+    document.querySelector("#age-progress-note").textContent = `${numberFormat.format(poolRows.length)} ${activePlayerPool === "active" ? "active " : ""}raw players checked`;
     status.textContent = `Showing top ${Math.min(50, rows.length)} of ${numberFormat.format(rows.length)} qualified players.`;
   } catch (error) {
     if (requestId !== activeRequestId) return;
@@ -533,6 +570,7 @@ function applyExample(name) {
   document.querySelector(".age-controls-panel").removeAttribute("data-advanced-age-range");
   document.querySelector("#age-advanced-toggle").textContent = "Advanced age range";
   document.querySelector("#age-group").value = activeGroup;
+  document.querySelector("#age-player-pool").value = activePlayerPool;
   updateMetricControls();
   document.querySelector("#age-stat").value = activeMetric;
   document.querySelector("#age-rule").value = activeRule;

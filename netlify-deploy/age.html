@@ -18,7 +18,7 @@
     <meta name="twitter:title" content="Statline Baseball Age Leaders" />
     <meta name="twitter:description" content="Find MLB batting and pitching leaders before or through a selected age across any season range." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260623-age-chart" />
+    <link rel="stylesheet" href="styles.css?v=20260626-active-age" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -85,6 +85,13 @@
               <select id="age-group" aria-label="Player type">
                 <option value="pitching">Pitchers</option>
                 <option value="hitting">Hitters</option>
+              </select>
+            </label>
+            <label>
+              <span>Player Pool</span>
+              <select id="age-player-pool" aria-label="Player pool">
+                <option value="all">All Players</option>
+                <option value="active">Active Players</option>
               </select>
             </label>
             <label>
@@ -204,6 +211,6 @@
       </main>
     </div>
 
-    <script src="age.js?v=20260623-age-chart"></script>
+    <script src="age.js?v=20260626-active-age"></script>
   </body>
 </html>
