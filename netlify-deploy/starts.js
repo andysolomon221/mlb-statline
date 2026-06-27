@@ -6,6 +6,7 @@ const numberFormat = new Intl.NumberFormat("en-US");
 let activeGroup = "hitting";
 let activeMetric = "homeRuns";
 let activeSeasonCount = 2;
+let activeSeasonRule = "all";
 let activeTeam = "all";
 let activeRange = { start: 1901, end: 2026 };
 let activeRequestId = 0;
@@ -201,6 +202,7 @@ function populateControls() {
     return `<option value="${value}">${value}</option>`;
   }).join("");
   document.querySelector("#starts-count").value = activeSeasonCount;
+  document.querySelector("#starts-season-rule").value = activeSeasonRule;
   updateMetricControls();
 }
 
@@ -215,6 +217,7 @@ function readControls() {
   activeGroup = document.querySelector("#starts-group").value;
   activeMetric = document.querySelector("#starts-stat").value;
   activeSeasonCount = Number(document.querySelector("#starts-count").value);
+  activeSeasonRule = document.querySelector("#starts-season-rule").value;
   activeTeam = document.querySelector("#starts-team").value;
   activeRange = {
     start: Number(document.querySelector("#starts-start").value),
@@ -244,7 +247,8 @@ function teamLabel() {
 
 function questionLabel() {
   const teamText = activeTeam === "all" ? "MLB" : teamLabel();
-  return `Most ${metricLabel()} in first ${activeSeasonCount} career season${activeSeasonCount === 1 ? "" : "s"}, ${teamText}`;
+  const ruleText = activeSeasonRule === "qualified" ? " meaningful" : "";
+  return `Most ${metricLabel()} in first ${activeSeasonCount}${ruleText} career season${activeSeasonCount === 1 ? "" : "s"}, ${teamText}`;
 }
 
 function searchUrl(year) {
@@ -317,6 +321,10 @@ function emptySeason(split) {
     season: Number(split.season),
     teams: new Set(),
     matchedTeam: false,
+    sampleGamesPlayed: 0,
+    sampleGamesStarted: 0,
+    samplePlateAppearances: 0,
+    sampleIpOuts: 0,
     gamesPlayed: 0,
     gamesStarted: 0,
     plateAppearances: 0,
@@ -338,6 +346,10 @@ function addSplitToSeason(row, split, includeStats) {
   const isTeamMatch = teamMatches(split);
   if (includeStats) row.teams.add(teamAbbr(split));
   if (isTeamMatch) row.matchedTeam = true;
+  row.sampleGamesPlayed += toNumber(stat.gamesPlayed);
+  row.sampleGamesStarted += toNumber(stat.gamesStarted);
+  row.samplePlateAppearances += toNumber(stat.plateAppearances);
+  row.sampleIpOuts += toNumber(stat.outs) || inningsToOuts(stat.inningsPitched);
   if (!includeStats) return;
   row.gamesPlayed += toNumber(stat.gamesPlayed);
   row.gamesStarted += toNumber(stat.gamesStarted);
@@ -367,6 +379,12 @@ function buildSeasonRows(seasonSplits) {
     bySeason.set(season, row);
   });
   return seasonsByPlayer;
+}
+
+function isCountableCareerStartSeason(season) {
+  if (activeSeasonRule !== "qualified") return true;
+  if (activeGroup === "pitching") return season.sampleIpOuts >= 60 || season.sampleGamesStarted >= 5;
+  return season.samplePlateAppearances >= 100;
 }
 
 function emptyAggregate(season) {
@@ -426,7 +444,9 @@ function aggregateRows(seasonSplits) {
   const seasonsByPlayer = buildSeasonRows(seasonSplits);
   const rows = [];
   seasonsByPlayer.forEach((bySeason) => {
-    const allSeasons = Array.from(bySeason.values()).sort((a, b) => a.season - b.season);
+    const allSeasons = Array.from(bySeason.values())
+      .sort((a, b) => a.season - b.season)
+      .filter(isCountableCareerStartSeason);
     const careerStart = allSeasons[0]?.season;
     if (!careerStart || careerStart < low || careerStart > high) return;
     const firstSeasons = allSeasons.slice(0, activeSeasonCount);
@@ -473,7 +493,10 @@ function renderSummary(rows, allRows = rows) {
   const { low, high } = careerStartBounds();
   const years = low === high ? `careers starting ${low}` : `careers starting ${low}-${high}`;
   document.querySelector("#starts-question").textContent = questionLabel();
-  document.querySelector("#starts-question-note").textContent = `${activeGroup === "pitching" ? "Pitchers" : "Hitters"}, ${teamLabel()}, ${years}`;
+  const ruleText = activeSeasonRule === "qualified"
+    ? activeGroup === "pitching" ? "20+ IP or 5+ GS seasons" : "100+ PA seasons"
+    : "all MLB seasons";
+  document.querySelector("#starts-question-note").textContent = `${activeGroup === "pitching" ? "Pitchers" : "Hitters"}, ${teamLabel()}, ${years}, ${ruleText}`;
   document.querySelector("#starts-player-count").textContent = numberFormat.format(rows.length);
   document.querySelector("#starts-leader-name").textContent = leader?.name || "--";
   document.querySelector("#starts-leader-note").textContent = leader ? `${metricLabel()}: ${fmtStat(activeMetric, leader[activeMetric])}` : `${numberFormat.format(allRows.length)} raw players checked`;
@@ -526,12 +549,14 @@ function applyExample(name) {
   activeGroup = example.group;
   activeMetric = example.metric;
   activeSeasonCount = example.seasons;
+  activeSeasonRule = "all";
   activeTeam = example.team;
   activeRange = { start: example.start, end: example.end };
   document.querySelector("#starts-group").value = activeGroup;
   updateMetricControls();
   document.querySelector("#starts-stat").value = activeMetric;
   document.querySelector("#starts-count").value = activeSeasonCount;
+  document.querySelector("#starts-season-rule").value = activeSeasonRule;
   document.querySelector("#starts-team").value = activeTeam;
   document.querySelector("#starts-start").value = activeRange.start;
   document.querySelector("#starts-end").value = activeRange.end;
