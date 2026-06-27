@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball First Seasons" />
     <meta name="twitter:description" content="Find MLB leaders across the first seasons of a player's career, with optional team and era filters." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260626-table-edge" />
+    <link rel="stylesheet" href="styles.css?v=20260626-starts-leaderboard" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -151,6 +151,22 @@
           </article>
         </section>
 
+        <section class="panel feature-panel age-visual-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">First-Seasons Leaderboard</p>
+              <h2 id="starts-chart-title">First-season leaders</h2>
+            </div>
+            <select id="starts-chart-size" aria-label="First-seasons leaderboard size">
+              <option value="10">Top 10</option>
+              <option value="20">Top 20</option>
+            </select>
+          </div>
+          <div class="bar-chart age-bar-chart" id="starts-bar-chart" aria-label="First-seasons leaderboard chart">
+            <div class="empty-state">Choose a first-seasons question, then hit View.</div>
+          </div>
+        </section>
+
         <section class="panel leaderboard age-table-panel">
           <div class="section-head">
             <div>
@@ -176,6 +192,6 @@
       </main>
     </div>
 
-    <script src="starts.js?v=20260626-start-season-rule"></script>
+    <script src="starts.js?v=20260626-starts-leaderboard"></script>
   </body>
 </html>

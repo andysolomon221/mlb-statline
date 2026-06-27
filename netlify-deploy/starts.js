@@ -10,6 +10,7 @@ let activeSeasonRule = "all";
 let activeTeam = "all";
 let activeRange = { start: 1901, end: 2026 };
 let activeRequestId = 0;
+let lastRenderedRows = [];
 
 const teamOptions = [
   ["all", "All MLB"],
@@ -488,6 +489,48 @@ function renderRows(rows) {
   `).join("") || `<tr><td colspan="${columns.length}" class="empty-row">No players match this career-start question.</td></tr>`;
 }
 
+function startsChartMeta(row) {
+  const pieces = [
+    row.teams,
+    row.seasonLabel,
+    `${row.seasonCount} season${row.seasonCount === 1 ? "" : "s"}`
+  ].filter(Boolean);
+  return pieces.join(" | ");
+}
+
+function renderStartsChart(rows) {
+  lastRenderedRows = rows;
+  const chart = document.querySelector("#starts-bar-chart");
+  const title = document.querySelector("#starts-chart-title");
+  if (!chart || !title) return;
+  title.textContent = `${questionLabel()} leaders`;
+  if (!rows.length) {
+    chart.innerHTML = `<div class="empty-state">No players match this career-start question.</div>`;
+    return;
+  }
+  const limit = Number(document.querySelector("#starts-chart-size")?.value || 10);
+  const visibleRows = rows.slice(0, limit);
+  const maxValue = Math.max(...visibleRows.map((row) => Math.abs(toNumber(row[activeMetric]))), 1);
+  chart.innerHTML = visibleRows.map((row) => {
+    const value = toNumber(row[activeMetric]);
+    const percent = Math.max(8, (Math.abs(value) / maxValue) * 100);
+    return `
+      <div class="bar-row age-bar-row">
+        <div class="bar-label">
+          <a class="chart-player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer">
+            <strong>${escapeHtml(row.name)}</strong>
+            <span>${escapeHtml(startsChartMeta(row))}</span>
+          </a>
+        </div>
+        <div class="bar-track" aria-hidden="true">
+          <div class="bar-fill" style="width:${percent.toFixed(1)}%"></div>
+        </div>
+        <div class="bar-value">${fmtStat(activeMetric, row[activeMetric])}</div>
+      </div>
+    `;
+  }).join("");
+}
+
 function renderSummary(rows, allRows = rows) {
   const leader = rows[0];
   const { low, high } = careerStartBounds();
@@ -512,6 +555,7 @@ async function runStartsSearch() {
   status.textContent = `Loading ${years.length} seasons from MLB Stats API...`;
   renderHead();
   document.querySelector("#starts-table").innerHTML = `<tr><td colspan="${metricConfig[activeGroup].columns.length}" class="empty-row">Loading career-start leaders...</td></tr>`;
+  document.querySelector("#starts-bar-chart").innerHTML = `<div class="empty-state">Loading first-seasons leaders...</div>`;
 
   try {
     const payloads = await fetchInBatches(years, fetchSeason, 4, (done, total) => {
@@ -523,6 +567,7 @@ async function runStartsSearch() {
     const allRows = aggregateRows(payloads);
     const rows = sortRows(allRows);
     renderRows(rows);
+    renderStartsChart(rows);
     renderSummary(rows, allRows);
     document.querySelector("#starts-table-title").textContent = `${questionLabel()} leaders`;
     document.querySelector("#starts-progress").textContent = "Done";
@@ -534,6 +579,7 @@ async function runStartsSearch() {
     document.querySelector("#starts-progress-note").textContent = "Could not load MLB data";
     status.textContent = "Could not load career-start leaders. Try a smaller season range or try again.";
     document.querySelector("#starts-table").innerHTML = `<tr><td colspan="${metricConfig[activeGroup].columns.length}" class="empty-row">Could not load career-start leaders.</td></tr>`;
+    document.querySelector("#starts-bar-chart").innerHTML = `<div class="empty-state">Could not load career-start leaders.</div>`;
   }
 }
 
@@ -573,6 +619,7 @@ function init() {
     renderHead();
   });
   document.querySelector("#starts-run").addEventListener("click", runStartsSearch);
+  document.querySelector("#starts-chart-size").addEventListener("change", () => renderStartsChart(lastRenderedRows));
   document.querySelectorAll("[data-starts-example]").forEach((button) => {
     button.addEventListener("click", () => applyExample(button.dataset.startsExample));
   });
