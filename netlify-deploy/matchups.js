@@ -84,7 +84,7 @@ let activeMatchupTool = "team-pitcher";
 let batter = { id: 605141, fullName: "Mookie Betts", position: "SS" };
 let pitcher = { id: 694973, fullName: "Paul Skenes", position: "P" };
 let teamOffenseRows = [];
-let activeTeamOffenseSort = { key: "pa", dir: -1 };
+let activeTeamOffenseSort = { key: "ab", dir: -1 };
 let batterCandidates = [];
 let pitcherCandidates = [];
 let matchupSearchTimer;
@@ -714,10 +714,10 @@ function renderTeamOffense(rows, teamName, pitcherName) {
       <tr>
         <td><a class="summary-link" href="${baseballReferenceSearchUrl(row.fullName)}" target="_blank" rel="noopener noreferrer">${row.fullName}</a></td>
         <td>${row.position || "-"}</td>
-        <td>${total.pa}</td>
         <td>${total.ab}</td>
         <td>${total.h}</td>
         <td>${total.hr}</td>
+        <td>${total.rbi}</td>
         <td>${total.bb}</td>
         <td>${total.so}</td>
         <td>${row.headToHead.length ? fmt(total.avg) : "-"}</td>
