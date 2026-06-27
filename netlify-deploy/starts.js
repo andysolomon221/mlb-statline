@@ -248,7 +248,7 @@ function teamLabel() {
 
 function questionLabel() {
   const teamText = activeTeam === "all" ? "MLB" : teamLabel();
-  const ruleText = activeSeasonRule === "qualified" ? " meaningful" : "";
+  const ruleText = activeSeasonRule === "rookie" ? " rookie-threshold" : "";
   return `Most ${metricLabel()} in first ${activeSeasonCount}${ruleText} career season${activeSeasonCount === 1 ? "" : "s"}, ${teamText}`;
 }
 
@@ -383,9 +383,9 @@ function buildSeasonRows(seasonSplits) {
 }
 
 function isCountableCareerStartSeason(season) {
-  if (activeSeasonRule !== "qualified") return true;
-  if (activeGroup === "pitching") return season.sampleIpOuts >= 60 || season.sampleGamesStarted >= 5;
-  return season.samplePlateAppearances >= 100;
+  if (activeSeasonRule !== "rookie") return true;
+  if (activeGroup === "pitching") return season.sampleIpOuts > 150;
+  return season.atBats > 130;
 }
 
 function emptyAggregate(season) {
@@ -536,8 +536,8 @@ function renderSummary(rows, allRows = rows) {
   const { low, high } = careerStartBounds();
   const years = low === high ? `careers starting ${low}` : `careers starting ${low}-${high}`;
   document.querySelector("#starts-question").textContent = questionLabel();
-  const ruleText = activeSeasonRule === "qualified"
-    ? activeGroup === "pitching" ? "20+ IP or 5+ GS seasons" : "100+ PA seasons"
+  const ruleText = activeSeasonRule === "rookie"
+    ? activeGroup === "pitching" ? "over 50 IP seasons" : "over 130 AB seasons"
     : "all MLB seasons";
   document.querySelector("#starts-question-note").textContent = `${activeGroup === "pitching" ? "Pitchers" : "Hitters"}, ${teamLabel()}, ${years}, ${ruleText}`;
   document.querySelector("#starts-player-count").textContent = numberFormat.format(rows.length);
