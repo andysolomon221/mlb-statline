@@ -100,6 +100,13 @@
               <select id="starts-count" aria-label="Number of first career seasons"></select>
             </label>
             <label>
+              <span>Season Rule</span>
+              <select id="starts-season-rule" aria-label="Career start season rule">
+                <option value="all">True first MLB season</option>
+                <option value="qualified">Skip tiny call-ups</option>
+              </select>
+            </label>
+            <label>
               <span>Team</span>
               <select id="starts-team" aria-label="Team filter"></select>
             </label>
@@ -169,6 +176,6 @@
       </main>
     </div>
 
-    <script src="starts.js?v=20260622-career-starts"></script>
+    <script src="starts.js?v=20260626-start-season-rule"></script>
   </body>
 </html>
