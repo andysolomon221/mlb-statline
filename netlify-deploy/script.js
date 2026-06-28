@@ -138,6 +138,7 @@ const firstSeason = 1901;
 const lastSeason = 2026;
 const seasonLeaderCache = new Map();
 const dateLeaderCache = new Map();
+const datePlayerCache = new Map();
 const peopleSearchCache = new Map();
 const playerSeasonSearchCache = new Map();
 let historicalPlayerCandidates = [];
@@ -687,6 +688,55 @@ async function fetchDateRangeLeaders() {
   return rows;
 }
 
+async function fetchDateRangePlayer(person) {
+  if (!person?.id || activeMode !== "date" || currentSearchScope() === "team") return null;
+  const range = normalizeDateRange();
+  const cacheKey = `${boardType}:${person.id}:${activeTeamId}:${range.start}:${range.end}`;
+  if (datePlayerCache.has(cacheKey)) return datePlayerCache.get(cacheKey);
+
+  try {
+    const params = new URLSearchParams({
+      stats: "byDateRange",
+      group: config.group,
+      sportIds: "1",
+      hydrate: "team",
+      startDate: isoToMlbDate(range.start),
+      endDate: isoToMlbDate(range.end)
+    });
+    const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${person.id}/stats?${params.toString()}`);
+    const split = (data.stats?.[0]?.splits || [])
+      .find((row) => activeTeamId === "all" || String(row.team?.id) === String(activeTeamId));
+    const row = split ? mapApiPlayer({
+      ...split,
+      player: { id: person.id, fullName: person.fullName },
+      position: person.primaryPosition
+    }) : null;
+    datePlayerCache.set(cacheKey, row);
+    return row;
+  } catch (error) {
+    datePlayerCache.set(cacheKey, null);
+    return null;
+  }
+}
+
+async function refreshSearchedDateRangePlayer() {
+  const query = currentPlayerSearchQuery();
+  if (!query || activeMode !== "date" || currentSearchScope() === "team") return;
+  const person = await resolveHistoricalPlayer(query);
+  if (!person) return;
+  const row = await fetchDateRangePlayer(person);
+  if (!row || playerWeight(row) <= 0) return;
+  const existingIndex = leaderRows.findIndex((player) => (
+    String(player.id) === String(row.id)
+    || normalizeSearchText(player.name) === normalizeSearchText(row.name)
+  ));
+  if (existingIndex >= 0) {
+    leaderRows[existingIndex] = { ...leaderRows[existingIndex], ...row };
+  } else {
+    leaderRows.push(row);
+  }
+}
+
 async function currentPlayers() {
   if (activeMode === "single") {
     return (await fetchSeasonLeaders(Number(activeSeason))).slice();
@@ -830,6 +880,8 @@ async function updateLeaders() {
 
   try {
     leaderRows = await currentPlayers();
+    if (requestId !== leaderRequestId) return;
+    await refreshSearchedDateRangePlayer();
     if (requestId !== leaderRequestId) return;
     leadersLoading = false;
     renderChart();
@@ -1866,6 +1918,7 @@ async function submitPlayerSearch(sourceInput) {
       if (opened) return;
     }
   }
+  await refreshSearchedDateRangePlayer();
   renderChart();
   renderTable();
   revealPlayerBoardFromHero();
