@@ -1647,6 +1647,7 @@ function matchesPlayerSearch(player, query) {
     : searchScope === "team"
       ? normalizeSearchText(`${player.team} ${player.teamName || ""} ${scope}`)
       : normalizeSearchText(`${player.name} ${player.team} ${player.teamName || ""} ${scope}`);
+  if (searchScope === "player") return haystack.includes(normalizeSearchText(query));
   const needles = searchNeedles(query);
   return needles.some((needle) => haystack.includes(needle));
 }
