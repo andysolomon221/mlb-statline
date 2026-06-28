@@ -242,13 +242,13 @@ const boardConfig = {
     columns: [
       ["games", "G"],
       ["ab", "AB"],
+      ["runs", "R"],
       ["avg", "AVG"],
       ["ops", "OPS"],
       ["hits", "H"],
       ["hr", "HR"],
       ["sb", "SB"],
       ["rbi", "RBI"],
-      ["strikeouts", "SO"],
       ["slg", "SLG"]
     ],
     metrics: [
@@ -261,7 +261,7 @@ const boardConfig = {
       ["slg", "SLG"],
       ["avg", "AVG"]
     ],
-    sortMap: { avg: "avg", ops: "ops", hits: "hits", hr: "homeRuns", sb: "stolenBases", rbi: "rbi", strikeouts: "strikeOuts", slg: "slg" },
+    sortMap: { avg: "avg", ops: "ops", hits: "hits", hr: "homeRuns", sb: "stolenBases", rbi: "rbi", runs: "runs", strikeouts: "strikeOuts", slg: "slg" },
     rateMetrics: ["avg", "ops", "slg"],
     weightKey: "pa",
     qualifierLabel: "Min PA",
@@ -653,6 +653,7 @@ function mapApiPlayer(split) {
     hr: toNumber(stat.homeRuns),
     sb: toNumber(stat.stolenBases),
     rbi: toNumber(stat.rbi),
+    runs: toNumber(stat.runs),
     strikeouts: toNumber(stat.strikeOuts),
     ab: toNumber(stat.atBats),
     pa: toNumber(stat.plateAppearances),

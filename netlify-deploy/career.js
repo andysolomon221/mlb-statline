@@ -14,13 +14,12 @@ const careerColumns = {
     ["season", "Year"],
     ["team", "Team"],
     ["gamesPlayed", "G"],
-    ["plateAppearances", "PA"],
     ["atBats", "AB"],
+    ["runs", "R"],
     ["hits", "H"],
     ["homeRuns", "HR"],
-    ["stolenBases", "SB"],
     ["rbi", "RBI"],
-    ["strikeOuts", "SO"],
+    ["stolenBases", "SB"],
     ["avg", "AVG"],
     ["obp", "OBP"],
     ["slg", "SLG"],
@@ -193,6 +192,7 @@ function mapSeasonRow(split) {
     gamesStarted: toNumber(stat.gamesStarted),
     plateAppearances: toNumber(stat.plateAppearances),
     atBats,
+    runs: toNumber(stat.runs),
     hits,
     homeRuns: toNumber(stat.homeRuns),
     stolenBases: toNumber(stat.stolenBases),
@@ -221,7 +221,7 @@ function mapSeasonRow(split) {
 function combineRows(rows) {
   const teamList = Array.from(new Set(rows.flatMap((row) => row.teamList || [row.team]).filter(Boolean)));
   const combined = rows.reduce((acc, row) => {
-    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "losses", "saves", "blownSaves", "earnedRuns", "ipOuts"].forEach((key) => {
+    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "runs", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "losses", "saves", "blownSaves", "earnedRuns", "ipOuts"].forEach((key) => {
       acc[key] += toNumber(row[key]);
     });
     return acc;
@@ -234,6 +234,7 @@ function combineRows(rows) {
     gamesStarted: 0,
     plateAppearances: 0,
     atBats: 0,
+    runs: 0,
     hits: 0,
     homeRuns: 0,
     stolenBases: 0,
@@ -325,7 +326,7 @@ async function fetchCareerRows() {
 
 function careerTotals(rows) {
   const totals = rows.reduce((acc, row) => {
-    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "losses", "saves", "blownSaves", "earnedRuns", "ipOuts"].forEach((key) => {
+    ["gamesPlayed", "gamesStarted", "plateAppearances", "atBats", "runs", "hits", "homeRuns", "stolenBases", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases", "wins", "losses", "saves", "blownSaves", "earnedRuns", "ipOuts"].forEach((key) => {
       acc[key] += toNumber(row[key]);
     });
     return acc;
@@ -334,6 +335,7 @@ function careerTotals(rows) {
     gamesStarted: 0,
     plateAppearances: 0,
     atBats: 0,
+    runs: 0,
     hits: 0,
     homeRuns: 0,
     stolenBases: 0,
@@ -382,7 +384,7 @@ function updateSortOptions() {
   const sort = document.querySelector("#career-sort");
   const options = activeGroup === "pitching"
     ? [["season", "Season"], ["era", "ERA"], ["whip", "WHIP"], ["strikeOuts", "SO"], ["wins", "W"], ["saves", "SV"], ["blownSaves", "BS"]]
-    : [["season", "Season"], ["ops", "OPS"], ["homeRuns", "HR"], ["stolenBases", "SB"], ["hits", "H"], ["rbi", "RBI"], ["strikeOuts", "SO"], ["avg", "AVG"]];
+    : [["season", "Season"], ["ops", "OPS"], ["homeRuns", "HR"], ["runs", "R"], ["hits", "H"], ["rbi", "RBI"], ["stolenBases", "SB"], ["avg", "AVG"]];
   sort.innerHTML = options.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
   if (!options.some(([value]) => value === activeSort)) activeSort = "season";
   sort.value = activeSort;
