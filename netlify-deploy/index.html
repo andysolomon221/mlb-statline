@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball" />
     <meta name="twitter:description" content="Explore MLB stats by season, team, league, player, custom year range, and matchup." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260626-table-edge" />
+    <link rel="stylesheet" href="styles.css?v=20260629-advanced-stats-nav" />
     <script>
       const statlineParams = new URLSearchParams(window.location.search);
       if (["mode", "metric", "team", "position", "start", "end", "year"].some((key) => statlineParams.has(key))) {
@@ -56,8 +56,7 @@
           <a class="active" href="index.html">Home</a>
           <a href="batting.html">Batting</a>
           <a href="pitching.html">Pitching</a>
-          <a href="advanced.html">Advanced</a>
-          <a href="statcast.html">Statcast</a>
+          <a href="advanced.html">Advanced Stats</a>
           <a href="matchups.html">Matchups</a>
           <a href="compare.html">Compare</a>
           <a href="career.html">Career</a>
@@ -193,14 +192,9 @@
               <small>Search starters and relievers across years for strikeouts, ERA, WHIP, wins, saves, and team pitching.</small>
             </a>
             <a class="start-card" href="advanced.html">
-              <span>Advanced</span>
-              <strong>Rate Stats And Deeper Boards</strong>
-              <small>Sort by advanced offensive and pitching metrics when traditional totals are not enough.</small>
-            </a>
-            <a class="start-card" href="statcast.html">
-              <span>Statcast</span>
-              <strong>Quality Of Contact</strong>
-              <small>Use public Statcast-style boards for exit velocity, barrels, hard-hit rate, and related skill indicators.</small>
+              <span>Advanced Stats</span>
+              <strong>Rate Stats And Quality Of Contact</strong>
+              <small>Switch between advanced MLB fields and public Statcast-style boards for deeper player signals.</small>
             </a>
             <a class="start-card" href="matchups.html">
               <span>Lineup vs Pitcher</span>
@@ -245,7 +239,7 @@
             <a class="start-card" href="teams.html">
               <span>Teams</span>
               <strong>Club Hubs And Team Filters</strong>
-              <small>Start with any club, then jump into its batting, pitching, advanced, Statcast, fantasy, news, and community links.</small>
+              <small>Start with any club, then jump into its batting, pitching, advanced stats, fantasy, news, and community links.</small>
             </a>
           </div>
         </section>

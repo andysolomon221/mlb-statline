@@ -61,8 +61,8 @@ function renderSelectedTeam() {
   document.querySelector("#team-tool-links").innerHTML = [
     linkButton("Batting leaders", `batting.html?team=${club.id}`),
     linkButton("Pitching leaders", `pitching.html?team=${club.id}`),
-    linkButton("Advanced board", `advanced.html?team=${club.id}`),
-    linkButton("Statcast board", `statcast.html?team=${club.id}`),
+    linkButton("Advanced stats", `advanced.html?team=${club.id}`),
+    linkButton("Statcast tab", `statcast.html?team=${club.id}`),
     linkButton("Matchup Lab", "matchups.html"),
     linkButton("Fantasy board", `fantasy.html?team=${club.id}`),
     linkButton("Player splits", "splits.html")
