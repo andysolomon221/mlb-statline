@@ -114,6 +114,7 @@ const metricConfig = {
   pitching: {
     label: "pitching",
     sortMap: {
+      era: "era",
       strikeOuts: "strikeOuts",
       wins: "wins",
       saves: "saves",
@@ -121,6 +122,7 @@ const metricConfig = {
       inningsPitched: "inningsPitched"
     },
     metrics: [
+      ["era", "ERA"],
       ["strikeOuts", "SO"],
       ["wins", "Wins"],
       ["saves", "Saves"],
@@ -135,6 +137,7 @@ const metricConfig = {
       ["gamesPlayed", "G"],
       ["gamesStarted", "GS"],
       ["inningsPitched", "IP"],
+      ["era", "ERA"],
       ["wins", "W"],
       ["losses", "L"],
       ["saves", "SV"],
@@ -171,7 +174,12 @@ function fmtStat(key, value) {
   if (key === "name" || key === "teams" || key === "seasonLabel") return escapeHtml(value || "-");
   if (!Number.isFinite(numeric)) return "-";
   if (key === "inningsPitched") return outsToInnings(numeric);
+  if (key === "era") return numeric.toFixed(2);
   return numberFormat.format(Math.round(numeric));
+}
+
+function metricIsLowerBetter(metric = activeMetric) {
+  return activeGroup === "pitching" && metric === "era";
 }
 
 function initials(name) {
@@ -249,7 +257,8 @@ function teamLabel() {
 function questionLabel() {
   const teamText = activeTeam === "all" ? "MLB" : teamLabel();
   const ruleText = activeSeasonRule === "rookie" ? " rookie-threshold" : "";
-  return `Most ${metricLabel()} in first ${activeSeasonCount}${ruleText} career season${activeSeasonCount === 1 ? "" : "s"}, ${teamText}`;
+  const prefix = metricIsLowerBetter() ? "Lowest" : "Most";
+  return `${prefix} ${metricLabel()} in first ${activeSeasonCount}${ruleText} career season${activeSeasonCount === 1 ? "" : "s"}, ${teamText}`;
 }
 
 function searchUrl(year) {
@@ -338,6 +347,7 @@ function emptySeason(split) {
     wins: 0,
     losses: 0,
     saves: 0,
+    earnedRuns: 0,
     ipOuts: 0
   };
 }
@@ -364,6 +374,7 @@ function addSplitToSeason(row, split, includeStats) {
   row.wins += toNumber(stat.wins);
   row.losses += toNumber(stat.losses);
   row.saves += toNumber(stat.saves);
+  row.earnedRuns += toNumber(stat.earnedRuns);
   row.ipOuts += toNumber(stat.outs) || inningsToOuts(stat.inningsPitched);
 }
 
@@ -407,6 +418,7 @@ function emptyAggregate(season) {
     wins: 0,
     losses: 0,
     saves: 0,
+    earnedRuns: 0,
     ipOuts: 0
   };
 }
@@ -427,6 +439,7 @@ function addSeasonToAggregate(row, season) {
   row.wins += season.wins;
   row.losses += season.losses;
   row.saves += season.saves;
+  row.earnedRuns += season.earnedRuns;
   row.ipOuts += season.ipOuts;
 }
 
@@ -437,6 +450,7 @@ function finalizeRow(row) {
     ? seasons[0] === seasons[seasons.length - 1] ? String(seasons[0]) : `${seasons[0]}-${seasons[seasons.length - 1]}`
     : "-";
   row.inningsPitched = row.ipOuts;
+  row.era = row.ipOuts ? (row.earnedRuns * 27) / row.ipOuts : null;
   return row;
 }
 
@@ -462,7 +476,11 @@ function aggregateRows(seasonSplits) {
 
 function sortRows(rows) {
   return rows.slice().sort((a, b) => {
-    const diff = toNumber(b[activeMetric]) - toNumber(a[activeMetric]);
+    const valueA = Number(a[activeMetric]);
+    const valueB = Number(b[activeMetric]);
+    const safeA = Number.isFinite(valueA) ? valueA : metricIsLowerBetter() ? Number.POSITIVE_INFINITY : 0;
+    const safeB = Number.isFinite(valueB) ? valueB : metricIsLowerBetter() ? Number.POSITIVE_INFINITY : 0;
+    const diff = metricIsLowerBetter() ? safeA - safeB : safeB - safeA;
     if (diff) return diff;
     return String(a.name).localeCompare(b.name);
   });
@@ -510,10 +528,17 @@ function renderStartsChart(rows) {
   }
   const limit = Number(document.querySelector("#starts-chart-size")?.value || 10);
   const visibleRows = rows.slice(0, limit);
-  const maxValue = Math.max(...visibleRows.map((row) => Math.abs(toNumber(row[activeMetric]))), 1);
+  const chartValues = visibleRows.map((row) => Number(row[activeMetric])).filter(Number.isFinite);
+  const maxValue = Math.max(...chartValues.map(Math.abs), 1);
+  const minValue = Math.min(...chartValues, 0);
+  const highValue = Math.max(...chartValues, 1);
+  const spread = Math.max(highValue - minValue, 1);
   chart.innerHTML = visibleRows.map((row) => {
-    const value = toNumber(row[activeMetric]);
-    const percent = Math.max(8, (Math.abs(value) / maxValue) * 100);
+    const value = Number(row[activeMetric]);
+    const safeValue = Number.isFinite(value) ? value : metricIsLowerBetter() ? highValue : 0;
+    const percent = metricIsLowerBetter()
+      ? Math.max(36, 100 - ((safeValue - minValue) / spread) * 56)
+      : Math.max(8, (Math.abs(safeValue) / maxValue) * 100);
     return `
       <div class="bar-row age-bar-row">
         <div class="bar-label">

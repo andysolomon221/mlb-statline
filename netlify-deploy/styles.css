@@ -812,11 +812,13 @@ input[type="range"] {
   margin-bottom: 18px;
 }
 
-body[data-board="hitting"] .data-grid {
+body[data-board="hitting"] .data-grid,
+body[data-board="pitching"] .data-grid {
   grid-template-columns: 1fr;
 }
 
-body[data-board="hitting"] .division-panel {
+body[data-board="hitting"] .division-panel,
+body[data-board="pitching"] .division-panel {
   max-width: 760px;
 }
 
