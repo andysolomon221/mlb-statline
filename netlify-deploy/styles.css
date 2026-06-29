@@ -153,6 +153,10 @@ select {
   content: "Pick a batter, pitcher, team, roster, and ballpark for career head-to-head context.";
 }
 
+.rail-nav a[href="standings.html"]::after {
+  content: "Division and Wild Card standings by date, league, and race.";
+}
+
 .rail-nav a[href="compare.html"]::after {
   content: "Put two players side by side for single-season or historical range comparisons.";
 }
@@ -1421,6 +1425,92 @@ input[type="search"] {
   overflow-wrap: anywhere;
 }
 
+.standings-date-control input {
+  min-height: 44px;
+}
+
+.standings-date-control button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--navy);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.standings-control-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.75fr) minmax(360px, 1fr) minmax(240px, auto);
+  gap: 14px;
+  align-items: center;
+}
+
+.standings-view-toggle,
+.standings-league-toggle {
+  width: 100%;
+}
+
+.standings-share-row {
+  justify-content: end;
+}
+
+.standings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.standings-card {
+  display: grid;
+  gap: 14px;
+}
+
+.standings-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.standings-table th,
+.standings-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 12px 10px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.standings-table th {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.standings-table th:nth-child(2),
+.standings-table td:nth-child(2) {
+  text-align: left;
+}
+
+.standings-table-wrap {
+  overflow-x: auto;
+}
+
+.standings-team {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.standings-badge {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
 .advanced-grid {
   grid-template-columns: 1fr;
 }
@@ -2488,8 +2578,13 @@ td {
   .compare-player-grid,
   .news-grid,
   .team-hub-grid,
-  .team-directory-grid {
+  .team-directory-grid,
+  .standings-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .standings-control-grid {
+    grid-template-columns: 1fr;
   }
 
   .daily-board-actions {
@@ -2575,6 +2670,16 @@ td {
     gap: 12px;
     margin: 10px 0;
     padding: 13px;
+  }
+
+  .standings-grid,
+  .standings-control-grid,
+  .standings-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .standings-share-row {
+    justify-content: start;
   }
 
   .daily-board-actions {
@@ -2930,19 +3035,19 @@ td {
     order: 4;
   }
 
-  .rail-nav a[href="teams.html"] {
+  .rail-nav a[href="standings.html"] {
     order: 5;
   }
 
-  .rail-nav a[href="news.html"] {
+  .rail-nav a[href="teams.html"] {
     order: 6;
   }
 
-  .rail-nav a[href="advanced.html"] {
+  .rail-nav a[href="news.html"] {
     order: 7;
   }
 
-  .rail-nav a[href="statcast.html"] {
+  .rail-nav a[href="advanced.html"] {
     order: 8;
   }
 
@@ -2974,7 +3079,7 @@ td {
     order: 15;
   }
 
-  .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="teams.html"]):not([href="news.html"]) {
+  .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="standings.html"]):not([href="teams.html"]):not([href="news.html"]) {
     min-height: 36px;
     color: #dbe8f4;
     font-size: 11px;

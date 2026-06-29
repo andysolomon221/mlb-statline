@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Statline Standings</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="favicon-48.png" sizes="48x48" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/standings" />
+    <meta name="description" content="View MLB division and Wild Card standings by date, league, and race." />
+    <meta property="og:title" content="Statline Baseball Standings" />
+    <meta property="og:description" content="View MLB division and Wild Card standings by date, league, and race." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/standings" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Statline Baseball Standings" />
+    <meta name="twitter:description" content="View MLB division and Wild Card standings by date, league, and race." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260629-standings-page" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="standings">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <a class="brand-mark" href="index.html" aria-label="Statline Baseball home"><img src="statline-logo.png" alt="" /></a>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced Stats</a>
+          <a href="matchups.html">Matchups</a>
+          <a class="active" href="standings.html">Standings</a>
+          <a href="compare.html">Compare</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="age.html">Age Leaders</a>
+          <a href="starts.html">First Seasons</a>
+          <a href="span.html">Span Finder</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="standings-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Standings</p>
+            <h1>Division and Wild Card races by date.</h1>
+          </div>
+          <div class="season-control standings-date-control" aria-label="Standings date">
+            <label for="standings-date">Date</label>
+            <input id="standings-date" type="date" aria-label="Standings date" />
+            <button type="button" id="standings-today">Today</button>
+          </div>
+        </header>
+
+        <section class="score-strip standings-summary" aria-label="Standings summary">
+          <article>
+            <span>Standings Date</span>
+            <strong id="standings-date-card">-</strong>
+            <small>Snapshot from MLB standings data.</small>
+          </article>
+          <article>
+            <span>Best Record</span>
+            <strong id="standings-best-record">-</strong>
+            <small id="standings-best-record-note">-</small>
+          </article>
+          <article>
+            <span>Tightest Division</span>
+            <strong id="standings-tightest-race">-</strong>
+            <small id="standings-tightest-race-note">-</small>
+          </article>
+          <article>
+            <span>Teams Loaded</span>
+            <strong id="standings-team-count">-</strong>
+            <small>AL and NL clubs.</small>
+          </article>
+        </section>
+
+        <section class="panel standings-tools" aria-label="Standings controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Race View</p>
+              <h2 id="standings-title">Division standings</h2>
+              <small class="data-note" id="standings-status">Loading MLB standings...</small>
+            </div>
+          </div>
+          <div class="standings-control-grid">
+            <div class="mode-toggle standings-view-toggle" role="group" aria-label="Standings view">
+              <button class="active" type="button" data-standings-view="division">Division</button>
+              <button type="button" data-standings-view="wildcard">Wild Card</button>
+            </div>
+            <div class="league-toggle standings-league-toggle" role="group" aria-label="League filter">
+              <button class="active" type="button" data-standings-league="all">All MLB</button>
+              <button type="button" data-standings-league="al">American League</button>
+              <button type="button" data-standings-league="nl">National League</button>
+            </div>
+            <div class="share-action-row standings-share-row">
+              <span class="share-action-label">Share this view</span>
+              <button id="copy-standings-link" class="secondary-action" type="button">Copy Link</button>
+              <span class="copy-status" id="standings-copy-status" aria-live="polite"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="standings-grid" id="standings-grid" aria-live="polite"></section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="standings.js?v=20260629-standings-page"></script>
+  </body>
+</html>
