@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball Batting" />
     <meta name="twitter:description" content="Explore MLB batting leaders by season, team, league, position, player, and custom year range." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260626-share-label" />
+    <link rel="stylesheet" href="styles.css?v=20260629-batting-table-fit" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -124,11 +124,11 @@
             </div>
             <div class="range-fields">
               <label>
-                <span>From <strong id="range-start-value">1990</strong></span>
+                <span>From <strong id="range-start-value">2026</strong></span>
                 <select id="range-start" aria-label="Range start year"></select>
               </label>
               <label>
-                <span>To <strong id="range-end-value">1999</strong></span>
+                <span>To <strong id="range-end-value">2026</strong></span>
                 <select id="range-end" aria-label="Range end year"></select>
               </label>
             </div>
@@ -143,6 +143,7 @@
               </label>
             </div>
             <div class="quick-ranges" role="group" aria-label="Quick ranges">
+              <button data-range-start="1901" data-range-end="2026">All years</button>
               <button data-range-start="1990" data-range-end="1999">1990s</button>
               <button data-range-start="2000" data-range-end="2009">2000s</button>
               <button data-range-start="2010" data-range-end="2019">2010s</button>
@@ -225,7 +226,7 @@
               </div>
             </div>
             <div class="table-wrap">
-              <table>
+              <table class="player-board-table">
                 <thead id="player-head">
                 </thead>
                 <tbody id="player-table"></tbody>
@@ -264,6 +265,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260628-initial-search-fix"></script>
+    <script src="script.js?v=20260629-range-current-default"></script>
   </body>
 </html>

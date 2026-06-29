@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball Pitching" />
     <meta name="twitter:description" content="Sort MLB pitching leaders by season, team, league, year range, ERA, WHIP, strikeouts, saves, and more." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260626-table-edge" />
+    <link rel="stylesheet" href="styles.css?v=20260629-batting-table-fit" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -123,11 +123,11 @@
             </div>
             <div class="range-fields">
               <label>
-                <span>From <strong id="range-start-value">1990</strong></span>
+                <span>From <strong id="range-start-value">2026</strong></span>
                 <select id="range-start" aria-label="Range start year"></select>
               </label>
               <label>
-                <span>To <strong id="range-end-value">1999</strong></span>
+                <span>To <strong id="range-end-value">2026</strong></span>
                 <select id="range-end" aria-label="Range end year"></select>
               </label>
             </div>
@@ -142,6 +142,7 @@
               </label>
             </div>
             <div class="quick-ranges" role="group" aria-label="Quick ranges">
+              <button data-range-start="1901" data-range-end="2026">All years</button>
               <button data-range-start="1990" data-range-end="1999">1990s</button>
               <button data-range-start="2000" data-range-end="2009">2000s</button>
               <button data-range-start="2010" data-range-end="2019">2010s</button>
@@ -171,6 +172,7 @@
               <button data-board-size="all">All players</button>
             </div>
             <div class="share-action-row">
+              <span class="share-action-label">Share this view</span>
               <button id="copy-board-link" class="secondary-action" type="button">Copy Link</button>
               <span class="copy-status" id="board-copy-status" aria-live="polite"></span>
             </div>
@@ -261,6 +263,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260626-share-links"></script>
+    <script src="script.js?v=20260629-range-current-default"></script>
   </body>
 </html>
