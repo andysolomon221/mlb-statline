@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball" />
     <meta name="twitter:description" content="Explore MLB stats by season, team, league, player, custom year range, and matchup." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260630-standings-layout" />
+    <link rel="stylesheet" href="styles.css?v=20260630-home-stat-lanes" />
     <script>
       const statlineParams = new URLSearchParams(window.location.search);
       if (["mode", "metric", "team", "position", "start", "end", "year"].some((key) => statlineParams.has(key))) {
@@ -84,34 +84,66 @@
           </div>
         </header>
 
-        <section class="daily-board" aria-label="Daily baseball board">
-          <div class="daily-board-copy">
-            <p class="eyebrow">Today's Baseball Board</p>
-            <h2>Start with the question fans are asking tonight.</h2>
-            <small>Quick paths for game-day matchups, current leaders, team pages, and fresh baseball reading.</small>
-          </div>
-          <div class="daily-board-actions">
-            <a href="matchups.html">
-              <span>Lineup Check</span>
-              <strong>Team vs Pitcher</strong>
-              <small>Pick a club and starter to see roster head-to-head history.</small>
-            </a>
-            <a href="batting.html?mode=single&year=2026&metric=hr#leaders">
-              <span>Current Leaders</span>
-              <strong>2026 HR Board</strong>
-              <small>Start with this season's power race, then change the stat.</small>
-            </a>
-            <a href="teams.html">
-              <span>Team Hub</span>
-              <strong>Pick Your Club</strong>
-              <small>Jump into team batting, pitching, matchups, news, and links.</small>
-            </a>
-            <a href="news.html">
-              <span>Feed</span>
-              <strong>Baseball News</strong>
-              <small>Scan free stories and team-specific sources.</small>
-            </a>
-          </div>
+        <section class="home-stat-lanes" aria-label="Today and historical baseball stats">
+          <article class="home-stat-lane home-stat-lane-live">
+            <div class="home-stat-lane-copy">
+              <p class="eyebrow">Today's Stats</p>
+              <h2>Start with what fans are arguing about tonight.</h2>
+              <small>Game-day matchups, current boards, standings, and team pages.</small>
+            </div>
+            <div class="home-stat-links">
+              <a href="matchups.html">
+                <span>Game Day</span>
+                <strong>Lineup vs Starter</strong>
+                <small>Build a team-vs-pitcher board for tonight.</small>
+              </a>
+              <a href="batting.html?mode=single&year=2026&metric=hr#leaders">
+                <span>Current Leaders</span>
+                <strong>2026 Batting Boards</strong>
+                <small>HR, OPS, hits, RBI, steals, and more.</small>
+              </a>
+              <a href="pitching.html?mode=single&year=2026&metric=era#leaders">
+                <span>Pitching</span>
+                <strong>2026 Pitching Boards</strong>
+                <small>ERA, strikeouts, WHIP, wins, saves, and starts.</small>
+              </a>
+              <a href="standings.html">
+                <span>Standings</span>
+                <strong>Division And Wild Card</strong>
+                <small>AL/NL standings with Wild Card cut lines.</small>
+              </a>
+            </div>
+          </article>
+
+          <article class="home-stat-lane home-stat-lane-history">
+            <div class="home-stat-lane-copy">
+              <p class="eyebrow">Historical Stats</p>
+              <h2>Jump into any season, span, career, or era.</h2>
+              <small>Leaderboards across years, player comps, first seasons, and rolling stretches.</small>
+            </div>
+            <div class="home-stat-links">
+              <a href="batting.html?mode=range&start=1901&end=2026&metric=hr#leaders">
+                <span>All-Time Boards</span>
+                <strong>Batting Across Eras</strong>
+                <small>Single seasons, ranges, teams, and leagues.</small>
+              </a>
+              <a href="pitching.html?mode=range&start=1901&end=2026&metric=strikeouts#leaders">
+                <span>Pitching History</span>
+                <strong>Arms Across Any Era</strong>
+                <small>Strikeouts, ERA, WHIP, wins, saves, and more.</small>
+              </a>
+              <a href="starts.html">
+                <span>First Seasons</span>
+                <strong>Rookies And Early Careers</strong>
+                <small>First 1-20 career seasons for hitters and pitchers.</small>
+              </a>
+              <a href="compare.html">
+                <span>Compare</span>
+                <strong>Settle A Player Debate</strong>
+                <small>Careers, seasons, ranges, and career windows.</small>
+              </a>
+            </div>
+          </article>
         </section>
 
         <section class="quick-jump-panel" aria-label="Quick paths">

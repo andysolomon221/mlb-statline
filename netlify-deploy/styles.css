@@ -496,6 +496,93 @@ h2 {
   line-height: 1.3;
 }
 
+.home-stat-lanes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 18px 0;
+}
+
+.home-stat-lane {
+  display: grid;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(24, 32, 43, 0.05);
+}
+
+.home-stat-lane-live {
+  border-top: 6px solid var(--red);
+}
+
+.home-stat-lane-history {
+  border-top: 6px solid var(--gold);
+}
+
+.home-stat-lane-copy {
+  display: grid;
+  gap: 7px;
+}
+
+.home-stat-lane-copy h2 {
+  max-width: 560px;
+  font-size: 30px;
+  line-height: 1.08;
+}
+
+.home-stat-lane-copy small {
+  color: var(--muted);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.home-stat-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.home-stat-links a {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 124px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px;
+  color: inherit;
+  background: #f8fafc;
+  text-decoration: none;
+}
+
+.home-stat-links a:hover {
+  border-color: rgba(18, 53, 91, 0.42);
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(24, 32, 43, 0.08);
+}
+
+.home-stat-links span {
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.home-stat-links strong {
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.15;
+}
+
+.home-stat-links small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
 .quick-jump-panel {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2588,6 +2675,7 @@ td {
 
   .score-strip,
   .daily-board,
+  .home-stat-lanes,
   .quick-jump-panel,
   .rabbit-hole-panel,
   .range-toolbar,
@@ -2617,6 +2705,10 @@ td {
   }
 
   .daily-board-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .home-stat-links {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -2692,6 +2784,29 @@ td {
     grid-template-columns: 1fr;
     gap: 10px;
     margin: 10px 0;
+  }
+
+  .home-stat-lanes {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 10px 0;
+  }
+
+  .home-stat-lane {
+    gap: 13px;
+    padding: 14px;
+  }
+
+  .home-stat-lane-copy h2 {
+    font-size: 24px;
+  }
+
+  .home-stat-links {
+    grid-template-columns: 1fr;
+  }
+
+  .home-stat-links a {
+    min-height: auto;
   }
 
   .daily-board {
