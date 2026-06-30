@@ -1521,7 +1521,7 @@ input[type="search"] {
 .standings-team {
   display: grid;
   grid-template-columns: 20px 38px minmax(0, 1fr);
-  gap: 8px;
+  column-gap: 12px;
   align-items: center;
 }
 
