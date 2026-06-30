@@ -9,6 +9,7 @@ const divisionNames = {
   205: "NL Central"
 };
 const divisionOrder = ["AL East", "AL Central", "AL West", "NL East", "NL Central", "NL West"];
+const leagueOrder = ["American League", "National League"];
 const teamAbbr = {
   "Angels": "LAA",
   "Astros": "HOU",
@@ -208,29 +209,24 @@ function groupBy(rows, key) {
 
 function tableMarkup(rows, mode) {
   const gamesBackHeader = mode === "wildcard" ? "WC GB" : "GB";
-  const rankKey = mode === "wildcard" ? "wildCardRank" : "divisionRank";
   return `
     <div class="table-wrap standings-table-wrap">
       <table class="standings-table">
         <thead>
           <tr>
-            <th>Rank</th>
             <th>Team</th>
             <th>W</th>
             <th>L</th>
             <th>Pct</th>
             <th>${gamesBackHeader}</th>
-            <th>L10</th>
-            <th>Streak</th>
-            <th>Diff</th>
           </tr>
         </thead>
         <tbody>
           ${rows.map((row, index) => `
-            <tr>
-              <td>${row[rankKey] === 99 ? index + 1 : row[rankKey]}</td>
+            <tr class="${mode === "wildcard" && index === 2 ? "standings-cutline" : ""}">
               <td>
                 <span class="standings-team">
+                  <span class="standings-rank">${index + 1}</span>
                   <span class="club-badge standings-badge">${row.abbr}</span>
                   <strong>${row.name}</strong>
                 </span>
@@ -239,9 +235,6 @@ function tableMarkup(rows, mode) {
               <td>${row.losses}</td>
               <td>${row.pct}</td>
               <td>${mode === "wildcard" ? row.wildCardGamesBack : row.gamesBack}</td>
-              <td>${row.lastTen}</td>
-              <td>${row.streak}</td>
-              <td>${row.diff > 0 ? `+${row.diff}` : row.diff}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -252,26 +245,41 @@ function tableMarkup(rows, mode) {
 
 function renderDivision(rows) {
   const byDivision = groupBy(rows, "divisionName");
-  const sections = divisionOrder
-    .filter((division) => byDivision[division])
-    .map((division) => {
-      const divisionRows = byDivision[division].sort((a, b) => a.divisionRank - b.divisionRank || pctValue(b) - pctValue(a));
-      return `
-        <article class="panel standings-card">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">${divisionRows[0]?.leagueName || "League"}</p>
-              <h2>${division}</h2>
+  const byLeague = groupBy(rows, "leagueName");
+  const sections = leagueOrder.filter((league) => byLeague[league]).map((league) => {
+    const leagueDivisions = divisionOrder
+      .filter((division) => byDivision[division]?.[0]?.leagueName === league)
+      .map((division) => {
+        const divisionRows = byDivision[division].sort((a, b) => a.divisionRank - b.divisionRank || pctValue(b) - pctValue(a));
+        return `
+          <article class="panel standings-card">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">${league}</p>
+                <h2>${division}</h2>
+              </div>
             </div>
-          </div>
-          ${tableMarkup(divisionRows, "division")}
-        </article>
-      `;
-    });
+            ${tableMarkup(divisionRows, "division")}
+          </article>
+        `;
+      }).join("");
+
+    return `
+      <section class="standings-league-column" aria-label="${league}">
+        <div class="standings-league-heading">
+          <p class="eyebrow">League</p>
+          <h2>${league}</h2>
+        </div>
+        ${leagueDivisions}
+      </section>
+    `;
+  });
+  grid.classList.toggle("standings-grid-single", state.league !== "all");
   grid.innerHTML = sections.join("") || `<div class="panel empty-state">No standings found for this date.</div>`;
 }
 
 function renderWildCard(rows) {
+  grid.classList.remove("standings-grid-single");
   const divisionLeaders = new Set(rows.filter((row) => row.divisionRank === 1).map((row) => row.id));
   const byLeague = groupBy(rows, "leagueName");
   const sections = Object.entries(byLeague).map(([league, leagueRows]) => {

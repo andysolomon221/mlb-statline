@@ -1461,6 +1461,24 @@ input[type="search"] {
   gap: 18px;
 }
 
+.standings-grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.standings-league-column {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.standings-league-heading {
+  padding: 4px 2px 0;
+}
+
+.standings-league-heading h2 {
+  margin: 0;
+}
+
 .standings-card {
   display: grid;
   gap: 14px;
@@ -1468,7 +1486,7 @@ input[type="search"] {
 
 .standings-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 480px;
   border-collapse: collapse;
 }
 
@@ -1487,9 +1505,13 @@ input[type="search"] {
   text-transform: uppercase;
 }
 
-.standings-table th:nth-child(2),
-.standings-table td:nth-child(2) {
+.standings-table th:first-child,
+.standings-table td:first-child {
   text-align: left;
+}
+
+.standings-table tr.standings-cutline td {
+  border-bottom: 4px solid var(--navy);
 }
 
 .standings-table-wrap {
@@ -1498,17 +1520,24 @@ input[type="search"] {
 
 .standings-team {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 20px 38px minmax(0, 1fr);
+  gap: 8px;
   align-items: center;
 }
 
+.standings-rank {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+}
+
 .standings-badge {
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .advanced-grid {
