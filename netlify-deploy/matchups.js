@@ -490,13 +490,22 @@ function matchupShareParams() {
   params.set("pitTeam", document.querySelector("#matchup-pitching-team")?.value || "PIT");
   params.set("park", document.querySelector("#matchup-park")?.value || "neutral");
   params.set("roster", activeRosterType);
-  params.set("view", activeViewMode);
-  params.set("batter", compactName(batter.fullName));
-  params.set("batterId", batter.id);
+  if (activeMatchupTool === "batter-pitcher") {
+    params.set("view", activeViewMode);
+    params.set("batter", compactName(batter.fullName));
+    params.set("batterId", batter.id);
+  }
   params.set("pitcher", compactName(pitcher.fullName));
   params.set("pitcherId", pitcher.id);
-  params.set("playerTeamType", document.querySelector("#player-team-type")?.value || "batter");
-  params.set("opponent", document.querySelector("#player-team-opponent")?.value || "PIT");
+  if (activeMatchupTool === "player-team") {
+    const playerTeamType = document.querySelector("#player-team-type")?.value || "batter";
+    params.set("playerTeamType", playerTeamType);
+    params.set("opponent", document.querySelector("#player-team-opponent")?.value || "PIT");
+    if (playerTeamType === "batter") {
+      params.set("batter", compactName(batter.fullName));
+      params.set("batterId", batter.id);
+    }
+  }
   return params;
 }
 
@@ -859,15 +868,17 @@ async function updateTeamOffense() {
   }
 }
 
-async function populateTeamPlayerDropdowns({ selectFirst = false } = {}) {
+async function populateTeamPlayerDropdowns({ selectFirst = false, selectFirstRoles = [] } = {}) {
   const battingTeam = document.querySelector("#matchup-batting-team")?.value || "LAD";
   const pitchingTeam = document.querySelector("#matchup-pitching-team")?.value || "PIT";
   const [hitters, pitchers] = await Promise.all([
     teamRosterHitters(battingTeam),
     teamRosterPitchers(pitchingTeam)
   ]);
-  if (selectFirst && hitters.length) batter = hitters[0];
-  if (selectFirst && pitchers.length) pitcher = pitchers[0];
+  const shouldSelectBatter = selectFirst === true || selectFirstRoles.includes("batter");
+  const shouldSelectPitcher = selectFirst === true || selectFirstRoles.includes("pitcher");
+  if (shouldSelectBatter && hitters.length) batter = hitters[0];
+  if (shouldSelectPitcher && pitchers.length) pitcher = pitchers[0];
   batterCandidates = uniquePeople([batter, ...hitters]);
   pitcherCandidates = uniquePeople([pitcher, ...pitchers]);
   renderAutocompleteOptions("#batter-options", batterCandidates);
@@ -1160,17 +1171,21 @@ function bindEvents() {
     if (document.querySelector("#player-team-type").value === "pitcher") {
       document.querySelector("#player-team-opponent").value = document.querySelector("#matchup-batting-team").value;
     }
-    populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
+    const selectFirstRoles = activeMatchupTool === "team-pitcher" ? [] : ["batter"];
+    populateTeamPlayerDropdowns({ selectFirstRoles }).then(analyzeMatchup);
   });
   document.querySelector("#matchup-pitching-team").addEventListener("change", () => {
     if (document.querySelector("#player-team-type").value === "batter") {
       document.querySelector("#player-team-opponent").value = document.querySelector("#matchup-pitching-team").value;
     }
-    populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
+    populateTeamPlayerDropdowns({ selectFirstRoles: ["pitcher"] }).then(analyzeMatchup);
   });
   document.querySelector("#matchup-roster-pool").addEventListener("change", (event) => {
     activeRosterType = event.target.value;
-    populateTeamPlayerDropdowns({ selectFirst: true }).then(analyzeMatchup);
+    const selectFirstRoles = activeMatchupTool === "team-pitcher"
+      ? ["pitcher"]
+      : ["batter", "pitcher"];
+    populateTeamPlayerDropdowns({ selectFirstRoles }).then(analyzeMatchup);
   });
   document.querySelector("#browse-players-toggle").addEventListener("click", (event) => {
     const panel = document.querySelector("#browse-players-panel");
