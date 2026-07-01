@@ -7,6 +7,7 @@ const initialParams = new URLSearchParams(window.location.search);
 
 let activeGroup = "pitching";
 let activePlayerPool = "all";
+let activeTeam = "all";
 let activeMetric = "strikeOuts";
 let activeRule = "before";
 let activeAge = 25;
@@ -23,6 +24,106 @@ const mlbTeamIds = [
   118, 119, 120, 121, 133, 134, 135, 136, 137, 138,
   139, 140, 141, 142, 143, 144, 145, 146, 147, 158
 ];
+
+const teamOptions = [
+  ["all", "All MLB"],
+  ["ARI", "Arizona Diamondbacks"],
+  ["ATH", "Athletics"],
+  ["ATL", "Atlanta Braves"],
+  ["BAL", "Baltimore Orioles"],
+  ["BOS", "Boston Red Sox"],
+  ["CHC", "Chicago Cubs"],
+  ["CWS", "Chicago White Sox"],
+  ["CIN", "Cincinnati Reds"],
+  ["CLE", "Cleveland Guardians"],
+  ["COL", "Colorado Rockies"],
+  ["DET", "Detroit Tigers"],
+  ["HOU", "Houston Astros"],
+  ["KC", "Kansas City Royals"],
+  ["LAA", "Los Angeles Angels"],
+  ["LAD", "Los Angeles Dodgers"],
+  ["MIA", "Miami Marlins"],
+  ["MIL", "Milwaukee Brewers"],
+  ["MIN", "Minnesota Twins"],
+  ["NYM", "New York Mets"],
+  ["NYY", "New York Yankees"],
+  ["PHI", "Philadelphia Phillies"],
+  ["PIT", "Pittsburgh Pirates"],
+  ["SD", "San Diego Padres"],
+  ["SEA", "Seattle Mariners"],
+  ["SF", "San Francisco Giants"],
+  ["STL", "St. Louis Cardinals"],
+  ["TB", "Tampa Bay Rays"],
+  ["TEX", "Texas Rangers"],
+  ["TOR", "Toronto Blue Jays"],
+  ["WSH", "Washington Nationals"]
+];
+
+const teamAliases = {
+  ATH: ["ATH", "OAK", "PHA", "ATHLETICS", "OAKLAND", "KANSAS CITY ATHLETICS", "PHILADELPHIA ATHLETICS"],
+  ATL: ["ATL", "MLN", "BSN", "BRAVES", "MILWAUKEE BRAVES", "BOSTON BRAVES"],
+  BAL: ["BAL", "SLB", "ORIOLES", "BROWNS", "ST. LOUIS BROWNS"],
+  BOS: ["BOS", "RED SOX", "AMERICANS"],
+  LAD: ["LAD", "LA", "BRO", "BRK", "DODGERS", "BROOKLYN DODGERS"],
+  SF: ["SF", "SFG", "NYG", "GIANTS", "NEW YORK GIANTS"],
+  MIN: ["MIN", "WS1", "SENATORS", "TWINS", "WASHINGTON SENATORS"],
+  TEX: ["TEX", "WS2", "RANGERS", "WASHINGTON SENATORS"],
+  WSH: ["WSH", "MON", "EXPOS", "NATIONALS", "MONTREAL EXPOS"],
+  LAA: ["LAA", "ANA", "CAL", "ANGELS"],
+  MIA: ["MIA", "FLA", "MARLINS", "FLORIDA MARLINS"],
+  MIL: ["MIL", "SEATTLE PILOTS", "PILOTS", "BREWERS"],
+  TB: ["TB", "TBD", "RAYS", "DEVIL RAYS"],
+  CWS: ["CWS", "CHW", "WHITE SOX"],
+  CHC: ["CHC", "CUBS"],
+  NYY: ["NYY", "YANKEES"],
+  NYM: ["NYM", "METS"],
+  PHI: ["PHI", "PHILLIES"],
+  PIT: ["PIT", "PIRATES"],
+  CIN: ["CIN", "REDS"],
+  CLE: ["CLE", "IND", "GUARDIANS", "INDIANS"],
+  DET: ["DET", "TIGERS"],
+  HOU: ["HOU", "ASTROS"],
+  KC: ["KC", "KCR", "ROYALS"],
+  SD: ["SD", "SDP", "PADRES"],
+  SEA: ["SEA", "MARINERS"],
+  STL: ["STL", "CARDINALS"],
+  TOR: ["TOR", "BLUE JAYS"],
+  ARI: ["ARI", "DIAMONDBACKS"],
+  COL: ["COL", "ROCKIES"]
+};
+
+const teamIdsByAbbr = {
+  ARI: 109,
+  ATH: 133,
+  ATL: 144,
+  BAL: 110,
+  BOS: 111,
+  CHC: 112,
+  CWS: 145,
+  CIN: 113,
+  CLE: 114,
+  COL: 115,
+  DET: 116,
+  HOU: 117,
+  KC: 118,
+  LAA: 108,
+  LAD: 119,
+  MIA: 146,
+  MIL: 158,
+  MIN: 142,
+  NYM: 121,
+  NYY: 147,
+  PHI: 143,
+  PIT: 134,
+  SD: 135,
+  SEA: 136,
+  SF: 137,
+  STL: 138,
+  TB: 139,
+  TEX: 140,
+  TOR: 141,
+  WSH: 120
+};
 
 const metricConfig = {
   hitting: {
@@ -118,6 +219,8 @@ const metricConfig = {
 function applyInitialAgeParams() {
   if (["hitting", "pitching"].includes(initialParams.get("group"))) activeGroup = initialParams.get("group");
   if (["all", "active"].includes(initialParams.get("pool"))) activePlayerPool = initialParams.get("pool");
+  const team = String(initialParams.get("team") || "").toUpperCase();
+  if (teamOptions.some(([value]) => value === team)) activeTeam = team;
   if (["before", "through", "older", "after"].includes(initialParams.get("rule"))) activeRule = initialParams.get("rule");
   const age = Number(initialParams.get("age"));
   if (Number.isFinite(age)) activeAge = Math.min(45, Math.max(18, age));
@@ -201,10 +304,11 @@ function yearOptions() {
 
 function populateControls() {
   const years = yearOptions();
+  if (!initialParams.has("end")) activeRange.end = lastAgeSeason;
   document.querySelector("#age-start").innerHTML = years;
   document.querySelector("#age-end").innerHTML = years;
-  document.querySelector("#age-start").value = activeRange.start;
-  document.querySelector("#age-end").value = activeRange.end;
+  document.querySelector("#age-start").value = String(activeRange.start);
+  document.querySelector("#age-end").value = String(activeRange.end);
 
   const ages = [];
   for (let age = 18; age <= 45; age += 1) {
@@ -218,6 +322,8 @@ function populateControls() {
   document.querySelector("#age-range-end").value = activeAgeRange.end;
   document.querySelector("#age-group").value = activeGroup;
   document.querySelector("#age-player-pool").value = activePlayerPool;
+  document.querySelector("#age-team").innerHTML = teamOptions.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  document.querySelector("#age-team").value = activeTeam;
   document.querySelector("#age-rule").value = activeRule;
   if (activeAdvancedAgeRange) {
     document.querySelector(".age-controls-panel").setAttribute("data-advanced-age-range", "");
@@ -239,6 +345,7 @@ function updateMetricControls() {
 function readControls() {
   activeGroup = document.querySelector("#age-group").value;
   activePlayerPool = document.querySelector("#age-player-pool").value;
+  activeTeam = document.querySelector("#age-team").value;
   activeMetric = document.querySelector("#age-stat").value;
   activeRule = document.querySelector("#age-rule").value;
   activeAge = Number(document.querySelector("#age-cutoff").value);
@@ -278,12 +385,17 @@ function metricLabel(metric = activeMetric) {
   return metricConfig[activeGroup].metrics.find(([value]) => value === metric)?.[1] || metric.toUpperCase();
 }
 
+function teamLabel() {
+  return teamOptions.find(([value]) => value === activeTeam)?.[1] || "All MLB";
+}
+
 function questionLabel() {
   const poolPrefix = activePlayerPool === "active" ? "Active players: " : "";
+  const teamSuffix = activeTeam === "all" ? "" : `, ${teamLabel()}`;
   if (activeAdvancedAgeRange) {
     const low = Math.min(activeAgeRange.start, activeAgeRange.end);
     const high = Math.max(activeAgeRange.start, activeAgeRange.end);
-    return `${poolPrefix}Most ${metricLabel()} from age ${low} through ${high}`;
+    return `${poolPrefix}Most ${metricLabel()} from age ${low} through ${high}${teamSuffix}`;
   }
   const rules = {
     before: `before age ${activeAge}`,
@@ -291,7 +403,7 @@ function questionLabel() {
     older: `age ${activeAge} or older`,
     after: `after age ${activeAge}`
   };
-  return `${poolPrefix}Most ${metricLabel()} ${rules[activeRule] || `before age ${activeAge}`}`;
+  return `${poolPrefix}Most ${metricLabel()} ${rules[activeRule] || `before age ${activeAge}`}${teamSuffix}`;
 }
 
 function searchUrl(year) {
@@ -383,6 +495,29 @@ function teamAbbr(split) {
   return split.team?.abbreviation || split.team?.teamName || split.team?.name || "MLB";
 }
 
+function splitTeamTokens(split) {
+  return [
+    split.team?.abbreviation,
+    split.team?.teamName,
+    split.team?.name,
+    split.team?.shortName
+  ].filter(Boolean).map((value) => String(value).toUpperCase());
+}
+
+function teamMatches(split) {
+  if (activeTeam === "all") return true;
+  const selectedTeamId = teamIdsByAbbr[activeTeam];
+  const splitTeamId = Number(split.team?.id);
+  if (selectedTeamId && Number.isFinite(splitTeamId)) return splitTeamId === selectedTeamId;
+  const aliases = teamAliases[activeTeam] || [activeTeam];
+  const tokens = splitTeamTokens(split);
+  return tokens.some((token) => aliases.some((alias) => {
+    const normalizedAlias = String(alias).toUpperCase();
+    if (token === normalizedAlias) return true;
+    return normalizedAlias.length > 3 && token.includes(normalizedAlias);
+  }));
+}
+
 function addSplitToAggregate(row, split) {
   const stat = split.stat || {};
   row.teams.add(teamAbbr(split));
@@ -432,6 +567,7 @@ function aggregateRows(seasonSplits) {
   seasonSplits.flat().forEach((split) => {
     const age = toNumber(split.stat?.age);
     if (!ageMatches(age)) return;
+    if (!teamMatches(split)) return;
     const id = String(split.player?.id || split.player?.fullName || "");
     if (!id) return;
     const row = byPlayer.get(id) || emptyAggregate(split);
@@ -544,7 +680,8 @@ function renderSummary(rows, allRows = rows) {
   const leader = rows[0];
   document.querySelector("#age-question").textContent = questionLabel();
   const poolLabel = activePlayerPool === "active" ? "Active " : "";
-  document.querySelector("#age-question-note").textContent = `${poolLabel}${activeGroup === "pitching" ? "Pitchers" : "Hitters"}, ${Math.min(activeRange.start, activeRange.end)}-${Math.max(activeRange.start, activeRange.end)}`;
+  const teamText = activeTeam === "all" ? "All MLB" : teamLabel();
+  document.querySelector("#age-question-note").textContent = `${poolLabel}${activeGroup === "pitching" ? "Pitchers" : "Hitters"}, ${teamText}, ${Math.min(activeRange.start, activeRange.end)}-${Math.max(activeRange.start, activeRange.end)}`;
   document.querySelector("#age-player-count").textContent = numberFormat.format(rows.length);
   document.querySelector("#age-leader-name").textContent = leader?.name || "--";
   document.querySelector("#age-leader-note").textContent = leader ? `${metricLabel()}: ${fmtStat(activeMetric, leader[activeMetric])}` : `${numberFormat.format(allRows.length)} raw players before minimum filter`;
@@ -555,6 +692,7 @@ function ageShareParams() {
   const params = new URLSearchParams();
   params.set("group", activeGroup);
   params.set("pool", activePlayerPool);
+  if (activeTeam !== "all") params.set("team", activeTeam);
   params.set("metric", activeMetric);
   params.set("rule", activeRule);
   params.set("age", activeAge);
