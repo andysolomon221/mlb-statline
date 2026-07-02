@@ -396,8 +396,84 @@ function renderMobileCompareStack(statsA, statsB) {
   `).join("");
 }
 
+function comparisonRows(statsA, statsB) {
+  return metricSets[activeGroup].map(([key, label, lowerBetter, digits]) => {
+    const valueA = statsA[key] || 0;
+    const valueB = statsB[key] || 0;
+    const tied = Math.abs(valueA - valueB) < .0005;
+    const aWins = !tied && (lowerBetter ? valueA < valueB : valueA > valueB);
+    const bWins = !tied && !aWins;
+    return {
+      key,
+      label,
+      digits,
+      lowerBetter,
+      valueA,
+      valueB,
+      tied,
+      aWins,
+      bWins,
+      winner: tied ? "Push" : (aWins ? playerA.fullName : playerB.fullName)
+    };
+  });
+}
+
+function edgeSummary(rows) {
+  const aWins = rows.filter((row) => row.aWins).length;
+  const bWins = rows.filter((row) => row.bWins).length;
+  const pushes = rows.filter((row) => row.tied).length;
+  const leaderName = aWins === bWins ? "Even" : (aWins > bWins ? playerA.fullName : playerB.fullName);
+  const leaderWins = Math.max(aWins, bWins);
+  const trailingWins = Math.min(aWins, bWins);
+  const main = aWins === bWins
+    ? `Even: each leads ${aWins} ${aWins === 1 ? "category" : "categories"}`
+    : `Edge: ${leaderName} leads ${leaderWins} of ${rows.length} categories`;
+  const detail = aWins === bWins
+    ? `${pushes} ${pushes === 1 ? "push" : "pushes"}`
+    : `${trailingWins} for the other side${pushes ? `, ${pushes} ${pushes === 1 ? "push" : "pushes"}` : ""}`;
+  return { aWins, bWins, pushes, leaderName, main, detail };
+}
+
+function renderComparisonSnapshot(rows) {
+  const summary = edgeSummary(rows);
+  const snapshotRows = rows.map((row) => `
+    <div class="compare-snapshot-row${row.tied ? " is-push" : ""}">
+      <span>${escapeHtml(row.label)}</span>
+      <strong class="${row.aWins ? "is-winner" : ""}" data-player="${escapeHtml(playerA.fullName)}">${formatValue(row.key, row.valueA, row.digits)}</strong>
+      <strong class="${row.bWins ? "is-winner" : ""}" data-player="${escapeHtml(playerB.fullName)}">${formatValue(row.key, row.valueB, row.digits)}</strong>
+    </div>
+  `).join("");
+  document.querySelector("#compare-snapshot").innerHTML = `
+    <div class="compare-snapshot-head">
+      <div>
+        <p class="eyebrow">Who Leads What</p>
+        <h3>${escapeHtml(summary.main)}</h3>
+        <small>${escapeHtml(summary.detail)}</small>
+      </div>
+      <div class="compare-snapshot-score">
+        <article class="${summary.aWins > summary.bWins ? "is-leading" : ""}">
+          <span>${escapeHtml(playerA.fullName)}</span>
+          <strong>${summary.aWins}</strong>
+        </article>
+        <article class="${summary.bWins > summary.aWins ? "is-leading" : ""}">
+          <span>${escapeHtml(playerB.fullName)}</span>
+          <strong>${summary.bWins}</strong>
+        </article>
+      </div>
+    </div>
+    <div class="compare-snapshot-labels">
+      <span>Stat</span>
+      <span>${escapeHtml(playerA.fullName)}</span>
+      <span>${escapeHtml(playerB.fullName)}</span>
+    </div>
+    <div class="compare-snapshot-rows">
+      ${snapshotRows}
+    </div>
+  `;
+}
+
 function renderComparison(statsA, statsB) {
-  const metrics = metricSets[activeGroup];
+  const rows = comparisonRows(statsA, statsB);
   document.querySelector("#compare-head-a").textContent = playerA.fullName;
   document.querySelector("#compare-head-b").textContent = playerB.fullName;
   document.querySelector("#compare-player-a-card").textContent = playerA.fullName;
@@ -417,18 +493,14 @@ function renderComparison(statsA, statsB) {
     </article>
   `).join("");
   renderMobileCompareStack(statsA, statsB);
-  document.querySelector("#compare-table").innerHTML = metrics.map(([key, label, lowerBetter, digits]) => {
-    const valueA = statsA[key] || 0;
-    const valueB = statsB[key] || 0;
-    const tied = Math.abs(valueA - valueB) < .0005;
-    const aWins = !tied && (lowerBetter ? valueA < valueB : valueA > valueB);
-    const edge = tied ? "Push" : (aWins ? playerA.fullName : playerB.fullName);
+  renderComparisonSnapshot(rows);
+  document.querySelector("#compare-table").innerHTML = rows.map((row) => {
     return `
       <tr>
-        <td>${label}</td>
-        <td class="${aWins ? "compare-edge" : ""}">${formatValue(key, valueA, digits)}</td>
-        <td class="${!aWins && !tied ? "compare-edge" : ""}">${formatValue(key, valueB, digits)}</td>
-        <td>${escapeHtml(edge)}</td>
+        <td>${escapeHtml(row.label)}</td>
+        <td class="${row.aWins ? "compare-edge" : ""}">${formatValue(row.key, row.valueA, row.digits)}</td>
+        <td class="${row.bWins ? "compare-edge" : ""}">${formatValue(row.key, row.valueB, row.digits)}</td>
+        <td>${escapeHtml(row.winner)}</td>
       </tr>
     `;
   }).join("");

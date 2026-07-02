@@ -85,6 +85,8 @@ let batter = { id: 605141, fullName: "Mookie Betts", position: "SS" };
 let pitcher = { id: 694973, fullName: "Paul Skenes", position: "P" };
 let teamOffenseRows = [];
 let activeTeamOffenseSort = { key: "ab", dir: -1 };
+let activeTeamPitcherView = "history";
+let activeDecisionMetric = "ops";
 let batterCandidates = [];
 let pitcherCandidates = [];
 let matchupSearchTimer;
@@ -490,6 +492,10 @@ function matchupShareParams() {
   params.set("pitTeam", document.querySelector("#matchup-pitching-team")?.value || "PIT");
   params.set("park", document.querySelector("#matchup-park")?.value || "neutral");
   params.set("roster", activeRosterType);
+  if (activeMatchupTool === "team-pitcher") {
+    params.set("teamView", activeTeamPitcherView);
+    params.set("decisionMetric", activeDecisionMetric);
+  }
   if (activeMatchupTool === "batter-pitcher") {
     params.set("view", activeViewMode);
     params.set("batter", compactName(batter.fullName));
@@ -703,6 +709,131 @@ function sortedTeamOffenseRows(rows) {
   });
 }
 
+function decisionLensLabel(score) {
+  if (score >= 16) return ["Hitter lean", "Split + park favor hitter."];
+  if (score <= -16) return ["Pitcher lean", "Pitcher split has the edge."];
+  return ["Watch list", "Close split read."];
+}
+
+const decisionMetrics = {
+  ops: { label: "OPS", hitterKey: "ops", pitcherKey: "ops", lowerBetter: false, digits: 3 },
+  hr: { label: "HR", hitterKey: "homeRuns", pitcherKey: "homeRuns", lowerBetter: false, digits: 0 },
+  so: { label: "SO", hitterKey: "strikeOuts", pitcherKey: "strikeOuts", lowerBetter: true, digits: 0 },
+  bb: { label: "BB", hitterKey: "baseOnBalls", pitcherKey: "baseOnBalls", lowerBetter: false, digits: 0 },
+  avg: { label: "AVG", hitterKey: "avg", pitcherKey: "avg", lowerBetter: false, digits: 3 }
+};
+
+function splitStatValue(stat, key) {
+  return num(stat?.[key]);
+}
+
+function formatDecisionValue(metric, value) {
+  return metric.digits > 0 ? fmt(value, metric.digits) : new Intl.NumberFormat("en-US").format(Math.round(num(value)));
+}
+
+function decisionScore(hitterValue, pitcherValue, metric, parkFactor) {
+  const diff = metric.lowerBetter ? pitcherValue - hitterValue : hitterValue - pitcherValue;
+  const multiplier = metric.digits > 0 ? 100 : metric.key === "hr" ? 8 : 5;
+  return diff * multiplier + (parkFactor - 100) * .6;
+}
+
+function renderTeamDecisionLens(rows, pitcherStats) {
+  const [, parkName, parkFactor, parkNote] = parkContext();
+  const pitcherHand = pitcherStats.pitchHand || pitcher.pitchHand || "";
+  const metric = { key: activeDecisionMetric, ...(decisionMetrics[activeDecisionMetric] || decisionMetrics.ops) };
+  const cards = rows.map((row) => {
+    const hitterSplit = splitForHand(row.profile, pitcherHand);
+    const pitcherSplit = splitForHand(pitcherStats, row.profile.batSide);
+    const hitterValue = splitStatValue(hitterSplit, metric.hitterKey) || splitStatValue(row.profile.season, metric.hitterKey);
+    const pitcherValue = splitStatValue(pitcherSplit, metric.pitcherKey) || splitStatValue(pitcherStats.season, metric.pitcherKey);
+    const score = decisionScore(hitterValue, pitcherValue, metric, parkFactor);
+    const [label, note] = decisionLensLabel(score);
+    return { ...row, hitterValue, pitcherValue, score, label, note };
+  }).sort((a, b) => b.score - a.score);
+
+  document.querySelector("#team-decision-lens").innerHTML = `
+    <div class="team-decision-toolbar">
+      <label>
+        <span>Split Stat</span>
+        <select id="team-decision-metric" aria-label="Decision lens split stat">
+          ${Object.entries(decisionMetrics).map(([key, option]) => `<option value="${key}"${key === activeDecisionMetric ? " selected" : ""}>${option.label}</option>`).join("")}
+        </select>
+      </label>
+    </div>
+    <div class="team-decision-summary">
+      <article>
+        <span>Pitcher</span>
+        <strong>${escapeHtml(pitcherStats.fullName || pitcher.fullName)}</strong>
+        <small>Throws ${escapeHtml(pitcherHand || "?")} | ${activeSeason}</small>
+      </article>
+      <article>
+        <span>Park</span>
+        <strong>${escapeHtml(parkName)}</strong>
+        <small>Factor ${parkFactor}: ${escapeHtml(parkNote)}</small>
+      </article>
+      <article>
+        <span>Lens</span>
+        <strong>${escapeHtml(metric.label)} Splits</strong>
+        <small>Vs handedness, with park context. Not a betting recommendation.</small>
+      </article>
+    </div>
+    <div class="table-wrap team-decision-table-wrap">
+      <table class="team-offense-table team-decision-table">
+        <thead>
+          <tr>
+            <th>Hitter</th>
+            <th>Bat</th>
+            <th>Hitter ${escapeHtml(metric.label)}</th>
+            <th>Pitcher Allows</th>
+            <th>Read</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cards.map((card) => `
+            <tr>
+              <td><a class="summary-link" href="${baseballReferenceSearchUrl(card.fullName)}" target="_blank" rel="noopener noreferrer">${escapeHtml(card.fullName)}</a><small>${escapeHtml(card.position || "-")}</small></td>
+              <td>${escapeHtml(card.profile.batSide || "?")}</td>
+              <td>${formatDecisionValue(metric, card.hitterValue)}</td>
+              <td>${formatDecisionValue(metric, card.pitcherValue)}</td>
+              <td><strong>${escapeHtml(card.label)}</strong><small>${escapeHtml(card.note)}</small></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.querySelector("#team-decision-metric")?.addEventListener("change", (event) => {
+    activeDecisionMetric = event.target.value;
+    updateMatchupShareUrl();
+    renderTeamDecisionLens(rows, pitcherStats);
+  });
+}
+
+async function updateTeamDecisionLens(rows) {
+  const lens = document.querySelector("#team-decision-lens");
+  if (!lens) return;
+  lens.innerHTML = `<div class="empty-state">Loading split context...</div>`;
+  try {
+    const pitcherStats = await playerStats(pitcher, "pitching");
+    const enrichedRows = await Promise.all(rows.map(async (row) => ({
+      ...row,
+      profile: await playerStats(row, "hitting")
+    })));
+    renderTeamDecisionLens(enrichedRows, pitcherStats);
+  } catch (error) {
+    lens.innerHTML = `<div class="empty-state">Could not load split context for this roster.</div>`;
+  }
+}
+
+function syncTeamPitcherView() {
+  const isLens = activeTeamPitcherView === "lens";
+  document.querySelector("#team-offense-history")?.toggleAttribute("hidden", isLens);
+  document.querySelector("#team-decision-lens")?.toggleAttribute("hidden", !isLens);
+  document.querySelectorAll("[data-team-pitcher-view]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.teamPitcherView === activeTeamPitcherView);
+  });
+}
+
 function updateTeamOffenseHeaders() {
   document.querySelectorAll("[data-team-sort]").forEach((button) => {
     const isActive = button.dataset.teamSort === activeTeamOffenseSort.key;
@@ -862,6 +993,8 @@ async function updateTeamOffense() {
       headToHead: await headToHeadStats(hitter, pitcher)
     })));
     renderTeamOffense(rows, teamName, pitcher.fullName);
+    syncTeamPitcherView();
+    if (activeTeamPitcherView === "lens") await updateTeamDecisionLens(rows);
   } catch (error) {
     document.querySelector("#team-offense-status").textContent = "Could not load offense";
     document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="10" class="empty-row">Could not load this team's head-to-head history.</td></tr>`;
@@ -1101,6 +1234,8 @@ function applyUrlParams() {
   const params = new URLSearchParams(window.location.search);
   const tool = params.get("tool");
   if (["batter-pitcher", "team-pitcher", "player-team"].includes(tool)) activeMatchupTool = tool;
+  if (["history", "lens"].includes(params.get("teamView"))) activeTeamPitcherView = params.get("teamView");
+  if (decisionMetrics[params.get("decisionMetric")]) activeDecisionMetric = params.get("decisionMetric");
   if (params.get("season")) activeSeason = params.get("season");
   if (params.get("roster")) activeRosterType = params.get("roster");
   if (params.get("view")) activeViewMode = params.get("view");
@@ -1131,6 +1266,14 @@ function bindEvents() {
         document.querySelector("#player-team-opponent").value = document.querySelector("#matchup-batting-team").value;
       }
       analyzeMatchup();
+    });
+  });
+  document.querySelectorAll("[data-team-pitcher-view]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeTeamPitcherView = button.dataset.teamPitcherView;
+      syncTeamPitcherView();
+      updateMatchupShareUrl();
+      if (activeTeamPitcherView === "lens") updateTeamDecisionLens(teamOffenseRows);
     });
   });
   document.querySelector("#matchup-season").addEventListener("change", (event) => {

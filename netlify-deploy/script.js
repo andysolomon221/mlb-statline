@@ -1929,26 +1929,16 @@ async function submitPlayerSearch(sourceInput) {
   if (playerSearch) playerSearch.value = value;
   if (heroPlayerSearch) heroPlayerSearch.value = value;
   const query = cleanSearchInput(value).toLowerCase();
-  if (query && currentSearchScope() !== "team") {
-    const historicalPlayer = await resolveHistoricalPlayer(value);
-    if (historicalPlayer) {
-      const normalizedQuery = normalizeSearchText(query);
-      const normalizedPlayer = normalizeSearchText(historicalPlayer.fullName);
-      const shouldOpenHistorical = normalizedPlayer === normalizedQuery
-        || normalizedPlayer.includes(normalizedQuery)
-        || normalizeSearchText(displayPersonOption(historicalPlayer)) === normalizeSearchText(value);
-      if (shouldOpenHistorical) {
-        const opened = await openHistoricalPlayerRange(historicalPlayer, value);
-        if (opened) return;
-      }
-    }
-  }
   const currentMatches = query
     ? positionFilteredRows(leaderRows).filter((player) => matchesPlayerSearch(player, query))
     : [];
   if (query && !currentMatches.length) {
     const historicalPlayer = await resolveHistoricalPlayer(value);
     if (historicalPlayer) {
+      if (activeMode === "single") {
+        window.location.href = statlinePlayerUrl("career.html", historicalPlayer.fullName);
+        return;
+      }
       const opened = await openHistoricalPlayerRange(historicalPlayer, value);
       if (opened) return;
     }
