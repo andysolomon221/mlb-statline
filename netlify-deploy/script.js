@@ -2043,13 +2043,22 @@ function teamMetricLabel(key = activeTeamMetric) {
   return config.teamMetrics.find(([metric]) => metric === key)?.[1] || key.toUpperCase();
 }
 
+function uniqueTeamOptions() {
+  return Array.from(
+    new Map(
+      teamRows
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name) || String(a.id).localeCompare(String(b.id)))
+        .map((team) => [team.name, team])
+    ).values()
+  );
+}
+
 function teamOptions() {
   if (!teamRows.length) return;
   const previousA = document.querySelector("#team-a").value;
   const previousB = document.querySelector("#team-b").value;
-  const options = teamRows
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const options = uniqueTeamOptions()
     .map((team) => `<option value="${team.id}">${team.name}</option>`)
     .join("");
   document.querySelector("#team-a").innerHTML = options;
@@ -2086,7 +2095,7 @@ function teamFilterOptions() {
   if (!select || !teamRows.length) return;
   let appliedPendingTeam = false;
   if (pendingTeamAbbr) {
-    const requestedTeam = teamRows.find((team) => team.abbr === pendingTeamAbbr.toUpperCase());
+    const requestedTeam = uniqueTeamOptions().find((team) => team.abbr === pendingTeamAbbr.toUpperCase());
     if (requestedTeam) {
       activeTeamId = String(requestedTeam.id);
       appliedPendingTeam = true;
@@ -2094,13 +2103,12 @@ function teamFilterOptions() {
     pendingTeamAbbr = "";
   }
   const previous = String(activeTeamId);
-  const options = teamRows
-    .slice()
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const optionRows = uniqueTeamOptions();
+  const options = optionRows
     .map((team) => `<option value="${team.id}">${team.name}</option>`)
     .join("");
   select.innerHTML = `<option value="all">All teams</option>${options}`;
-  const values = teamRows.map((team) => String(team.id));
+  const values = optionRows.map((team) => String(team.id));
   activeTeamId = previous === "all" || values.includes(previous) ? previous : "all";
   select.value = activeTeamId;
   activeTeamName = activeTeamId === "all" ? "All teams" : teamRows.find((team) => String(team.id) === activeTeamId)?.name || "Selected team";
