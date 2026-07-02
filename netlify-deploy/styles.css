@@ -2304,13 +2304,14 @@ td {
 }
 
 .team-decision-table {
-  width: 100%;
-  min-width: 0;
+  width: auto;
+  min-width: 760px;
+  max-width: 100%;
 }
 
 .team-decision-table th:first-child,
 .team-decision-table td:first-child {
-  width: 28%;
+  width: 260px;
 }
 
 .team-decision-table th:nth-child(2),
@@ -2322,12 +2323,12 @@ td {
 .team-decision-table td:nth-child(3),
 .team-decision-table th:nth-child(4),
 .team-decision-table td:nth-child(4) {
-  width: 104px;
+  width: 116px;
 }
 
 .team-decision-table th:last-child,
 .team-decision-table td:last-child {
-  width: 156px;
+  width: 220px;
 }
 
 .team-decision-table td:first-child small,
@@ -2641,9 +2642,10 @@ td {
 .compare-snapshot-labels,
 .compare-snapshot-row {
   display: grid;
-  grid-template-columns: minmax(70px, .45fr) repeat(2, minmax(108px, 1fr));
+  grid-template-columns: 120px 220px 220px;
   gap: 10px;
   align-items: center;
+  justify-content: start;
 }
 
 .compare-snapshot-labels {
@@ -2679,7 +2681,7 @@ td {
 }
 
 .compare-snapshot-row strong {
-  justify-self: end;
+  justify-self: start;
   min-width: 84px;
   border-radius: 6px;
   padding: 7px 8px;
