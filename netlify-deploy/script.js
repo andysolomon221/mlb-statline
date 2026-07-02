@@ -148,6 +148,38 @@ const teamStatsCache = new Map();
 const teamPitchingSummaryCache = new Map();
 const boardType = document.body.dataset.board || "hitting";
 const leagueIds = { al: "103", nl: "104" };
+const currentTeamNamesById = {
+  108: "Los Angeles Angels",
+  109: "Arizona Diamondbacks",
+  110: "Baltimore Orioles",
+  111: "Boston Red Sox",
+  112: "Chicago Cubs",
+  113: "Cincinnati Reds",
+  114: "Cleveland Guardians",
+  115: "Colorado Rockies",
+  116: "Detroit Tigers",
+  117: "Houston Astros",
+  118: "Kansas City Royals",
+  119: "Los Angeles Dodgers",
+  120: "Washington Nationals",
+  121: "New York Mets",
+  133: "Athletics",
+  134: "Pittsburgh Pirates",
+  135: "San Diego Padres",
+  136: "Seattle Mariners",
+  137: "San Francisco Giants",
+  138: "St. Louis Cardinals",
+  139: "Tampa Bay Rays",
+  140: "Texas Rangers",
+  141: "Toronto Blue Jays",
+  142: "Minnesota Twins",
+  143: "Philadelphia Phillies",
+  144: "Atlanta Braves",
+  145: "Chicago White Sox",
+  146: "Miami Marlins",
+  147: "New York Yankees",
+  158: "Milwaukee Brewers"
+};
 const positionOptions = {
   hitting: [
     ["all", "All hitters"],
@@ -905,7 +937,9 @@ function standingsUrl(year) {
   return `https://statsapi.mlb.com/api/v1/standings?${params.toString()}`;
 }
 
-function normalizeTeamName(name) {
+function normalizeTeamName(name, id = "") {
+  const currentName = currentTeamNamesById[Number(id)];
+  if (currentName) return currentName;
   return name === "Diamondbacks" ? "D-backs" : name;
 }
 
@@ -915,7 +949,7 @@ function abbreviationFor(name) {
 }
 
 function mapStandingRecord(record) {
-  const name = normalizeTeamName(record.team?.name || "Unknown");
+  const name = normalizeTeamName(record.team?.name || "Unknown", record.team?.id);
   return {
     id: record.team?.id || name,
     name,
@@ -971,7 +1005,7 @@ async function fetchDateRangeTeamRecords() {
     [away, home].forEach((side, index) => {
       const team = side?.team || {};
       const id = team.id || team.name;
-      const name = normalizeTeamName(team.name || "Unknown");
+      const name = normalizeTeamName(team.name || "Unknown", id);
       const runs = index === 0 ? awayScore : homeScore;
       const runsAllowed = index === 0 ? homeScore : awayScore;
       const existing = records.get(String(id)) || {
@@ -1030,10 +1064,12 @@ function teamDateRangeStatsUrl(group = config.group) {
 
 function mapTeamStat(split) {
   const stat = split.stat || {};
+  const id = split.team?.id || split.team?.name;
+  const name = normalizeTeamName(split.team?.name || "Unknown", id);
   const common = {
-    id: split.team?.id || split.team?.name,
-    name: normalizeTeamName(split.team?.name || "Unknown"),
-    abbr: abbreviationFor(split.team?.name || "Unknown")
+    id,
+    name,
+    abbr: abbreviationFor(name)
   };
   if (boardType === "pitching") {
     return {
