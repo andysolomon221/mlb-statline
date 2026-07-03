@@ -710,8 +710,8 @@ function sortedTeamOffenseRows(rows) {
 }
 
 function decisionLensLabel(score) {
-  if (score >= 16) return ["Hitter lean", "Split + park favor hitter."];
-  if (score <= -16) return ["Pitcher lean", "Pitcher split has the edge."];
+  if (score >= 16) return ["Hitter lean", "Split favors hitter."];
+  if (score <= -16) return ["Pitcher lean", "Split favors pitcher."];
   return ["Watch list", "Close split read."];
 }
 
@@ -784,7 +784,7 @@ function renderTeamDecisionLens(rows, pitcherStats) {
             <th>Hitter</th>
             <th>Bat</th>
             <th>Hitter ${escapeHtml(metric.label)}</th>
-            <th>Pitcher Allows</th>
+            <th>P Allows ${escapeHtml(metric.label)}</th>
             <th>Read</th>
           </tr>
         </thead>
@@ -800,6 +800,25 @@ function renderTeamDecisionLens(rows, pitcherStats) {
           `).join("")}
         </tbody>
       </table>
+    </div>
+    <div class="team-decision-mobile-list">
+      ${cards.map((card) => `
+        <article class="team-decision-mobile-card">
+          <div class="team-decision-mobile-player">
+            <a class="summary-link" href="${baseballReferenceSearchUrl(card.fullName)}" target="_blank" rel="noopener noreferrer">${escapeHtml(card.fullName)}</a>
+            <small>${escapeHtml(card.position || "-")}</small>
+          </div>
+          <div class="team-decision-mobile-stats">
+            <span><small>Bat</small><strong>${escapeHtml(card.profile.batSide || "?")}</strong></span>
+            <span><small>Hitter</small><strong>${formatDecisionValue(metric, card.hitterValue)}</strong></span>
+            <span><small>Pitcher</small><strong>${formatDecisionValue(metric, card.pitcherValue)}</strong></span>
+          </div>
+          <div class="team-decision-mobile-read">
+            <span>Read</span>
+            <strong>${escapeHtml(card.label)}</strong>
+          </div>
+        </article>
+      `).join("")}
     </div>
   `;
   document.querySelector("#team-decision-metric")?.addEventListener("change", (event) => {
