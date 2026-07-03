@@ -2835,6 +2835,152 @@ td {
   .park-panel {
     grid-column: 1 / -1;
   }
+
+  .team-decision-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .team-decision-summary article {
+    min-height: auto;
+  }
+
+  .team-decision-summary strong {
+    white-space: normal;
+  }
+
+  .team-decision-table-wrap {
+    overflow-x: visible;
+  }
+
+  .team-decision-table {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 12px;
+  }
+
+  .team-decision-table thead {
+    display: none;
+  }
+
+  .team-decision-table tbody,
+  .team-decision-table tr,
+  .team-decision-table td {
+    width: 100%;
+  }
+
+  .team-decision-table tbody {
+    display: block;
+  }
+
+  .team-decision-table tr {
+    display: grid;
+    grid-template-columns: 44px minmax(72px, 1fr) minmax(78px, 1fr);
+    column-gap: 12px;
+    row-gap: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .team-decision-table th,
+  .team-decision-table td {
+    border-bottom: 0;
+    padding: 0;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .team-decision-table th:first-child,
+  .team-decision-table td:first-child {
+    position: static;
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: 4px;
+    white-space: normal;
+    box-shadow: none;
+  }
+
+  .team-decision-table th:nth-child(2),
+  .team-decision-table td:nth-child(2) {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+  }
+
+  .team-decision-table th:nth-child(3),
+  .team-decision-table td:nth-child(3),
+  .team-decision-table th:nth-child(4),
+  .team-decision-table td:nth-child(4),
+  .team-decision-table th:last-child,
+  .team-decision-table td:last-child {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .team-decision-table td:nth-child(n+2) {
+    display: grid;
+    gap: 3px;
+    align-items: start;
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .team-decision-table td:nth-child(2)::before {
+    content: "Bat";
+  }
+
+  .team-decision-table td:nth-child(3)::before {
+    content: "Hitter";
+  }
+
+  .team-decision-table td:nth-child(4)::before {
+    content: "Pitcher";
+  }
+
+  .team-decision-table td:nth-child(5)::before {
+    content: "Read";
+  }
+
+  .team-decision-table td:nth-child(n+2)::before {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .team-decision-table td:last-child {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    gap: 8px;
+    padding-top: 2px;
+  }
+
+  .team-decision-table td:last-child strong,
+  .team-decision-table td:last-child small {
+    text-align: left;
+  }
+
+  .team-decision-table td:last-child strong {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    border-radius: 999px;
+    padding: 4px 10px;
+    background: #eef6f5;
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .team-decision-table td:last-child small {
+    display: none;
+  }
 }
 
 @media (max-width: 680px) {
