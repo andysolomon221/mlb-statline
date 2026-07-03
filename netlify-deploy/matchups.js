@@ -1276,6 +1276,16 @@ function applyUrlParams() {
   setPlayerInput("pitcher", pitcher);
 }
 
+function isProbablesMode() {
+  const params = new URLSearchParams(window.location.search);
+  return ["probables", "today"].includes(params.get("mode"));
+}
+
+function hasSharedMatchupParams() {
+  const params = new URLSearchParams(window.location.search);
+  return ["tool", "batTeam", "pitTeam", "pitcher", "pitcherId", "batter", "batterId"].some((key) => params.has(key));
+}
+
 function bindEvents() {
   document.querySelectorAll("[data-matchup-tool]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1393,7 +1403,10 @@ function bindEvents() {
 populateControls();
 applyUrlParams();
 bindEvents();
-setGameDayOpen(false);
-setMatchupWorkspaceOpen(true);
-populateTeamPlayerDropdowns();
-analyzeMatchup();
+const startsOnProbables = isProbablesMode() && !hasSharedMatchupParams();
+setGameDayOpen(startsOnProbables);
+setMatchupWorkspaceOpen(!startsOnProbables);
+populateTeamPlayerDropdowns().then(() => {
+  if (startsOnProbables) loadGameDay();
+  else analyzeMatchup();
+});

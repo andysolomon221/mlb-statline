@@ -648,6 +648,8 @@ function init() {
   document.querySelectorAll("[data-starts-example]").forEach((button) => {
     button.addEventListener("click", () => applyExample(button.dataset.startsExample));
   });
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("example")) applyExample(params.get("example"));
 }
 
 init();
