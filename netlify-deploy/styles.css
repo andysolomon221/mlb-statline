@@ -2384,8 +2384,10 @@ td {
 
 .team-decision-mobile-stats {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 42px 92px 92px;
   gap: 12px;
+  justify-content: start;
+  max-width: 100%;
 }
 
 .team-decision-mobile-stats span {
@@ -2396,7 +2398,7 @@ td {
 
 .team-decision-mobile-stats strong {
   color: var(--ink);
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.05;
 }
 
