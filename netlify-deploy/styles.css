@@ -3102,13 +3102,13 @@ td {
 
   .team-decision-table tr {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 18px;
-    row-gap: 8px;
+    grid-template-columns: 44px minmax(72px, 1fr) minmax(78px, 1fr);
+    column-gap: 12px;
+    row-gap: 10px;
     border: 1px solid var(--line);
     border-radius: 8px;
-    margin-bottom: 10px;
-    padding: 14px;
+    margin-bottom: 8px;
+    padding: 12px;
     background: #fff;
   }
 
@@ -3155,9 +3155,10 @@ td {
 
   .team-decision-table td:nth-child(n+2) {
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 8px;
-    align-items: baseline;
+    gap: 3px;
+    align-items: start;
+    font-size: 16px;
+    line-height: 1.1;
   }
 
   .team-decision-table td:nth-child(2)::before {
@@ -3169,7 +3170,7 @@ td {
   }
 
   .team-decision-table td:nth-child(4)::before {
-    content: "Pitcher allows";
+    content: "Pitcher";
   }
 
   .team-decision-table td:nth-child(5)::before {
@@ -3179,15 +3180,17 @@ td {
   .team-decision-table td:nth-child(n+2)::before {
     color: var(--muted);
     font-size: 11px;
+    line-height: 1;
     font-weight: 900;
     text-transform: uppercase;
   }
 
   .team-decision-table td:last-child {
-    display: grid;
+    display: flex;
     grid-column: 1 / -1;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
+    align-items: center;
+    gap: 8px;
+    padding-top: 2px;
   }
 
   .team-decision-table td:last-child strong,
@@ -3195,9 +3198,19 @@ td {
     text-align: left;
   }
 
+  .team-decision-table td:last-child strong {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    border-radius: 999px;
+    padding: 4px 10px;
+    background: #eef6f5;
+    font-size: 15px;
+    line-height: 1;
+  }
+
   .team-decision-table td:last-child small {
-    grid-column: 2;
-    margin-top: 2px;
+    display: none;
   }
 
   .score-strip strong {
