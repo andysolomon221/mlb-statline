@@ -3076,25 +3076,48 @@ td {
   }
 
   .team-decision-table-wrap {
-    overflow-x: auto;
+    overflow-x: visible;
   }
 
   .team-decision-table {
-    min-width: 520px;
-    max-width: none;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     font-size: 12px;
+  }
+
+  .team-decision-table thead {
+    display: none;
+  }
+
+  .team-decision-table tbody,
+  .team-decision-table tr,
+  .team-decision-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .team-decision-table tr {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #fff;
   }
 
   .team-decision-table th,
   .team-decision-table td {
-    padding: 10px 8px;
+    border-bottom: 0;
+    padding: 7px 0;
+    text-align: left;
+    white-space: normal;
   }
 
   .team-decision-table th:first-child,
   .team-decision-table td:first-child {
     position: static;
-    width: 154px;
-    max-width: 154px;
+    width: 100%;
+    max-width: 100%;
     white-space: normal;
     box-shadow: none;
   }
@@ -3102,8 +3125,8 @@ td {
   .team-decision-table th:nth-child(2),
   .team-decision-table td:nth-child(2) {
     position: static;
-    width: 40px;
-    max-width: 40px;
+    width: 100%;
+    max-width: 100%;
     box-shadow: none;
   }
 
@@ -3111,14 +3134,55 @@ td {
   .team-decision-table td:nth-child(3),
   .team-decision-table th:nth-child(4),
   .team-decision-table td:nth-child(4) {
-    width: 78px;
-    max-width: 78px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .team-decision-table th:last-child,
   .team-decision-table td:last-child {
-    width: 132px;
-    max-width: 132px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .team-decision-table td:nth-child(n+2) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .team-decision-table td:nth-child(2)::before {
+    content: "Bat";
+  }
+
+  .team-decision-table td:nth-child(3)::before {
+    content: "Hitter";
+  }
+
+  .team-decision-table td:nth-child(4)::before {
+    content: "Pitcher allows";
+  }
+
+  .team-decision-table td:nth-child(5)::before {
+    content: "Read";
+  }
+
+  .team-decision-table td:nth-child(n+2)::before {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .team-decision-table td:last-child {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .team-decision-table td:last-child strong,
+  .team-decision-table td:last-child small {
+    text-align: right;
   }
 
   .score-strip strong {
