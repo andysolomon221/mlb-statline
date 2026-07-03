@@ -3093,22 +3093,29 @@ td {
   .team-decision-table tbody,
   .team-decision-table tr,
   .team-decision-table td {
-    display: block;
     width: 100%;
   }
 
+  .team-decision-table tbody {
+    display: block;
+  }
+
   .team-decision-table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 18px;
+    row-gap: 8px;
     border: 1px solid var(--line);
     border-radius: 8px;
     margin-bottom: 10px;
-    padding: 10px;
+    padding: 14px;
     background: #fff;
   }
 
   .team-decision-table th,
   .team-decision-table td {
     border-bottom: 0;
-    padding: 7px 0;
+    padding: 0;
     text-align: left;
     white-space: normal;
   }
@@ -3116,8 +3123,10 @@ td {
   .team-decision-table th:first-child,
   .team-decision-table td:first-child {
     position: static;
+    grid-column: 1 / -1;
     width: 100%;
     max-width: 100%;
+    padding-bottom: 4px;
     white-space: normal;
     box-shadow: none;
   }
@@ -3145,10 +3154,10 @@ td {
   }
 
   .team-decision-table td:nth-child(n+2) {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
     align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
   }
 
   .team-decision-table td:nth-child(2)::before {
@@ -3176,13 +3185,19 @@ td {
 
   .team-decision-table td:last-child {
     display: grid;
+    grid-column: 1 / -1;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: start;
   }
 
   .team-decision-table td:last-child strong,
   .team-decision-table td:last-child small {
-    text-align: right;
+    text-align: left;
+  }
+
+  .team-decision-table td:last-child small {
+    grid-column: 2;
+    margin-top: 2px;
   }
 
   .score-strip strong {
