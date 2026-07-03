@@ -2864,9 +2864,13 @@ td {
   }
 
   .team-decision-table tbody,
-  .team-decision-table tr,
-  .team-decision-table td {
+  .team-decision-table tr {
     width: 100%;
+  }
+
+  .team-decision-table td {
+    min-width: 0;
+    width: auto;
   }
 
   .team-decision-table tbody {
@@ -2907,7 +2911,7 @@ td {
   .team-decision-table th:nth-child(2),
   .team-decision-table td:nth-child(2) {
     position: static;
-    width: 100%;
+    width: auto;
     max-width: 100%;
     box-shadow: none;
   }
@@ -2915,7 +2919,11 @@ td {
   .team-decision-table th:nth-child(3),
   .team-decision-table td:nth-child(3),
   .team-decision-table th:nth-child(4),
-  .team-decision-table td:nth-child(4),
+  .team-decision-table td:nth-child(4) {
+    width: auto;
+    max-width: 100%;
+  }
+
   .team-decision-table th:last-child,
   .team-decision-table td:last-child {
     width: 100%;
@@ -3237,9 +3245,13 @@ td {
   }
 
   .team-decision-table tbody,
-  .team-decision-table tr,
-  .team-decision-table td {
+  .team-decision-table tr {
     width: 100%;
+  }
+
+  .team-decision-table td {
+    min-width: 0;
+    width: auto;
   }
 
   .team-decision-table tbody {
@@ -3280,7 +3292,7 @@ td {
   .team-decision-table th:nth-child(2),
   .team-decision-table td:nth-child(2) {
     position: static;
-    width: 100%;
+    width: auto;
     max-width: 100%;
     box-shadow: none;
   }
@@ -3289,7 +3301,7 @@ td {
   .team-decision-table td:nth-child(3),
   .team-decision-table th:nth-child(4),
   .team-decision-table td:nth-child(4) {
-    width: 100%;
+    width: auto;
     max-width: 100%;
   }
 
