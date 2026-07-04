@@ -47,7 +47,7 @@ const teamAbbr = {
 const state = {
   date: todayString(),
   view: "division",
-  league: "all",
+  league: "al",
   rows: []
 };
 const standingsCache = new Map();
@@ -119,6 +119,8 @@ function normalizeRow(record, group) {
     gamesBack: record.gamesBack || record.divisionGamesBack || "-",
     wildCardGamesBack: record.wildCardGamesBack || "-",
     lastTen: splitRecord(record, "lastTen"),
+    home: splitRecord(record, "home"),
+    away: splitRecord(record, "away"),
     streak: record.streak?.streakCode || "-",
     runsScored: Number(record.runsScored) || 0,
     runsAllowed: Number(record.runsAllowed) || 0,
@@ -129,7 +131,7 @@ function normalizeRow(record, group) {
 function standingsUrl() {
   const season = state.date.slice(0, 4);
   const params = new URLSearchParams({
-    leagueId: state.league === "all" ? "103,104" : leagueIds[state.league],
+    leagueId: leagueIds[state.league],
     season,
     standingsTypes: "regularSeason",
     date: state.date
@@ -172,7 +174,7 @@ function loadParams() {
   const league = params.get("league");
   if (/^\d{4}-\d{2}-\d{2}$/.test(date || "")) state.date = date;
   if (view === "division" || view === "wildcard") state.view = view;
-  if (league === "all" || league === "al" || league === "nl") state.league = league;
+  if (league === "al" || league === "nl") state.league = league;
   dateInput.value = state.date;
   dateInput.max = todayString();
   setActiveButtons();
@@ -215,10 +217,13 @@ function tableMarkup(rows, mode) {
         <thead>
           <tr>
             <th>Team</th>
-            <th>W</th>
-            <th>L</th>
+            <th>W-L</th>
             <th>Pct</th>
             <th>${gamesBackHeader}</th>
+            <th>L10</th>
+            <th>Home</th>
+            <th>Away</th>
+            <th>Strk</th>
           </tr>
         </thead>
         <tbody>
@@ -227,14 +232,17 @@ function tableMarkup(rows, mode) {
               <td>
                 <span class="standings-team">
                   <span class="standings-rank">${index + 1}</span>
-                  <span class="club-badge standings-badge">${row.abbr}</span>
-                  <strong>${row.name}</strong>
+                  <strong>${row.abbr}</strong>
+                  <small>${row.name}</small>
                 </span>
               </td>
-              <td>${row.wins}</td>
-              <td>${row.losses}</td>
+              <td>${row.wins}-${row.losses}</td>
               <td>${row.pct}</td>
               <td>${mode === "wildcard" ? row.wildCardGamesBack : row.gamesBack}</td>
+              <td>${row.lastTen}</td>
+              <td>${row.home}</td>
+              <td>${row.away}</td>
+              <td>${row.streak}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -274,12 +282,12 @@ function renderDivision(rows) {
       </section>
     `;
   });
-  grid.classList.toggle("standings-grid-single", state.league !== "all");
+  grid.classList.add("standings-grid-single");
   grid.innerHTML = sections.join("") || `<div class="panel empty-state">No standings found for this date.</div>`;
 }
 
 function renderWildCard(rows) {
-  grid.classList.remove("standings-grid-single");
+  grid.classList.add("standings-grid-single");
   const divisionLeaders = new Set(rows.filter((row) => row.divisionRank === 1).map((row) => row.id));
   const byLeague = groupBy(rows, "leagueName");
   const sections = Object.entries(byLeague).map(([league, leagueRows]) => {

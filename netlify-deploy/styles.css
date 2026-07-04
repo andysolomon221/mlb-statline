@@ -1581,17 +1581,18 @@ input[type="search"] {
 
 .standings-table {
   width: 100%;
-  min-width: 480px;
+  min-width: 760px;
   border-collapse: collapse;
 }
 
 .standings-table th,
 .standings-table td {
   border-bottom: 1px solid var(--line);
-  padding: 12px 10px;
+  padding: 10px 8px;
   text-align: right;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 850;
+  white-space: nowrap;
 }
 
 .standings-table th {
@@ -1603,6 +1604,7 @@ input[type="search"] {
 .standings-table th:first-child,
 .standings-table td:first-child {
   text-align: left;
+  width: 180px;
 }
 
 .standings-table tr.standings-cutline td {
@@ -1615,8 +1617,8 @@ input[type="search"] {
 
 .standings-team {
   display: grid;
-  grid-template-columns: 20px 38px minmax(0, 1fr);
-  column-gap: 12px;
+  grid-template-columns: 20px 44px minmax(0, 1fr);
+  column-gap: 8px;
   align-items: center;
 }
 
@@ -1627,12 +1629,20 @@ input[type="search"] {
   text-align: center;
 }
 
-.standings-badge {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  border-radius: 8px;
-  font-size: 13px;
+.standings-team strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.standings-team small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .advanced-grid {
@@ -2889,6 +2899,10 @@ td {
   .team-directory-grid,
   .standings-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .standings-grid.standings-grid-single {
+    grid-template-columns: 1fr;
   }
 
   .standings-control-grid {
