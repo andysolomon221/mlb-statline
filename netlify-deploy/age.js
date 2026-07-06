@@ -1,5 +1,7 @@
 const firstAgeSeason = 1901;
 const lastAgeSeason = 2026;
+const minPlayerAge = 18;
+const maxPlayerAge = 50;
 const ageCache = new Map();
 const activePlayerCache = new Map();
 const numberFormat = new Intl.NumberFormat("en-US");
@@ -223,7 +225,7 @@ function applyInitialAgeParams() {
   if (teamOptions.some(([value]) => value === team)) activeTeam = team;
   if (["before", "through", "older", "after"].includes(initialParams.get("rule"))) activeRule = initialParams.get("rule");
   const age = Number(initialParams.get("age"));
-  if (Number.isFinite(age)) activeAge = Math.min(45, Math.max(18, age));
+  if (Number.isFinite(age)) activeAge = Math.min(maxPlayerAge, Math.max(minPlayerAge, age));
   const start = Number(initialParams.get("start"));
   const end = Number(initialParams.get("end"));
   if (Number.isFinite(start) && Number.isFinite(end)) {
@@ -237,8 +239,8 @@ function applyInitialAgeParams() {
   const ageEnd = Number(initialParams.get("ageEnd"));
   if (Number.isFinite(ageStart) && Number.isFinite(ageEnd)) {
     activeAgeRange = {
-      start: Math.min(45, Math.max(18, ageStart)),
-      end: Math.min(45, Math.max(18, ageEnd))
+      start: Math.min(maxPlayerAge, Math.max(minPlayerAge, ageStart)),
+      end: Math.min(maxPlayerAge, Math.max(minPlayerAge, ageEnd))
     };
   }
   const metric = initialParams.get("metric");
@@ -311,7 +313,7 @@ function populateControls() {
   document.querySelector("#age-end").value = String(activeRange.end);
 
   const ages = [];
-  for (let age = 18; age <= 45; age += 1) {
+  for (let age = minPlayerAge; age <= maxPlayerAge; age += 1) {
     ages.push(`<option value="${age}">${age}</option>`);
   }
   document.querySelector("#age-cutoff").innerHTML = ages.join("");
