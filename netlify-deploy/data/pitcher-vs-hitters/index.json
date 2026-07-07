@@ -1,0 +1,83 @@
+{
+  "generated": "2026-07-07",
+  "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+  "players": [
+    {
+      "id": "martp001",
+      "name": "Pedro Martinez",
+      "seasons": "1992-2009",
+      "careerSo": 3154,
+      "rank": 1
+    },
+    {
+      "id": "ryann001",
+      "name": "Nolan Ryan",
+      "seasons": "1966-1993",
+      "careerSo": 5714,
+      "rank": 2
+    },
+    {
+      "id": "johnr005",
+      "name": "Randy Johnson",
+      "seasons": "1988-2009",
+      "careerSo": 4875,
+      "rank": 3
+    },
+    {
+      "id": "clemr001",
+      "name": "Roger Clemens",
+      "seasons": "1984-2007",
+      "careerSo": 4672,
+      "rank": 4
+    },
+    {
+      "id": "carls001",
+      "name": "Steve Carlton",
+      "seasons": "1965-1988",
+      "careerSo": 4136,
+      "rank": 5
+    },
+    {
+      "id": "blylb001",
+      "name": "Bert Blyleven",
+      "seasons": "1970-1992",
+      "careerSo": 3701,
+      "rank": 6
+    },
+    {
+      "id": "seavt001",
+      "name": "Tom Seaver",
+      "seasons": "1967-1986",
+      "careerSo": 3640,
+      "rank": 7
+    },
+    {
+      "id": "suttd001",
+      "name": "Don Sutton",
+      "seasons": "1966-1988",
+      "careerSo": 3574,
+      "rank": 8
+    },
+    {
+      "id": "perrg101",
+      "name": "Gaylord Perry",
+      "seasons": "1962-1983",
+      "careerSo": 3534,
+      "rank": 9
+    },
+    {
+      "id": "niekp001",
+      "name": "Phil Niekro",
+      "seasons": "1964-1987",
+      "careerSo": 3342,
+      "rank": 10
+    },
+    {
+      "id": "schic002",
+      "name": "Curt Schilling",
+      "seasons": "1988-2007",
+      "careerSo": 3116,
+      "rank": 11
+    }
+  ]
+}

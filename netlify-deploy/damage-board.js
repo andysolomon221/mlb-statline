@@ -1,9 +1,11 @@
 const initialParams = new URLSearchParams(window.location.search);
 const requestedTopLimit = initialParams.get("limit") || "10";
+const requestedMode = initialParams.get("mode") === "pitcher" ? "pitcher" : "hitter";
 const pvpState = {
+  mode: requestedMode,
   players: [],
-  activePlayerId: initialParams.get("player") || "bondb001",
-  activeSort: initialParams.get("sort") || "hr",
+  activePlayerId: initialParams.get("player") || (requestedMode === "pitcher" ? "martp001" : "bondb001"),
+  activeSort: initialParams.get("sort") || (requestedMode === "pitcher" ? "so" : "hr"),
   minPa: Number(initialParams.get("minPa")) || 0,
   limit: requestedTopLimit,
   bottomLimit: initialParams.get("bottom") || requestedTopLimit,
@@ -38,6 +40,55 @@ function activePlayer() {
   return pvpState.players.find((player) => player.id === pvpState.activePlayerId) || pvpState.players[0];
 }
 
+function modeConfig() {
+  if (pvpState.mode === "pitcher") {
+    return {
+      indexPath: "data/pitcher-vs-hitters/index.json",
+      dataPath: "data/pitcher-vs-hitters",
+      defaultId: "martp001",
+      defaultSort: "so",
+      selectedLabel: "Selected Pitcher",
+      opponentSingular: "hitter",
+      opponentPlural: "hitters",
+      opponentTitle: "Hitters",
+      opponentEyebrow: "Opponent Hitters",
+      listEyebrow: "Hitter List",
+      facedLabel: "Batters Faced",
+      totalLabel: "Strikeouts",
+      totalNote: "Against all opposing hitters",
+      summaryKey: "strikeouts",
+      facedKey: "battersFaced",
+      rowNameKey: "batter",
+      rowIdKey: "batterId",
+      intro: "Build a shareable top board, then scan the full hitter list below"
+    };
+  }
+  return {
+    indexPath: "data/player-vs-pitchers/index.json",
+    dataPath: "data/player-vs-pitchers",
+    defaultId: "bondb001",
+    defaultSort: "hr",
+    selectedLabel: "Selected Hitter",
+    opponentSingular: "pitcher",
+    opponentPlural: "pitchers",
+    opponentTitle: "Pitchers",
+    opponentEyebrow: "Opponent Pitchers",
+    listEyebrow: "Pitcher List",
+    facedLabel: "Pitchers Faced",
+    totalLabel: "Total HR",
+    totalNote: "Against all opposing pitchers",
+    summaryKey: "homeRuns",
+    facedKey: "pitchersFaced",
+    rowNameKey: "pitcher",
+    rowIdKey: "pitcherId",
+    intro: "Build a shareable top board, then scan the full pitcher list below"
+  };
+}
+
+function rowName(row) {
+  return row[modeConfig().rowNameKey] || row.name || row[modeConfig().rowIdKey] || "--";
+}
+
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Request returned ${response.status}`);
@@ -54,7 +105,7 @@ function sortRows(rows) {
       const diff = num(b[key]) - num(a[key]);
       if (diff) return diff;
     }
-    return String(a.pitcher).localeCompare(String(b.pitcher));
+    return String(rowName(a)).localeCompare(String(rowName(b)));
   });
 }
 
@@ -88,6 +139,7 @@ function statLabel(key = pvpState.activeSort) {
     so: "SO",
     ops: "OPS",
     avg: "AVG",
+    ab: "AB",
     pa: "PA"
   }[key] || key.toUpperCase();
 }
@@ -104,30 +156,43 @@ function renderSummary(rows) {
   const data = pvpState.data;
   const player = data.player;
   const leader = rows[0];
+  const config = modeConfig();
+  document.querySelector("#pvp-mode").value = pvpState.mode;
+  document.querySelector("#pvp-player-label").textContent = pvpState.mode === "pitcher" ? "Pitcher" : "Hitter";
+  document.querySelector("#pvp-controls-eyebrow").textContent = config.opponentEyebrow;
+  document.querySelector("#pvp-controls-intro").textContent = config.intro;
+  document.querySelector("#pvp-selected-label").textContent = config.selectedLabel;
   document.querySelector("#pvp-player-name").textContent = player.name;
   document.querySelector("#pvp-player-note").textContent = `${player.seasons} regular season`;
-  document.querySelector("#pvp-pitchers-faced").textContent = fmtNumber(data.summary.pitchersFaced);
+  document.querySelector("#pvp-faced-label").textContent = config.facedLabel;
+  document.querySelector("#pvp-pitchers-faced").textContent = fmtNumber(data.summary[config.facedKey]);
   document.querySelector("#pvp-data-through").textContent = data.player.dataThrough;
-  document.querySelector("#pvp-total-hr").textContent = fmtNumber(data.summary.homeRuns);
+  document.querySelector("#pvp-total-label").textContent = config.totalLabel;
+  document.querySelector("#pvp-total-hr").textContent = fmtNumber(data.summary[config.summaryKey]);
+  document.querySelector("#pvp-total-note").textContent = config.totalNote;
   document.querySelector("#pvp-leader-label").textContent = `Top ${statLabel()}`;
-  document.querySelector("#pvp-leader").textContent = leader ? leader.pitcher : "--";
+  document.querySelector("#pvp-leader").textContent = leader ? rowName(leader) : "--";
   document.querySelector("#pvp-leader-note").textContent = leader ? `${statLabel()} ${statLabel() === "AVG" || statLabel() === "OPS" ? fmtRate(leader[pvpState.activeSort]) : fmtNumber(leader[pvpState.activeSort])}` : "No rows";
-  document.querySelector("#player-vs-pitchers-heading").textContent = `${player.name} ${statLabel()} by opposing pitcher.`;
-  const limitLabel = pvpState.limit === "all" ? "All pitchers" : `Top ${pvpState.limit}`;
-  document.querySelector("#pvp-leaderboard-title").textContent = `${limitLabel}: ${player.name} ${statLabel()} by opposing pitcher`;
-  const bottomLabel = pvpState.bottomLimit === "hidden" ? "Pitcher list" : pvpState.bottomLimit === "all" ? "All pitchers" : `Top ${pvpState.bottomLimit}`;
-  document.querySelector("#pvp-table-title").textContent = `${bottomLabel}: ${player.name} ${statLabel()} by opposing pitcher`;
+  document.querySelector("#player-vs-pitchers-heading").textContent = `${player.name} ${statLabel()} by opposing ${config.opponentSingular}.`;
+  const limitLabel = pvpState.limit === "all" ? `All ${config.opponentPlural}` : `Top ${pvpState.limit}`;
+  document.querySelector("#pvp-leaderboard-title").textContent = `${limitLabel}: ${player.name} ${statLabel()} by opposing ${config.opponentSingular}`;
+  document.querySelector("#pvp-table-eyebrow").textContent = config.listEyebrow;
+  document.querySelector("#pvp-first-column").textContent = config.opponentTitle.slice(0, -1);
+  document.querySelector("#pvp-limit-all").textContent = `All ${config.opponentTitle}`;
+  document.querySelector("#pvp-bottom-all").textContent = `All ${config.opponentTitle}`;
+  const bottomLabel = pvpState.bottomLimit === "hidden" ? config.listEyebrow : pvpState.bottomLimit === "all" ? `All ${config.opponentPlural}` : `Top ${pvpState.bottomLimit}`;
+  document.querySelector("#pvp-table-title").textContent = `${bottomLabel}: ${player.name} ${statLabel()} by opposing ${config.opponentSingular}`;
 }
 
 function renderTable(rows, targetSelector) {
   const table = document.querySelector(targetSelector);
   if (!rows.length) {
-    table.innerHTML = `<tr><td colspan="10">No pitchers match this filter.</td></tr>`;
+    table.innerHTML = `<tr><td colspan="10">No ${modeConfig().opponentPlural} match this filter.</td></tr>`;
     return;
   }
   table.innerHTML = rows.map((row) => `
     <tr>
-      <td>${escapeHtml(row.pitcher)}</td>
+      <td>${escapeHtml(rowName(row))}</td>
       <td>${fmtNumber(row.pa)}</td>
       <td>${fmtNumber(row.ab)}</td>
       <td>${fmtNumber(row.h)}</td>
@@ -152,7 +217,7 @@ function fmtSelectedStat(value) {
 function renderTopBoard(rows) {
   const board = document.querySelector("#pvp-leaderboard-table");
   if (!rows.length) {
-    board.innerHTML = `<div class="empty-state">No pitchers match this filter.</div>`;
+    board.innerHTML = `<div class="empty-state">No ${modeConfig().opponentPlural} match this filter.</div>`;
     return;
   }
   const leaderValue = Math.max(...rows.map(selectedStatValue), 0);
@@ -163,7 +228,7 @@ function renderTopBoard(rows) {
       <article class="pvp-top-row">
         <div class="pvp-top-rank">${index + 1}</div>
         <div class="pvp-top-label">
-          <strong>${escapeHtml(row.pitcher)}</strong>
+          <strong>${escapeHtml(rowName(row))}</strong>
           <span>${fmtNumber(row.pa)} PA | ${fmtNumber(row.ab)} AB | ${fmtNumber(row.h)} H</span>
         </div>
         <div class="pvp-top-track" aria-hidden="true">
@@ -177,6 +242,7 @@ function renderTopBoard(rows) {
 
 function updateUrl() {
   const params = new URLSearchParams();
+  if (pvpState.mode === "pitcher") params.set("mode", "pitcher");
   params.set("player", pvpState.activePlayerId);
   params.set("sort", pvpState.activeSort);
   if (pvpState.minPa) params.set("minPa", String(pvpState.minPa));
@@ -201,6 +267,7 @@ function render() {
   const topRows = leaderboardRows();
   const listRows = bottomRows();
   const totalRows = filteredRowCount();
+  const config = modeConfig();
   renderSummary(topRows);
   renderTopBoard(topRows);
   if (pvpState.bottomLimit !== "hidden") {
@@ -209,13 +276,13 @@ function render() {
     document.querySelector("#pvp-table").innerHTML = "";
   }
   document.querySelector("#pvp-status").textContent = pvpState.limit === "all"
-    ? `${fmtNumber(topRows.length)} pitchers on top board`
-    : `${fmtNumber(topRows.length)} of ${fmtNumber(totalRows)} pitchers on top board`;
+    ? `${fmtNumber(topRows.length)} ${config.opponentPlural} on top board`
+    : `${fmtNumber(topRows.length)} of ${fmtNumber(totalRows)} ${config.opponentPlural} on top board`;
   document.querySelector("#pvp-full-status").textContent = pvpState.bottomLimit === "hidden"
-    ? `${fmtNumber(allRows.length)} pitchers available`
+    ? `${fmtNumber(allRows.length)} ${config.opponentPlural} available`
     : pvpState.bottomLimit === "all"
-      ? `${fmtNumber(listRows.length)} pitchers shown`
-      : `${fmtNumber(listRows.length)} of ${fmtNumber(allRows.length)} pitchers shown`;
+      ? `${fmtNumber(listRows.length)} ${config.opponentPlural} shown`
+      : `${fmtNumber(listRows.length)} of ${fmtNumber(allRows.length)} ${config.opponentPlural} shown`;
   document.querySelector("#pvp-sort").value = pvpState.activeSort;
   document.querySelector("#pvp-min-pa").value = String(pvpState.minPa);
   document.querySelector("#pvp-limit").value = pvpState.limit;
@@ -227,7 +294,7 @@ async function loadPlayerData() {
   const player = activePlayer();
   if (!player) throw new Error("No player data is available yet.");
   pvpState.activePlayerId = player.id;
-  pvpState.data = await fetchJson(`data/player-vs-pitchers/${player.id}.json`);
+  pvpState.data = await fetchJson(`${modeConfig().dataPath}/${player.id}.json`);
   render();
 }
 
@@ -247,6 +314,14 @@ async function copyLink() {
 }
 
 function bindEvents() {
+  document.querySelector("#pvp-mode").addEventListener("change", async (event) => {
+    pvpState.mode = event.target.value === "pitcher" ? "pitcher" : "hitter";
+    pvpState.activePlayerId = modeConfig().defaultId;
+    pvpState.activeSort = modeConfig().defaultSort;
+    await loadIndex();
+    renderPlayerOptions();
+    await loadPlayerData();
+  });
   document.querySelector("#pvp-run").addEventListener("click", async () => {
     pvpState.activePlayerId = document.querySelector("#pvp-player").value;
     await loadPlayerData();
@@ -282,13 +357,12 @@ function bindEvents() {
 
 async function initializePlayerVsPitchers() {
   try {
-    const index = await fetchJson("data/player-vs-pitchers/index.json");
-    pvpState.players = index.players || [];
+    await loadIndex();
     if (!pvpState.players.some((player) => player.id === pvpState.activePlayerId)) {
-      pvpState.activePlayerId = pvpState.players[0]?.id || "bondb001";
+      pvpState.activePlayerId = pvpState.players[0]?.id || modeConfig().defaultId;
     }
-    if (!["hr", "h", "rbi", "bb", "so", "ops", "avg", "pa"].includes(pvpState.activeSort)) {
-      pvpState.activeSort = "hr";
+    if (!["hr", "h", "rbi", "bb", "so", "ops", "avg", "ab", "pa"].includes(pvpState.activeSort)) {
+      pvpState.activeSort = modeConfig().defaultSort;
     }
     if (!["10", "20", "50", "all"].includes(pvpState.limit)) {
       pvpState.limit = "10";
@@ -300,11 +374,16 @@ async function initializePlayerVsPitchers() {
     bindEvents();
     await loadPlayerData();
   } catch (error) {
-    document.querySelector("#pvp-status").textContent = "Could not load player-vs-pitchers data.";
+    document.querySelector("#pvp-status").textContent = "Could not load damage board data.";
     document.querySelector("#pvp-full-status").textContent = "No rows loaded.";
     document.querySelector("#pvp-leaderboard-table").innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
     document.querySelector("#pvp-table").innerHTML = `<tr><td colspan="10">${escapeHtml(error.message)}</td></tr>`;
   }
+}
+
+async function loadIndex() {
+  const index = await fetchJson(modeConfig().indexPath);
+  pvpState.players = index.players || [];
 }
 
 initializePlayerVsPitchers();
