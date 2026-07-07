@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statline Baseball Damage Board</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="favicon-48.png" sizes="48x48" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <meta name="description" content="Build hitter damage boards by ranking the pitchers a slugger hurt most by home runs, hits, RBI, OPS, and more." />
+    <meta property="og:title" content="Statline Baseball Damage Board" />
+    <meta property="og:description" content="Build hitter damage boards by ranking the pitchers a slugger hurt most by home runs, hits, RBI, OPS, and more." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Statline Baseball Damage Board" />
+    <meta name="twitter:description" content="Build hitter damage boards by ranking the pitchers a slugger hurt most by home runs, hits, RBI, OPS, and more." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260707-damage-board-live" />
+  </head>
+  <body data-board="player-vs-pitchers">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <a class="brand-mark" href="index.html" aria-label="Statline Baseball home"><img src="statline-logo.png" alt="" /></a>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced Stats</a>
+          <a href="matchups.html">Matchups</a>
+          <a class="active" href="damage-board.html">Damage Board</a>
+          <a href="standings.html">Standings</a>
+          <a href="compare.html">Compare</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="age.html">Age Leaders</a>
+          <a href="starts.html">First Seasons</a>
+          <a href="span.html">Span Finder</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="player-vs-pitchers-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Statline Baseball Damage Board</p>
+            <h1 id="player-vs-pitchers-heading">Barry Bonds homers by opposing pitcher.</h1>
+          </div>
+          <div class="season-control split-search-card" aria-label="Player vs pitchers search">
+            <label for="pvp-player">Player</label>
+            <div class="search-action">
+              <select id="pvp-player" aria-label="Choose player"></select>
+              <button type="button" id="pvp-run">View</button>
+            </div>
+          </div>
+        </header>
+
+        <section class="panel player-vs-pitchers-controls" aria-label="Player vs pitchers controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Opponent Pitchers</p>
+              <h2>Build a shareable top board, then scan the full pitcher list below</h2>
+            </div>
+            <div class="split-status" id="pvp-status">Loading data...</div>
+          </div>
+          <div class="compare-control-grid">
+            <label>
+              <span>Sort By</span>
+              <select id="pvp-sort" aria-label="Sort stat">
+                <option value="hr">HR</option>
+                <option value="h">H</option>
+                <option value="rbi">RBI</option>
+                <option value="bb">BB</option>
+                <option value="so">SO</option>
+                <option value="ops">OPS</option>
+                <option value="avg">AVG</option>
+                <option value="pa">PA</option>
+              </select>
+            </label>
+            <label>
+              <span>Minimum PA</span>
+              <select id="pvp-min-pa" aria-label="Minimum plate appearances">
+                <option value="0">0 PA</option>
+                <option value="5">5 PA</option>
+                <option value="10">10 PA</option>
+                <option value="25">25 PA</option>
+                <option value="50">50 PA</option>
+              </select>
+            </label>
+            <label>
+              <span>Top Board Size</span>
+              <select id="pvp-limit" aria-label="Leaderboard size">
+                <option value="10">Top 10</option>
+                <option value="20">Top 20</option>
+                <option value="50">Top 50</option>
+                <option value="all">All Pitchers</option>
+              </select>
+            </label>
+            <label>
+              <span>Source</span>
+              <a class="summary-link career-reference-button" href="data-sources.html">Retrosheet + Chadwick</a>
+            </label>
+          </div>
+          <div class="share-action-row">
+            <span class="share-action-label">Share this view</span>
+            <button id="copy-pvp-link" class="secondary-action" type="button">Copy Link</button>
+            <span class="copy-status" id="pvp-copy-status" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section class="score-strip player-vs-pitchers-summary" aria-label="Player vs pitchers summary">
+          <article>
+            <span>Selected Hitter</span>
+            <strong id="pvp-player-name">Barry Bonds</strong>
+            <small id="pvp-player-note">Regular season only</small>
+          </article>
+          <article>
+            <span>Pitchers Faced</span>
+            <strong id="pvp-pitchers-faced">--</strong>
+            <small id="pvp-data-through">Retrosheet play-by-play</small>
+          </article>
+          <article>
+            <span>Total HR</span>
+            <strong id="pvp-total-hr">--</strong>
+            <small id="pvp-total-note">Against all opposing pitchers</small>
+          </article>
+          <article>
+            <span id="pvp-leader-label">Top Pitcher</span>
+            <strong id="pvp-leader">--</strong>
+            <small id="pvp-leader-note">Sorted by HR</small>
+          </article>
+        </section>
+
+        <section class="panel leaderboard player-vs-pitchers-table-panel pvp-top-board-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Top Board</p>
+              <h2 id="pvp-leaderboard-title">Top 10: Barry Bonds HR by opposing pitcher</h2>
+            </div>
+          </div>
+          <div class="pvp-top-board" id="pvp-leaderboard-table"></div>
+        </section>
+
+        <section class="panel leaderboard player-vs-pitchers-table-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Pitcher List</p>
+              <h2 id="pvp-table-title">All pitchers: Barry Bonds HR by opposing pitcher</h2>
+            </div>
+            <div class="pvp-full-actions">
+              <div class="split-status" id="pvp-full-status">Loading rows...</div>
+              <label>
+                <span>Bottom List</span>
+                <select id="pvp-bottom-limit" aria-label="Bottom list size">
+                  <option value="hidden">Hidden</option>
+                  <option value="10">Top 10</option>
+                  <option value="20">Top 20</option>
+                  <option value="50">Top 50</option>
+                  <option value="all">All Pitchers</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="table-wrap" id="pvp-full-list-wrap" hidden>
+            <table class="player-vs-pitchers-table">
+              <thead>
+                <tr>
+                  <th>Pitcher</th>
+                  <th><button type="button" data-pvp-sort="pa">PA</button></th>
+                  <th><button type="button" data-pvp-sort="ab">AB</button></th>
+                  <th><button type="button" data-pvp-sort="h">H</button></th>
+                  <th><button type="button" data-pvp-sort="hr">HR</button></th>
+                  <th><button type="button" data-pvp-sort="rbi">RBI</button></th>
+                  <th><button type="button" data-pvp-sort="bb">BB</button></th>
+                  <th><button type="button" data-pvp-sort="so">SO</button></th>
+                  <th><button type="button" data-pvp-sort="avg">AVG</button></th>
+                  <th><button type="button" data-pvp-sort="ops">OPS</button></th>
+                </tr>
+              </thead>
+              <tbody id="pvp-table"></tbody>
+            </table>
+          </div>
+          <small class="data-note" id="pvp-data-note">Regular-season Retrosheet play-by-play. Local proof dataset currently includes Barry Bonds.</small>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="damage-board.js?v=20260707-damage-board-live"></script>
+  </body>
+</html>

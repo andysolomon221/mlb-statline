@@ -153,6 +153,14 @@ select {
   content: "Pick a batter, pitcher, team, roster, and ballpark for career head-to-head context.";
 }
 
+.rail-nav a[href="damage-board.html"]::after {
+  content: "Build shareable hitter damage boards from career head-to-head history.";
+}
+
+.rail-nav a[href="player-vs-pitchers.html"]::after {
+  content: "Rank the opposing pitchers a hitter has faced by HR, H, RBI, walks, strikeouts, and rate stats.";
+}
+
 .rail-nav a[href="standings.html"]::after {
   content: "Division and Wild Card standings by date, league, and race.";
 }
@@ -286,6 +294,16 @@ h1 {
   max-width: 1280px;
   font-size: clamp(38px, 4.7vw, 66px);
   line-height: 1.02;
+}
+
+body[data-board="player-vs-pitchers"] .topbar {
+  min-height: 170px;
+}
+
+body[data-board="player-vs-pitchers"] .topbar h1 {
+  max-width: 620px;
+  font-size: 48px;
+  line-height: 1.04;
 }
 
 h2 {
@@ -1893,6 +1911,144 @@ body[data-board="hitting"] .player-board-table td:not(:first-child):not(:nth-chi
   width: 56px;
 }
 
+.player-vs-pitchers-table {
+  table-layout: fixed;
+  min-width: 860px;
+}
+
+.player-vs-pitchers-table th,
+.player-vs-pitchers-table td {
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
+.player-vs-pitchers-table th:first-child,
+.player-vs-pitchers-table td:first-child {
+  width: 210px;
+  text-align: left;
+}
+
+.player-vs-pitchers-table th:not(:first-child),
+.player-vs-pitchers-table td:not(:first-child) {
+  width: 72px;
+}
+
+.player-vs-pitchers-table th button {
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.player-vs-pitchers-table th button.active {
+  color: var(--red);
+}
+
+.pvp-top-board-panel {
+  width: min(620px, 100%);
+}
+
+.pvp-top-board {
+  display: grid;
+  gap: 11px;
+  width: min(500px, 100%);
+  padding: 6px 0 2px;
+}
+
+.pvp-top-row {
+  display: grid;
+  grid-template-columns: 24px minmax(130px, 170px) minmax(120px, 240px) 42px;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+}
+
+.pvp-top-rank {
+  color: var(--red);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.pvp-top-label {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.pvp-top-label strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pvp-top-label span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pvp-top-track {
+  height: 14px;
+  border-radius: 999px;
+  background: #e8edf1;
+  overflow: hidden;
+}
+
+.pvp-top-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+}
+
+.pvp-top-value {
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: right;
+}
+
+.pvp-full-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pvp-full-actions label {
+  display: grid;
+  gap: 6px;
+  min-width: 150px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pvp-full-actions select {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: #fff;
+  font-weight: 900;
+}
+
 .matchup-offense-panel .table-wrap {
   min-height: 0;
   max-height: none;
@@ -3395,6 +3551,37 @@ td {
     height: 11px;
   }
 
+  .pvp-top-board {
+    gap: 9px;
+  }
+
+  .pvp-top-row {
+    grid-template-columns: 22px minmax(110px, 1fr) minmax(72px, 0.8fr) 42px;
+    gap: 7px;
+    min-height: 32px;
+  }
+
+  .pvp-top-track {
+    grid-column: auto;
+    height: 10px;
+  }
+
+  .pvp-top-rank {
+    font-size: 12px;
+  }
+
+  .pvp-top-label strong {
+    font-size: 14px;
+  }
+
+  .pvp-top-label span {
+    font-size: 10px;
+  }
+
+  .pvp-top-value {
+    font-size: 15px;
+  }
+
   .section-head {
     align-items: stretch;
     flex-direction: column;
@@ -3645,6 +3832,15 @@ td {
   h1 {
     font-size: 28px;
     line-height: 1.03;
+  }
+
+  body[data-board="player-vs-pitchers"] .topbar {
+    min-height: 0;
+  }
+
+  body[data-board="player-vs-pitchers"] .topbar h1 {
+    max-width: 100%;
+    font-size: 28px;
   }
 
   h2 {

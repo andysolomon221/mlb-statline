@@ -418,60 +418,6 @@ function comparisonRows(statsA, statsB) {
   });
 }
 
-function edgeSummary(rows) {
-  const aWins = rows.filter((row) => row.aWins).length;
-  const bWins = rows.filter((row) => row.bWins).length;
-  const pushes = rows.filter((row) => row.tied).length;
-  const leaderName = aWins === bWins ? "Even" : (aWins > bWins ? playerA.fullName : playerB.fullName);
-  const leaderWins = Math.max(aWins, bWins);
-  const trailingWins = Math.min(aWins, bWins);
-  const main = aWins === bWins
-    ? `Even: each leads ${aWins} ${aWins === 1 ? "category" : "categories"}`
-    : `Edge: ${leaderName} leads ${leaderWins} of ${rows.length} categories`;
-  const detail = aWins === bWins
-    ? `${pushes} ${pushes === 1 ? "push" : "pushes"}`
-    : `${trailingWins} for the other side${pushes ? `, ${pushes} ${pushes === 1 ? "push" : "pushes"}` : ""}`;
-  return { aWins, bWins, pushes, leaderName, main, detail };
-}
-
-function renderComparisonSnapshot(rows) {
-  const summary = edgeSummary(rows);
-  const snapshotRows = rows.map((row) => `
-    <div class="compare-snapshot-row${row.tied ? " is-push" : ""}">
-      <span>${escapeHtml(row.label)}</span>
-      <strong class="${row.aWins ? "is-winner" : ""}" data-player="${escapeHtml(playerA.fullName)}">${formatValue(row.key, row.valueA, row.digits)}</strong>
-      <strong class="${row.bWins ? "is-winner" : ""}" data-player="${escapeHtml(playerB.fullName)}">${formatValue(row.key, row.valueB, row.digits)}</strong>
-    </div>
-  `).join("");
-  document.querySelector("#compare-snapshot").innerHTML = `
-    <div class="compare-snapshot-head">
-      <div>
-        <p class="eyebrow">Who Leads What</p>
-        <h3>${escapeHtml(summary.main)}</h3>
-        <small>${escapeHtml(summary.detail)}</small>
-      </div>
-      <div class="compare-snapshot-score">
-        <article class="${summary.aWins > summary.bWins ? "is-leading" : ""}">
-          <span>${escapeHtml(playerA.fullName)}</span>
-          <strong>${summary.aWins}</strong>
-        </article>
-        <article class="${summary.bWins > summary.aWins ? "is-leading" : ""}">
-          <span>${escapeHtml(playerB.fullName)}</span>
-          <strong>${summary.bWins}</strong>
-        </article>
-      </div>
-    </div>
-    <div class="compare-snapshot-labels">
-      <span>Stat</span>
-      <span>${escapeHtml(playerA.fullName)}</span>
-      <span>${escapeHtml(playerB.fullName)}</span>
-    </div>
-    <div class="compare-snapshot-rows">
-      ${snapshotRows}
-    </div>
-  `;
-}
-
 function renderComparison(statsA, statsB) {
   const rows = comparisonRows(statsA, statsB);
   document.querySelector("#compare-head-a").textContent = playerA.fullName;
@@ -493,7 +439,6 @@ function renderComparison(statsA, statsB) {
     </article>
   `).join("");
   renderMobileCompareStack(statsA, statsB);
-  renderComparisonSnapshot(rows);
   document.querySelector("#compare-table").innerHTML = rows.map((row) => {
     return `
       <tr>
