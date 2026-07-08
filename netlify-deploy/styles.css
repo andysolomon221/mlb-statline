@@ -2982,7 +2982,7 @@ body.compare-card-view .site-footer {
 }
 
 body.compare-card-view main {
-  padding: 14px;
+  padding: 4px;
 }
 
 body.compare-card-view .advanced-grid {
@@ -2998,34 +2998,73 @@ body.compare-card-view .advanced-grid > .panel {
 }
 
 body.compare-card-view .compare-card-tools {
-  justify-content: flex-start;
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 20;
+  margin: 0;
+  opacity: .08;
+  transition: opacity .16s ease;
+}
+
+body.compare-card-view .compare-card-tools:hover,
+body.compare-card-view .compare-card-tools:focus-within {
+  opacity: 1;
 }
 
 body.compare-card-view .compare-versus-card {
-  max-width: 780px;
+  max-width: 680px;
   margin: 0 auto;
 }
 
 body.compare-card-view .compare-portrait-card,
 body.compare-card-view .compare-vs-mark {
-  min-height: 260px;
+  min-height: 190px;
+  padding: 6px 8px 5px;
 }
 
 body.compare-card-view .compare-headshot-frame {
-  width: min(100%, 205px);
+  width: min(100%, 150px);
+  aspect-ratio: 1 / 1.18;
+}
+
+body.compare-card-view .compare-vs-mark {
+  gap: 4px;
+}
+
+body.compare-card-view .compare-vs-mark img {
+  width: 62px;
+  height: 62px;
+}
+
+body.compare-card-view .compare-vs-mark span {
+  font-size: 11px;
+}
+
+body.compare-card-view .compare-vs-mark strong {
+  font-size: 15px;
+}
+
+body.compare-card-view .compare-portrait-card > a {
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+body.compare-card-view .compare-portrait-card > small {
+  margin-top: 1px;
+  font-size: 9px;
 }
 
 body.compare-card-view .compare-side-by-side-table th,
 body.compare-card-view .compare-side-by-side-table td {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  font-size: 18px;
+  padding: 3px 8px;
+  font-size: 15px;
+  line-height: 1.08;
 }
 
 body.compare-card-view .compare-side-by-side-table .compare-section-row td {
-  padding-top: 7px;
-  padding-bottom: 7px;
-  font-size: 20px;
+  padding: 5px 8px;
+  font-size: 17px;
 }
 
 .compare-mobile-card {
