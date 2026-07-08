@@ -144,6 +144,37 @@ function statLabel(key = pvpState.activeSort) {
   }[key] || key.toUpperCase();
 }
 
+function sumRows(key) {
+  return (pvpState.data?.rows || []).reduce((total, row) => total + num(row[key]), 0);
+}
+
+function summaryMetric() {
+  const summary = pvpState.data?.summary || {};
+  const sort = pvpState.activeSort;
+  if (pvpState.mode === "pitcher") {
+    const pitcherMetrics = {
+      hr: ["HR Allowed", summary.homeRunsAllowed],
+      h: ["Hits Allowed", summary.hitsAllowed],
+      bb: ["Walks", summary.walks],
+      so: ["Strikeouts", summary.strikeouts],
+      pa: ["Plate Appearances", summary.plateAppearances],
+      ab: ["At-Bats", sumRows("ab")],
+      rbi: ["RBI Allowed", sumRows("rbi")]
+    };
+    return pitcherMetrics[sort] || pitcherMetrics.so;
+  }
+  const hitterMetrics = {
+    hr: ["Total HR", summary.homeRuns],
+    h: ["Hits", summary.hits],
+    bb: ["Walks", summary.walks],
+    so: ["Strikeouts", sumRows("so")],
+    pa: ["Plate Appearances", summary.plateAppearances],
+    ab: ["At-Bats", sumRows("ab")],
+    rbi: ["RBI", sumRows("rbi")]
+  };
+  return hitterMetrics[sort] || hitterMetrics.hr;
+}
+
 function renderPlayerOptions() {
   const select = document.querySelector("#pvp-player");
   select.innerHTML = pvpState.players.map((player) => `
@@ -167,8 +198,9 @@ function renderSummary(rows) {
   document.querySelector("#pvp-faced-label").textContent = config.facedLabel;
   document.querySelector("#pvp-pitchers-faced").textContent = fmtNumber(data.summary[config.facedKey]);
   document.querySelector("#pvp-data-through").textContent = data.player.dataThrough;
-  document.querySelector("#pvp-total-label").textContent = config.totalLabel;
-  document.querySelector("#pvp-total-hr").textContent = fmtNumber(data.summary[config.summaryKey]);
+  const [summaryLabel, summaryValue] = summaryMetric();
+  document.querySelector("#pvp-total-label").textContent = summaryLabel;
+  document.querySelector("#pvp-total-hr").textContent = fmtNumber(summaryValue);
   document.querySelector("#pvp-total-note").textContent = config.totalNote;
   document.querySelector("#pvp-leader-label").textContent = `Top ${statLabel()}`;
   document.querySelector("#pvp-leader").textContent = leader ? rowName(leader) : "--";
