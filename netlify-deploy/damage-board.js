@@ -89,6 +89,25 @@ function rowName(row) {
   return row[modeConfig().rowNameKey] || row.name || row[modeConfig().rowIdKey] || "--";
 }
 
+function careerUrl(name, group) {
+  const params = new URLSearchParams();
+  params.set("player", name);
+  params.set("group", group);
+  return `career.html?${params.toString()}`;
+}
+
+function careerLink(name, group) {
+  return `<a class="summary-link" href="${escapeHtml(careerUrl(name, group))}">${escapeHtml(name)}</a>`;
+}
+
+function selectedCareerGroup() {
+  return pvpState.mode === "pitcher" ? "pitching" : "hitting";
+}
+
+function opponentCareerGroup() {
+  return pvpState.mode === "pitcher" ? "hitting" : "pitching";
+}
+
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Request returned ${response.status}`);
@@ -193,7 +212,7 @@ function renderSummary(rows) {
   document.querySelector("#pvp-controls-eyebrow").textContent = config.opponentEyebrow;
   document.querySelector("#pvp-controls-intro").textContent = config.intro;
   document.querySelector("#pvp-selected-label").textContent = config.selectedLabel;
-  document.querySelector("#pvp-player-name").textContent = player.name;
+  document.querySelector("#pvp-player-name").innerHTML = careerLink(player.name, selectedCareerGroup());
   document.querySelector("#pvp-player-note").textContent = `${player.seasons} regular season`;
   document.querySelector("#pvp-faced-label").textContent = config.facedLabel;
   document.querySelector("#pvp-pitchers-faced").textContent = fmtNumber(data.summary[config.facedKey]);
@@ -203,7 +222,7 @@ function renderSummary(rows) {
   document.querySelector("#pvp-total-hr").textContent = fmtNumber(summaryValue);
   document.querySelector("#pvp-total-note").textContent = config.totalNote;
   document.querySelector("#pvp-leader-label").textContent = `Top ${statLabel()}`;
-  document.querySelector("#pvp-leader").textContent = leader ? rowName(leader) : "--";
+  document.querySelector("#pvp-leader").innerHTML = leader ? careerLink(rowName(leader), opponentCareerGroup()) : "--";
   document.querySelector("#pvp-leader-note").textContent = leader ? `${statLabel()} ${statLabel() === "AVG" || statLabel() === "OPS" ? fmtRate(leader[pvpState.activeSort]) : fmtNumber(leader[pvpState.activeSort])}` : "No rows";
   document.querySelector("#player-vs-pitchers-heading").textContent = `${player.name} ${statLabel()} by opposing ${config.opponentSingular}.`;
   const limitLabel = pvpState.limit === "all" ? `All ${config.opponentPlural}` : `Top ${pvpState.limit}`;
@@ -224,7 +243,7 @@ function renderTable(rows, targetSelector) {
   }
   table.innerHTML = rows.map((row) => `
     <tr>
-      <td>${escapeHtml(rowName(row))}</td>
+      <td>${careerLink(rowName(row), opponentCareerGroup())}</td>
       <td>${fmtNumber(row.pa)}</td>
       <td>${fmtNumber(row.ab)}</td>
       <td>${fmtNumber(row.h)}</td>
@@ -260,7 +279,7 @@ function renderTopBoard(rows) {
       <article class="pvp-top-row">
         <div class="pvp-top-rank">${index + 1}</div>
         <div class="pvp-top-label">
-          <strong>${escapeHtml(rowName(row))}</strong>
+          <strong>${careerLink(rowName(row), opponentCareerGroup())}</strong>
           <span>${fmtNumber(row.pa)} PA | ${fmtNumber(row.ab)} AB | ${fmtNumber(row.h)} H</span>
         </div>
         <div class="pvp-top-track" aria-hidden="true">
