@@ -100,6 +100,17 @@ function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
+function careerUrl(name) {
+  const params = new URLSearchParams();
+  params.set("player", name);
+  params.set("group", activeGroup);
+  return `career.html?${params.toString()}`;
+}
+
+function headshotUrl(player) {
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/w_320,q_auto:best/v1/people/${player.id}/headshot/67/current`;
+}
+
 function compactName(name) {
   return String(name || "").trim();
 }
@@ -377,25 +388,6 @@ function mobileSummaryMetrics() {
     : [["plateAppearances", "PA", 0], ["hits", "H", 0], ["homeRuns", "HR", 0], ["rbi", "RBI", 0], ["avg", "AVG", 3], ["ops", "OPS", 3]];
 }
 
-function renderMobileCompareStack(statsA, statsB) {
-  const cards = [[playerA, statsA], [playerB, statsB]];
-  document.querySelector("#compare-mobile-stack").innerHTML = cards.map(([player, stats]) => `
-    <article class="compare-mobile-card">
-      <span>${escapeHtml(player.position || "MLB")}</span>
-      <strong>${escapeHtml(player.fullName)}</strong>
-      <small>${escapeHtml(playerScopeLine(player, player === playerA ? "a" : "b"))}</small>
-      <div class="compare-mobile-stat-grid">
-        ${mobileSummaryMetrics().map(([key, label, digits]) => `
-          <div>
-            <span>${label}</span>
-            <strong>${formatValue(key, stats[key] || 0, digits)}</strong>
-          </div>
-        `).join("")}
-      </div>
-    </article>
-  `).join("");
-}
-
 function comparisonRows(statsA, statsB) {
   return metricSets[activeGroup].map(([key, label, lowerBetter, digits]) => {
     const valueA = statsA[key] || 0;
@@ -418,10 +410,20 @@ function comparisonRows(statsA, statsB) {
   });
 }
 
+function renderComparePlayerPanel(player, side) {
+  return `
+    <article class="compare-portrait-card">
+      <div class="compare-headshot-frame">
+        <img src="${headshotUrl(player)}" alt="" loading="lazy" />
+      </div>
+      <a class="summary-link" href="${escapeHtml(careerUrl(player.fullName))}">${escapeHtml(player.fullName)}</a>
+      <small>${escapeHtml(playerScopeLine(player, side))}</small>
+    </article>
+  `;
+}
+
 function renderComparison(statsA, statsB) {
   const rows = comparisonRows(statsA, statsB);
-  document.querySelector("#compare-head-a").textContent = playerA.fullName;
-  document.querySelector("#compare-head-b").textContent = playerB.fullName;
   document.querySelector("#compare-player-a-card").textContent = playerA.fullName;
   document.querySelector("#compare-player-b-card").textContent = playerB.fullName;
   document.querySelector("#compare-player-a-note").textContent = playerA.position || "Player";
@@ -431,24 +433,27 @@ function renderComparison(statsA, statsB) {
     ? advancedCareerWindowsOpen ? "Custom career windows" : "Each player's own matching career seasons"
     : `${activeGroup === "hitting" ? "Batting" : "Pitching"} comparison`;
   document.querySelector("#compare-table-title").textContent = `${playerA.fullName} vs ${playerB.fullName}`;
-  document.querySelector("#compare-player-grid").innerHTML = [playerA, playerB].map((player) => `
-    <article class="fantasy-note-card">
-      <span>${player.position || "MLB"}</span>
-      <strong><a class="summary-link" href="${baseballReferenceSearchUrl(player.fullName)}" target="_blank" rel="noopener noreferrer">${escapeHtml(player.fullName)}</a></strong>
-      <small>${escapeHtml(playerScopeLine(player, player === playerA ? "a" : "b"))}</small>
-    </article>
-  `).join("");
-  renderMobileCompareStack(statsA, statsB);
-  document.querySelector("#compare-table").innerHTML = rows.map((row) => {
+  document.querySelector("#compare-player-grid").innerHTML = `
+    ${renderComparePlayerPanel(playerA, "a")}
+    <div class="compare-vs-mark">
+      <img src="statline-logo.png" alt="" />
+      <span>${escapeHtml(scopeLabel())}</span>
+      <strong>${activeGroup === "hitting" ? "Batting" : "Pitching"}</strong>
+    </div>
+    ${renderComparePlayerPanel(playerB, "b")}
+  `;
+  document.querySelector("#compare-table").innerHTML = `
+    <tr class="compare-section-row"><td colspan="3">Overall Stats</td></tr>
+    ${rows.map((row) => {
     return `
       <tr>
-        <td>${escapeHtml(row.label)}</td>
-        <td class="${row.aWins ? "compare-edge" : ""}">${formatValue(row.key, row.valueA, row.digits)}</td>
-        <td class="${row.bWins ? "compare-edge" : ""}">${formatValue(row.key, row.valueB, row.digits)}</td>
-        <td>${escapeHtml(row.winner)}</td>
+        <td class="compare-value-cell ${row.aWins ? "compare-edge" : ""}">${formatValue(row.key, row.valueA, row.digits)}</td>
+        <th scope="row">${escapeHtml(row.label)}</th>
+        <td class="compare-value-cell ${row.bWins ? "compare-edge" : ""}">${formatValue(row.key, row.valueB, row.digits)}</td>
       </tr>
     `;
-  }).join("");
+    }).join("")}
+  `;
 }
 
 async function runComparison() {

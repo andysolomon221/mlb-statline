@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball Compare" />
     <meta name="twitter:description" content="Put MLB players side by side across careers, selected seasons, or matching year counts." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260707-sticky-table-heads" />
+    <link rel="stylesheet" href="styles.css?v=20260708-side-by-side-compare" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -202,20 +202,13 @@
               </div>
               <div class="split-status" id="compare-status">Loading comparison...</div>
             </div>
-            <div class="compare-player-grid" id="compare-player-grid"></div>
-            <div class="compare-mobile-stack" id="compare-mobile-stack" aria-label="Mobile comparison summary"></div>
-            <div class="table-wrap compare-table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Stat</th>
-                    <th id="compare-head-a">Player 1</th>
-                    <th id="compare-head-b">Player 2</th>
-                    <th>Edge</th>
-                  </tr>
-                </thead>
+            <div class="compare-versus-card">
+              <div class="compare-player-grid" id="compare-player-grid"></div>
+              <div class="table-wrap compare-table-wrap">
+                <table class="compare-side-by-side-table">
                 <tbody id="compare-table"></tbody>
               </table>
+              </div>
             </div>
           </section>
         </section>
@@ -229,6 +222,6 @@
       </main>
     </div>
 
-    <script src="compare.js?v=20260702-compare-table-only"></script>
+    <script src="compare.js?v=20260708-side-by-side-compare"></script>
   </body>
 </html>
