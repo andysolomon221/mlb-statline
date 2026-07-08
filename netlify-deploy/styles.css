@@ -2709,7 +2709,8 @@ td {
 }
 
 .compare-action-row button.secondary-action,
-.share-action-row button.secondary-action {
+.share-action-row button.secondary-action,
+.compare-card-tools button.secondary-action {
   color: var(--navy);
   background: #eef3f8;
 }
@@ -2896,6 +2897,22 @@ td {
   font-size: 18px;
 }
 
+.compare-card-tools {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 840px;
+  margin: 0 auto 10px;
+}
+
+.compare-card-tools button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .compare-side-by-side-table {
   min-width: 0;
   table-layout: fixed;
@@ -2944,6 +2961,71 @@ td {
   color: var(--ink);
   background: #dfeee0;
   font-weight: 900;
+}
+
+body.compare-card-view {
+  background: #fffdf8;
+}
+
+body.compare-card-view .app-shell {
+  display: block;
+  min-height: auto;
+}
+
+body.compare-card-view .rail,
+body.compare-card-view .topbar,
+body.compare-card-view .compare-controls-panel,
+body.compare-card-view .compare-summary,
+body.compare-card-view .advanced-grid .section-head,
+body.compare-card-view .site-footer {
+  display: none;
+}
+
+body.compare-card-view main {
+  padding: 14px;
+}
+
+body.compare-card-view .advanced-grid {
+  display: block;
+  margin: 0;
+}
+
+body.compare-card-view .advanced-grid > .panel {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+
+body.compare-card-view .compare-card-tools {
+  justify-content: flex-start;
+}
+
+body.compare-card-view .compare-versus-card {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+body.compare-card-view .compare-portrait-card,
+body.compare-card-view .compare-vs-mark {
+  min-height: 260px;
+}
+
+body.compare-card-view .compare-headshot-frame {
+  width: min(100%, 205px);
+}
+
+body.compare-card-view .compare-side-by-side-table th,
+body.compare-card-view .compare-side-by-side-table td {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 18px;
+}
+
+body.compare-card-view .compare-side-by-side-table .compare-section-row td {
+  padding-top: 7px;
+  padding-bottom: 7px;
+  font-size: 20px;
 }
 
 .compare-mobile-card {

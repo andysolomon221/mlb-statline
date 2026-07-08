@@ -20,6 +20,7 @@ let candidatesA = [playerA];
 let candidatesB = [playerB];
 let searchTimer;
 let copyStatusTimer;
+let cardViewActive = false;
 
 const metricSets = {
   hitting: [
@@ -493,6 +494,7 @@ function compareShareParams() {
     params.set("bStart", cleanCareerRange(activePlayerCareerWindows.b).start);
     params.set("bEnd", cleanCareerRange(activePlayerCareerWindows.b).end);
   }
+  if (cardViewActive) params.set("view", "card");
   return params;
 }
 
@@ -505,6 +507,21 @@ function shareUrl() {
 function updateShareUrl() {
   if (!history.replaceState) return;
   history.replaceState(null, "", shareUrl());
+}
+
+function renderCardViewState() {
+  document.body.classList.toggle("compare-card-view", cardViewActive);
+  const button = document.querySelector("#compare-card-view-toggle");
+  if (button) button.textContent = cardViewActive ? "Show Criteria" : "Screenshot View";
+}
+
+function setCardView(nextValue) {
+  cardViewActive = Boolean(nextValue);
+  renderCardViewState();
+  updateShareUrl();
+  if (cardViewActive) {
+    document.querySelector(".compare-versus-card")?.scrollIntoView({ block: "start" });
+  }
 }
 
 async function copyText(value) {
@@ -594,6 +611,9 @@ function bindEvents() {
   bindAutocomplete("b");
   document.querySelector("#run-comparison").addEventListener("click", runComparison);
   document.querySelector("#copy-compare-link").addEventListener("click", copyCompareLink);
+  document.querySelector("#compare-card-view-toggle").addEventListener("click", () => {
+    setCardView(!cardViewActive);
+  });
   document.querySelector("#compare-group").addEventListener("change", (event) => {
     activeGroup = event.target.value;
     runComparison();
@@ -668,6 +688,7 @@ function bindEvents() {
 
 function applyUrlParams() {
   const params = new URLSearchParams(window.location.search);
+  cardViewActive = params.get("view") === "card";
   const requestedGroup = params.get("group");
   if (requestedGroup === "hitting" || requestedGroup === "pitching") {
     activeGroup = requestedGroup;
@@ -720,6 +741,7 @@ function initializeComparePage() {
   populateYears();
   applyUrlParams();
   updateModeControls();
+  renderCardViewState();
   bindEvents();
   runComparison();
 }
