@@ -1,5 +1,5 @@
 const query = new URLSearchParams(window.location.search);
-const currentSeason = 2026;
+const currentSeason = new Date().getFullYear();
 const firstSeason = 1901;
 const leagueIds = { al: "103", nl: "104" };
 const leagueLabels = { all: "MLB", al: "AL", nl: "NL" };
@@ -231,6 +231,7 @@ function validSize(value) {
 }
 
 function clampSeason(value) {
+  if (value === null || value === undefined || value === "") return 0;
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
   return Math.min(currentSeason, Math.max(firstSeason, Math.round(number)));
@@ -307,11 +308,13 @@ function metricFor(group = state.group, key = state.stat) {
 }
 
 function populateSeasons() {
+  els.season.innerHTML = "";
   const fragment = document.createDocumentFragment();
   for (let season = currentSeason; season >= firstSeason; season -= 1) {
     const option = document.createElement("option");
     option.value = String(season);
     option.textContent = String(season);
+    if (season === state.season) option.selected = true;
     fragment.appendChild(option);
   }
   els.season.appendChild(fragment);
@@ -695,7 +698,9 @@ function handleControlChange(event) {
   if (id === "trend-league") state.league = event.target.value;
   if (id === "trend-staff") state.staff = validStaff(event.target.value) || "full";
   if (id === "trend-scope") {
+    const previousScope = state.scope;
     state.scope = event.target.value;
+    if (state.scope === "season" && previousScope !== "season" && !query.has("season")) state.season = currentSeason;
     if (state.scope === "last7") setRecentScopeDays(7);
     if (state.scope === "last14") setRecentScopeDays(14);
     if (state.scope === "last30") setRecentScopeDays(30);
