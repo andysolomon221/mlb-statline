@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statline Baseball Trends</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="favicon-48.png" sizes="48x48" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/trends" />
+    <meta name="description" content="Find which MLB teams are leading batting and pitching stats over recent stretches, seasons, leagues, and custom date ranges." />
+    <meta property="og:title" content="Statline Baseball Trends" />
+    <meta property="og:description" content="Find which MLB teams are leading batting and pitching stats over recent stretches, seasons, leagues, and custom date ranges." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/trends" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Statline Baseball Trends" />
+    <meta name="twitter:description" content="Find which MLB teams are leading batting and pitching stats over recent stretches, seasons, leagues, and custom date ranges." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260710-trends-staff-toggle" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="trends">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <a class="brand-mark" href="index.html" aria-label="Statline Baseball home"><img src="statline-logo.png" alt="" /></a>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced Stats</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="damage-board.html">Damage Board</a>
+          <a href="standings.html">Standings</a>
+          <a class="active" href="trends.html">Trends</a>
+          <a href="compare.html">Compare</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="age.html">Age Leaders</a>
+          <a href="starts.html">First Seasons</a>
+          <a href="span.html">Span Finder</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="dashboard">
+        <header class="topbar trends-topbar">
+          <div>
+            <p class="eyebrow">Trends</p>
+            <h1>Team stat leaders over any stretch.</h1>
+            <p class="section-note">Find team-level batting and pitching leaders for the season, recent windows, or custom dates.</p>
+          </div>
+          <div class="source-card">
+            <span>Source</span>
+            <strong>MLB Stats API</strong>
+            <small>team totals by date range</small>
+          </div>
+        </header>
+
+        <section class="panel trends-controls-panel" aria-label="Trend controls">
+          <div class="trends-control-grid">
+            <label>
+              Stat Type
+              <select id="trend-group">
+                <option value="hitting">Batting</option>
+                <option value="pitching">Pitching</option>
+              </select>
+            </label>
+            <label>
+              Stat
+              <select id="trend-stat"></select>
+            </label>
+            <label>
+              League
+              <select id="trend-league">
+                <option value="all">MLB</option>
+                <option value="al">AL</option>
+                <option value="nl">NL</option>
+              </select>
+            </label>
+            <label class="trend-staff-field">
+              Staff
+              <select id="trend-staff">
+                <option value="full">Full staff</option>
+                <option value="starters">Starters</option>
+                <option value="relievers">Relievers</option>
+              </select>
+            </label>
+            <label>
+              Range
+              <select id="trend-scope">
+                <option value="last7">Last 7 days</option>
+                <option value="last14">Last 14 days</option>
+                <option value="last30">Last 30 days</option>
+                <option value="season">Season</option>
+                <option value="custom">Custom dates</option>
+              </select>
+            </label>
+            <label class="trend-season-field">
+              Season
+              <select id="trend-season"></select>
+            </label>
+            <label class="trend-date-field">
+              Start
+              <input id="trend-start" type="date" />
+            </label>
+            <label class="trend-date-field">
+              End
+              <input id="trend-end" type="date" />
+            </label>
+            <label>
+              Top Board Size
+              <select id="trend-size">
+                <option value="10">Top 10</option>
+                <option value="15">Top 15</option>
+                <option value="30">All Teams</option>
+              </select>
+            </label>
+          </div>
+          <div class="share-action-row">
+            <span class="share-action-label">Share this view</span>
+            <button type="button" id="copy-trend-link" class="secondary-action">Copy Link</button>
+            <span id="trend-copy-status" class="copy-status" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section class="score-strip trends-summary" aria-label="Trend summary">
+          <article>
+            <span>Leader</span>
+            <strong id="trend-leader">-</strong>
+            <small id="trend-leader-context">Loading</small>
+          </article>
+          <article>
+            <span>Stat</span>
+            <strong id="trend-stat-value">-</strong>
+            <small id="trend-stat-label">-</small>
+          </article>
+          <article>
+            <span>Range</span>
+            <strong id="trend-range-label">-</strong>
+            <small id="trend-teams-loaded">-</small>
+          </article>
+        </section>
+
+        <section class="panel trend-headline-panel" aria-live="polite">
+          <p class="eyebrow">Trend Line</p>
+          <h2 id="trend-headline">Loading team trend...</h2>
+        </section>
+
+        <section class="panel trend-board-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Top Board</p>
+              <h2 id="trend-board-title">Team leaders</h2>
+            </div>
+            <span id="trend-board-note" class="panel-kicker"></span>
+          </div>
+          <div id="trend-board" class="trend-board" aria-live="polite"></div>
+        </section>
+
+        <section class="panel trend-table-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Full Table</p>
+              <h2 id="trend-table-title">All teams</h2>
+            </div>
+          </div>
+          <div class="table-wrap trend-table-wrap">
+            <table class="leaderboard trend-table">
+              <thead id="trend-table-head"></thead>
+              <tbody id="trend-table-body">
+                <tr><td>Loading trends...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="trends.js?v=20260710-trends-staff-toggle" defer></script>
+  </body>
+</html>

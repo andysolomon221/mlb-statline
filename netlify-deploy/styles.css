@@ -165,6 +165,10 @@ select {
   content: "Division and Wild Card standings by date, league, and race.";
 }
 
+.rail-nav a[href="trends.html"]::after {
+  content: "Team batting and pitching trend boards by league, stat, and date range.";
+}
+
 .rail-nav a[href="compare.html"]::after {
   content: "Put two players side by side for single-season or historical range comparisons.";
 }
@@ -2598,6 +2602,7 @@ td {
 }
 
 .compare-control-grid,
+.trends-control-grid,
 .age-control-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(220px, 1fr));
@@ -2606,6 +2611,7 @@ td {
 }
 
 .compare-control-grid label,
+.trends-control-grid label,
 .compare-range-fields label,
 .compare-career-season-fields label,
 .age-control-grid label {
@@ -2615,6 +2621,184 @@ td {
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.source-card {
+  display: grid;
+  gap: 4px;
+  min-width: min(260px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  padding: 12px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.source-card span,
+.source-card small {
+  color: #dbe8f4;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.source-card strong {
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.trends-topbar .section-note {
+  width: min(660px, 100%);
+  margin: 8px 0 0;
+  color: #dbe8f4;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.trends-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.trends-controls-panel[data-scope="season"] .trend-date-field,
+.trends-controls-panel:not([data-scope="season"]) .trend-season-field,
+.trends-controls-panel:not([data-scope="custom"]) .trend-date-field {
+  display: none;
+}
+
+.trends-controls-panel:not([data-group="pitching"]) .trend-staff-field {
+  display: none;
+}
+
+.trend-headline-panel {
+  margin-bottom: 18px;
+}
+
+.trend-headline-panel h2 {
+  max-width: 980px;
+  margin: 0;
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.05;
+}
+
+.trend-board-panel {
+  max-width: 980px;
+}
+
+.trend-board {
+  display: grid;
+  gap: 13px;
+  margin-top: 16px;
+}
+
+.trend-row {
+  display: grid;
+  grid-template-columns: 44px minmax(190px, 0.82fr) minmax(180px, 1.4fr) 72px;
+  align-items: center;
+  gap: 16px;
+  min-height: 52px;
+}
+
+.trend-rank {
+  color: var(--red);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.trend-team {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trend-team strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.06;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trend-team small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.trend-bar-track {
+  height: 16px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e8edf1;
+}
+
+.trend-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--teal), var(--team-color, var(--gold)) 48%, var(--gold));
+}
+
+.trend-value {
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1;
+  text-align: right;
+}
+
+.trend-table-panel {
+  margin-top: 18px;
+}
+
+.trend-table-wrap {
+  max-height: min(72vh, 760px);
+  overflow: auto;
+}
+
+.trend-table {
+  min-width: 920px;
+}
+
+.trend-table th button {
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 900;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.trend-table td:first-child,
+.trend-table th:first-child {
+  width: 54px;
+}
+
+.trend-table td:nth-child(2),
+.trend-table th:nth-child(2) {
+  min-width: 230px;
+  text-align: left;
+}
+
+.trend-table td:nth-child(2) strong {
+  display: block;
+  color: var(--ink);
+}
+
+.trend-table td:nth-child(2) small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.empty-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .age-control-grid button {
@@ -4038,47 +4222,51 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
     order: 5;
   }
 
-  .rail-nav a[href="teams.html"] {
+  .rail-nav a[href="trends.html"] {
     order: 6;
   }
 
-  .rail-nav a[href="news.html"] {
+  .rail-nav a[href="teams.html"] {
     order: 7;
   }
 
-  .rail-nav a[href="advanced.html"] {
+  .rail-nav a[href="news.html"] {
     order: 8;
   }
 
-  .rail-nav a[href="compare.html"] {
+  .rail-nav a[href="advanced.html"] {
     order: 9;
   }
 
-  .rail-nav a[href="career.html"] {
+  .rail-nav a[href="compare.html"] {
     order: 10;
   }
 
-  .rail-nav a[href="splits.html"] {
+  .rail-nav a[href="career.html"] {
     order: 11;
   }
 
-  .rail-nav a[href="age.html"] {
+  .rail-nav a[href="splits.html"] {
     order: 12;
   }
 
-  .rail-nav a[href="starts.html"] {
+  .rail-nav a[href="age.html"] {
     order: 13;
   }
 
-  .rail-nav a[href="span.html"] {
+  .rail-nav a[href="starts.html"] {
     order: 14;
   }
 
-  .rail-nav a[href="fantasy.html"] {
+  .rail-nav a[href="span.html"] {
     order: 15;
   }
 
-  .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="standings.html"]):not([href="teams.html"]):not([href="news.html"]) {
+  .rail-nav a[href="fantasy.html"] {
+    order: 16;
+  }
+
+  .rail-nav a:nth-child(n+3):not([href="matchups.html"]):not([href="standings.html"]):not([href="trends.html"]):not([href="teams.html"]):not([href="news.html"]) {
     min-height: 36px;
     color: #dbe8f4;
     font-size: 11px;
@@ -4157,6 +4345,7 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
   .data-grid,
   .start-grid,
   .park-grid,
+  .trends-control-grid,
   .trust-grid {
     grid-template-columns: 1fr;
   }
@@ -4219,5 +4408,39 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
 
   table {
     min-width: 560px;
+  }
+
+  .source-card {
+    min-width: 0;
+  }
+
+  .trend-headline-panel h2 {
+    font-size: 27px;
+  }
+
+  .trend-board-panel {
+    max-width: 100%;
+  }
+
+  .trend-row {
+    grid-template-columns: 34px minmax(0, 1fr) 58px;
+    gap: 10px;
+  }
+
+  .trend-bar-track {
+    grid-column: 2 / 4;
+    height: 13px;
+  }
+
+  .trend-team strong {
+    font-size: 17px;
+  }
+
+  .trend-value {
+    font-size: 19px;
+  }
+
+  .trend-table {
+    min-width: 820px;
   }
 }
