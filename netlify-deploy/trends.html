@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball Trends" />
     <meta name="twitter:description" content="Find which MLB teams are leading batting and pitching stats over recent stretches, seasons, leagues, and custom date ranges." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260710-trends-staff-toggle" />
+    <link rel="stylesheet" href="styles.css?v=20260710-trends-historic-seasons" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -74,7 +74,7 @@
           <div>
             <p class="eyebrow">Trends</p>
             <h1>Team stat leaders over any stretch.</h1>
-            <p class="section-note">Find team-level batting and pitching leaders for the season, recent windows, or custom dates.</p>
+            <p class="section-note">Find team-level batting and pitching leaders for full seasons, recent windows, or custom dates.</p>
           </div>
           <div class="source-card">
             <span>Source</span>
@@ -118,12 +118,12 @@
                 <option value="last7">Last 7 days</option>
                 <option value="last14">Last 14 days</option>
                 <option value="last30">Last 30 days</option>
-                <option value="season">Season</option>
+                <option value="season">Full season</option>
                 <option value="custom">Custom dates</option>
               </select>
             </label>
             <label class="trend-season-field">
-              Season
+              Year
               <select id="trend-season"></select>
             </label>
             <label class="trend-date-field">
@@ -203,6 +203,6 @@
       </main>
     </div>
 
-    <script src="trends.js?v=20260710-trends-staff-toggle" defer></script>
+    <script src="trends.js?v=20260710-trends-historic-seasons" defer></script>
   </body>
 </html>

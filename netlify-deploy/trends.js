@@ -339,6 +339,10 @@ function syncControls() {
   els.season.value = String(state.season);
   els.start.value = state.start;
   els.end.value = state.end;
+  els.start.min = `${firstSeason}-01-01`;
+  els.start.max = todayIso();
+  els.end.min = `${firstSeason}-01-01`;
+  els.end.max = todayIso();
   els.size.value = String(state.size);
   els.controls.dataset.scope = state.scope;
   els.controls.dataset.group = state.group;
@@ -347,7 +351,7 @@ function syncControls() {
 function currentRange() {
   if (state.scope === "season") {
     return {
-      label: `${state.season}`,
+      label: `the ${state.season} season`,
       start: `${state.season}-01-01`,
       end: `${state.season}-12-31`
     };
