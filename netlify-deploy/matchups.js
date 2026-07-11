@@ -890,7 +890,64 @@ function statLine(stat = {}, keys = []) {
   return keys.map(([key, label, formatter]) => `${label} ${formatter ? formatter(stat[key]) : (stat[key] ?? "-")}`).join(" | ");
 }
 
+function rateStats(stat) {
+  const ab = num(stat.atBats);
+  const h = num(stat.hits);
+  const bb = num(stat.baseOnBalls);
+  const hbp = num(stat.hitByPitch);
+  const sf = num(stat.sacFlies);
+  const tb = num(stat.totalBases);
+  const avg = ab ? h / ab : 0;
+  const obpDenominator = ab + bb + hbp + sf;
+  const obp = obpDenominator ? (h + bb + hbp) / obpDenominator : 0;
+  const slg = ab ? tb / ab : 0;
+  return {
+    avg: fmt(avg),
+    obp: fmt(obp),
+    slg: fmt(slg),
+    ops: fmt(obp + slg)
+  };
+}
+
+function aggregatePlayerTeamRows(rows) {
+  const bySeasonTeam = new Map();
+  rows.forEach((row) => {
+    const key = `${row.season || "Career"}:${row.team || ""}`;
+    const existing = bySeasonTeam.get(key) || {
+      season: row.season || "Career",
+      team: row.team || "",
+      opponent: row.opponent || "",
+      stat: {
+        gamesPlayed: 0,
+        plateAppearances: 0,
+        atBats: 0,
+        hits: 0,
+        homeRuns: 0,
+        rbi: 0,
+        baseOnBalls: 0,
+        strikeOuts: 0,
+        hitByPitch: 0,
+        sacFlies: 0,
+        totalBases: 0
+      }
+    };
+    const stat = row.stat || {};
+    ["gamesPlayed", "plateAppearances", "atBats", "hits", "homeRuns", "rbi", "baseOnBalls", "strikeOuts", "hitByPitch", "sacFlies", "totalBases"].forEach((keyName) => {
+      existing.stat[keyName] += num(stat[keyName]);
+    });
+    bySeasonTeam.set(key, existing);
+  });
+  return Array.from(bySeasonTeam.values()).map((row) => ({
+    ...row,
+    stat: {
+      ...row.stat,
+      ...rateStats(row.stat)
+    }
+  }));
+}
+
 function renderPlayerTeamTable(type, rows) {
+  const seasonRows = aggregatePlayerTeamRows(rows);
   const columns = type === "pitcher"
     ? [
         ["season", "Season"],
@@ -918,8 +975,8 @@ function renderPlayerTeamTable(type, rows) {
         ["ops", "OPS"]
       ];
   document.querySelector("#player-team-head").innerHTML = `<tr>${columns.map(([, label]) => `<th>${label}</th>`).join("")}</tr>`;
-  document.querySelector("#player-team-table").innerHTML = rows.length
-    ? rows
+  document.querySelector("#player-team-table").innerHTML = seasonRows.length
+    ? seasonRows
         .slice()
         .sort((a, b) => Number(b.season) - Number(a.season))
         .map((row) => `
@@ -931,6 +988,7 @@ function renderPlayerTeamTable(type, rows) {
           </tr>
         `).join("")
     : `<tr><td colspan="${columns.length}" class="empty-row">No season-by-season history found for this player against that team.</td></tr>`;
+  return seasonRows;
 }
 
 async function updatePlayerVsTeam() {
@@ -949,7 +1007,7 @@ async function updatePlayerVsTeam() {
     ]);
     const totalStat = history.total?.stat || {};
     const opponentLabel = history.total?.opponent?.name || opponent.name;
-    const playerTeam = history.total?.team?.name || profile.teamName || player.teamName || "Career";
+    const playerTeam = "Career regular season";
     const totalNote = type === "pitcher"
       ? statLine(totalStat, [
           ["plateAppearances", "BF"],
@@ -970,9 +1028,15 @@ async function updatePlayerVsTeam() {
           ["avg", "AVG"],
           ["ops", "OPS"]
         ]);
-    const seasonLine = type === "pitcher"
-      ? `Season: ERA ${profile.season.era || "-"} | WHIP ${profile.season.whip || "-"} | SO ${profile.season.strikeOuts || 0}`
-      : `Season: AVG ${profile.season.avg || "-"} | OPS ${profile.season.ops || "-"} | HR ${profile.season.homeRuns || 0}`;
+    const hasSeasonLine = type === "pitcher"
+      ? Boolean(profile.season.era || profile.season.whip || num(profile.season.strikeOuts))
+      : Boolean(profile.season.avg || profile.season.ops || num(profile.season.homeRuns));
+    const seasonLine = hasSeasonLine
+      ? (type === "pitcher"
+          ? `Season: ERA ${profile.season.era || "-"} | WHIP ${profile.season.whip || "-"} | SO ${profile.season.strikeOuts || 0}`
+          : `Season: AVG ${profile.season.avg || "-"} | OPS ${profile.season.ops || "-"} | HR ${profile.season.homeRuns || 0}`)
+      : "Career regular-season view";
+    const seasonRows = aggregatePlayerTeamRows(history.rows);
 
     document.querySelector("#player-team-grid").innerHTML = `
       <article class="fantasy-note-card">
@@ -988,7 +1052,7 @@ async function updatePlayerVsTeam() {
       <article class="fantasy-note-card">
         <strong>Career vs Team</strong>
         <span>${history.total ? totalNote : "No recorded team history"}</span>
-        <span>${history.rows.length ? `${history.rows.length} detailed split rows` : "No season rows available"}</span>
+        <span>${seasonRows.length ? `${seasonRows.length} season rows` : "No season rows available"}</span>
       </article>
     `;
     renderPlayerTeamTable(type, history.rows);
