@@ -807,7 +807,7 @@ function renderRosterSnapshot(rows, teamName, pitcherName, statcastRow = null, s
   const total = aggregateRosterMatchup(rows);
   const rosterLabel = activeRosterType === "40Man" ? "40-man roster" : "active roster";
   const statcastNote = statcastRow
-    ? `${activeSeason} pitcher Statcast profile. Statcast data is available from 2015 forward.`
+    ? `Pitcher ${activeSeason} Statcast allowed profile vs all hitters. Statcast data is available from 2015 forward.`
     : statcastStatus || "Statcast row loads on the live Netlify site when available.";
   document.querySelector("#matchup-roster-snapshot").innerHTML = `
     <div class="roster-snapshot-head">
@@ -838,11 +838,11 @@ function renderRosterSnapshot(rows, teamName, pitcherName, statcastRow = null, s
       <div>${total.so}</div>
       <div>${total.topPaName || "-"}</div>
       <div>${total.topOpsName ? `${total.topOpsName} ${fmt(total.topOps)}` : "-"}</div>
-      <div class="roster-snapshot-label">EV Allowed</div>
-      <div class="roster-snapshot-label">Launch Angle</div>
-      <div class="roster-snapshot-label">xBA</div>
-      <div class="roster-snapshot-label">xSLG</div>
-      <div class="roster-snapshot-label">xwOBA</div>
+      <div class="roster-snapshot-label">${activeSeason} EV Allowed</div>
+      <div class="roster-snapshot-label">${activeSeason} LA Allowed</div>
+      <div class="roster-snapshot-label">${activeSeason} xBA Allowed</div>
+      <div class="roster-snapshot-label">${activeSeason} xSLG Allowed</div>
+      <div class="roster-snapshot-label">${activeSeason} xwOBA Allowed</div>
       <div>${fmtStatcastValue("exit_velocity_avg", statcastRow?.exit_velocity_avg)}</div>
       <div>${fmtStatcastValue("launch_angle_avg", statcastRow?.launch_angle_avg)}</div>
       <div>${fmtStatcastValue("xba", statcastRow?.xba)}</div>
