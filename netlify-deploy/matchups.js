@@ -5,6 +5,8 @@ const statsCache = new Map();
 const headToHeadCache = new Map();
 const rosterCache = new Map();
 const vsTeamCache = new Map();
+const gameLogCache = new Map();
+const statcastMatchupCache = new Map();
 const scheduleCache = new Map();
 
 const teams = [
@@ -111,6 +113,15 @@ function fmt(value, digits = 3) {
 function num(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
+}
+
+function inningsToOuts(value) {
+  const [whole, partial = "0"] = String(value || "0").split(".");
+  return (Number(whole) || 0) * 3 + (Number(partial) || 0);
+}
+
+function outsToInnings(outs) {
+  return `${Math.floor(outs / 3)}.${outs % 3}`;
 }
 
 function baseballReferenceSearchUrl(name) {
@@ -297,6 +308,27 @@ async function vsTeamStats(player, group, opponentTeamId) {
   const payload = { total, rows };
   vsTeamCache.set(cacheKey, payload);
   return payload;
+}
+
+async function playerGameLog(player, group, season) {
+  const cacheKey = `${player.id}:${group}:${season}`;
+  if (gameLogCache.has(cacheKey)) return gameLogCache.get(cacheKey);
+  const params = new URLSearchParams({
+    stats: "gameLog",
+    group,
+    season
+  });
+  const data = await fetchJson(`https://statsapi.mlb.com/api/v1/people/${player.id}/stats?${params.toString()}`);
+  const rows = ((data.stats || []).find((entry) => entry.type?.displayName === "gameLog")?.splits || []).map((split) => ({
+    season: split.season || season,
+    date: split.date || "",
+    team: split.team?.name || "",
+    opponentId: split.opponent?.id || null,
+    opponent: split.opponent?.name || "",
+    stat: split.stat || {}
+  }));
+  gameLogCache.set(cacheKey, rows);
+  return rows;
 }
 
 function selectedBattingTeam() {
@@ -651,24 +683,174 @@ function aggregateHeadToHead(rows) {
     acc.pa += num(stat.plateAppearances);
     acc.ab += num(stat.atBats);
     acc.h += num(stat.hits);
+    acc.doubles += num(stat.doubles);
+    acc.triples += num(stat.triples);
     acc.hr += num(stat.homeRuns);
     acc.rbi += num(stat.rbi);
     acc.bb += num(stat.baseOnBalls);
+    acc.ibb += num(stat.intentionalWalks);
+    acc.hbp += num(stat.hitByPitch);
+    acc.sf += num(stat.sacFlies);
     acc.so += num(stat.strikeOuts);
     acc.tb += num(stat.totalBases);
     return acc;
-  }, { pa: 0, ab: 0, h: 0, hr: 0, rbi: 0, bb: 0, so: 0, tb: 0 });
+  }, { pa: 0, ab: 0, h: 0, doubles: 0, triples: 0, hr: 0, rbi: 0, bb: 0, ibb: 0, hbp: 0, sf: 0, so: 0, tb: 0 });
   const avg = totals.ab ? totals.h / totals.ab : 0;
   const obpDenominator = totals.ab + totals.bb;
   const obp = obpDenominator ? (totals.h + totals.bb) / obpDenominator : 0;
   const slg = totals.ab ? totals.tb / totals.ab : 0;
+  const singles = Math.max(0, totals.h - totals.doubles - totals.triples - totals.hr);
+  const wobaDenominator = totals.ab + totals.bb - totals.ibb + totals.sf + totals.hbp;
+  const woba = wobaDenominator
+    ? ((0.69 * (totals.bb - totals.ibb)) + (0.72 * totals.hbp) + (0.89 * singles) + (1.27 * totals.doubles) + (1.62 * totals.triples) + (2.10 * totals.hr)) / wobaDenominator
+    : 0;
   return {
     ...totals,
     avg,
     obp,
     slg,
+    woba,
     ops: obp + slg
   };
+}
+
+function aggregateRosterMatchup(rows) {
+  const totals = rows.reduce((acc, row) => {
+    const total = aggregateHeadToHead(row.headToHead || []);
+    acc.pa += total.pa;
+    acc.ab += total.ab;
+    acc.h += total.h;
+    acc.doubles += total.doubles;
+    acc.triples += total.triples;
+    acc.hr += total.hr;
+    acc.bb += total.bb;
+    acc.ibb += total.ibb;
+    acc.hbp += total.hbp;
+    acc.sf += total.sf;
+    acc.so += total.so;
+    acc.tb += total.tb;
+    if (total.pa > acc.topPa) {
+      acc.topPa = total.pa;
+      acc.topPaName = row.fullName;
+    }
+    if (total.ops > acc.topOps && total.pa > 0) {
+      acc.topOps = total.ops;
+      acc.topOpsName = row.fullName;
+    }
+    return acc;
+  }, {
+    pa: 0,
+    ab: 0,
+    h: 0,
+    doubles: 0,
+    triples: 0,
+    hr: 0,
+    bb: 0,
+    ibb: 0,
+    hbp: 0,
+    sf: 0,
+    so: 0,
+    tb: 0,
+    topPa: 0,
+    topPaName: "",
+    topOps: 0,
+    topOpsName: ""
+  });
+  const avg = totals.ab ? totals.h / totals.ab : 0;
+  const obpDenominator = totals.ab + totals.bb;
+  const obp = obpDenominator ? (totals.h + totals.bb) / obpDenominator : 0;
+  const slg = totals.ab ? totals.tb / totals.ab : 0;
+  const singles = Math.max(0, totals.h - totals.doubles - totals.triples - totals.hr);
+  const wobaDenominator = totals.ab + totals.bb - totals.ibb + totals.sf + totals.hbp;
+  const woba = wobaDenominator
+    ? ((0.69 * (totals.bb - totals.ibb)) + (0.72 * totals.hbp) + (0.89 * singles) + (1.27 * totals.doubles) + (1.62 * totals.triples) + (2.10 * totals.hr)) / wobaDenominator
+    : 0;
+  return {
+    ...totals,
+    avg,
+    obp,
+    slg,
+    woba,
+    ops: obp + slg
+  };
+}
+
+function fmtMatchupRate(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "-";
+  return number.toFixed(3).replace(/^0/, "");
+}
+
+function fmtStatcastValue(key, value) {
+  if (value === null || value === undefined || value === "") return "-";
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "-";
+  if (key === "exit_velocity_avg") return `${number.toFixed(1)} MPH`;
+  if (key === "launch_angle_avg") return number.toFixed(1);
+  return number.toFixed(3).replace(/^0/, "");
+}
+
+async function pitcherStatcastProfile(pitcherPlayer) {
+  if (["localhost", "127.0.0.1", ""].includes(window.location.hostname)) throw new Error("Netlify-only Statcast function");
+  const cacheKey = `${pitcherPlayer.id}:${activeSeason}`;
+  if (statcastMatchupCache.has(cacheKey)) return statcastMatchupCache.get(cacheKey);
+  const response = await fetch(`/.netlify/functions/statcast?type=pitcher&year=${encodeURIComponent(activeSeason)}`);
+  if (!response.ok) throw new Error(`Statcast returned ${response.status}`);
+  const data = await response.json();
+  const row = (data.rows || []).find((item) => Number(item.playerId) === Number(pitcherPlayer.id)) || null;
+  statcastMatchupCache.set(cacheKey, row);
+  return row;
+}
+
+function renderRosterSnapshot(rows, teamName, pitcherName, statcastRow = null, statcastStatus = "") {
+  const total = aggregateRosterMatchup(rows);
+  const rosterLabel = activeRosterType === "40Man" ? "40-man roster" : "active roster";
+  const statcastNote = statcastRow
+    ? `${activeSeason} pitcher Statcast profile. Statcast data is available from 2015 forward.`
+    : statcastStatus || "Statcast row loads on the live Netlify site when available.";
+  document.querySelector("#matchup-roster-snapshot").innerHTML = `
+    <div class="roster-snapshot-head">
+      <div>
+        <p class="eyebrow">Roster Snapshot</p>
+        <h3>${pitcherName} vs current ${teamName} ${rosterLabel}</h3>
+      </div>
+      <div class="roster-snapshot-total">${total.pa} PA</div>
+    </div>
+    <div class="roster-snapshot-grid" role="table" aria-label="Roster matchup summary">
+      <div class="roster-snapshot-label">PA</div>
+      <div class="roster-snapshot-label">K%</div>
+      <div class="roster-snapshot-label">BB%</div>
+      <div class="roster-snapshot-label">AVG</div>
+      <div class="roster-snapshot-label">est. wOBA</div>
+      <div>${total.pa}</div>
+      <div>${percent(total.so, total.pa)}</div>
+      <div>${percent(total.bb, total.pa)}</div>
+      <div>${fmt(total.avg)}</div>
+      <div>${fmt(total.woba)}</div>
+      <div class="roster-snapshot-label">H-AB</div>
+      <div class="roster-snapshot-label">HR</div>
+      <div class="roster-snapshot-label">SO</div>
+      <div class="roster-snapshot-label">Most PA</div>
+      <div class="roster-snapshot-label">Best OPS</div>
+      <div>${total.h}-${total.ab}</div>
+      <div>${total.hr}</div>
+      <div>${total.so}</div>
+      <div>${total.topPaName || "-"}</div>
+      <div>${total.topOpsName ? `${total.topOpsName} ${fmt(total.topOps)}` : "-"}</div>
+      <div class="roster-snapshot-label">EV Allowed</div>
+      <div class="roster-snapshot-label">Launch Angle</div>
+      <div class="roster-snapshot-label">xBA</div>
+      <div class="roster-snapshot-label">xSLG</div>
+      <div class="roster-snapshot-label">xwOBA</div>
+      <div>${fmtStatcastValue("exit_velocity_avg", statcastRow?.exit_velocity_avg)}</div>
+      <div>${fmtStatcastValue("launch_angle_avg", statcastRow?.launch_angle_avg)}</div>
+      <div>${fmtStatcastValue("xba", statcastRow?.xba)}</div>
+      <div>${fmtStatcastValue("xslg", statcastRow?.xslg)}</div>
+      <div>${fmtStatcastValue("xwoba", statcastRow?.xwoba)}</div>
+    </div>
+    <small class="data-note">est. wOBA uses fixed linear weights from available matchup stats. ${statcastNote}</small>
+  `;
 }
 
 function formatHeadToHeadLine(rows, batterName, pitcherName, scopeLabel) {
@@ -890,6 +1072,10 @@ function statLine(stat = {}, keys = []) {
   return keys.map(([key, label, formatter]) => `${label} ${formatter ? formatter(stat[key]) : (stat[key] ?? "-")}`).join(" | ");
 }
 
+function percent(numerator, denominator) {
+  return denominator ? (numerator / denominator * 100).toFixed(1) : "-";
+}
+
 function rateStats(stat) {
   const ab = num(stat.atBats);
   const h = num(stat.hits);
@@ -946,12 +1132,96 @@ function aggregatePlayerTeamRows(rows) {
   }));
 }
 
-function renderPlayerTeamTable(type, rows) {
+function aggregatePitcherGameLogs(rows) {
+  const bySeasonTeam = new Map();
+  rows.forEach((row) => {
+    const key = `${row.season || "Career"}:${row.team || ""}`;
+    const existing = bySeasonTeam.get(key) || {
+      season: row.season || "Career",
+      team: row.team || "",
+      stat: {
+        gamesStarted: 0,
+        gamesPitched: 0,
+        wins: 0,
+        losses: 0,
+        ipOuts: 0,
+        earnedRuns: 0,
+        strikeOuts: 0,
+        baseOnBalls: 0,
+        homeRuns: 0
+      }
+    };
+    const stat = row.stat || {};
+    existing.stat.gamesStarted += num(stat.gamesStarted);
+    existing.stat.gamesPitched += num(stat.gamesPitched) || num(stat.gamesPlayed);
+    existing.stat.wins += num(stat.wins);
+    existing.stat.losses += num(stat.losses);
+    existing.stat.ipOuts += num(stat.outs) || inningsToOuts(stat.inningsPitched);
+    existing.stat.earnedRuns += num(stat.earnedRuns);
+    existing.stat.strikeOuts += num(stat.strikeOuts);
+    existing.stat.baseOnBalls += num(stat.baseOnBalls);
+    existing.stat.homeRuns += num(stat.homeRuns);
+    bySeasonTeam.set(key, existing);
+  });
+  return Array.from(bySeasonTeam.values()).map((row) => ({
+    ...row,
+    stat: {
+      ...row.stat,
+      inningsPitched: outsToInnings(row.stat.ipOuts),
+      era: row.stat.ipOuts ? fmt((row.stat.earnedRuns * 27) / row.stat.ipOuts, 2) : "-"
+    }
+  }));
+}
+
+function aggregatePitchingTotals(rows) {
+  const total = rows.reduce((acc, row) => {
+    const stat = row.stat || {};
+    acc.gamesStarted += num(stat.gamesStarted);
+    acc.gamesPitched += num(stat.gamesPitched);
+    acc.wins += num(stat.wins);
+    acc.losses += num(stat.losses);
+    acc.ipOuts += num(stat.ipOuts);
+    acc.earnedRuns += num(stat.earnedRuns);
+    acc.strikeOuts += num(stat.strikeOuts);
+    acc.baseOnBalls += num(stat.baseOnBalls);
+    acc.homeRuns += num(stat.homeRuns);
+    return acc;
+  }, {
+    gamesStarted: 0,
+    gamesPitched: 0,
+    wins: 0,
+    losses: 0,
+    ipOuts: 0,
+    earnedRuns: 0,
+    strikeOuts: 0,
+    baseOnBalls: 0,
+    homeRuns: 0
+  });
+  return {
+    ...total,
+    inningsPitched: outsToInnings(total.ipOuts),
+    era: total.ipOuts ? fmt((total.earnedRuns * 27) / total.ipOuts, 2) : "-"
+  };
+}
+
+async function pitcherVsTeamGameLog(player, seasonRows, opponentTeamId) {
+  const seasons = Array.from(new Set(seasonRows.map((row) => row.season).filter(Boolean))).sort();
+  if (!seasons.length) return [];
+  const logs = await Promise.all(seasons.map((season) => playerGameLog(player, "pitching", season)));
+  return aggregatePitcherGameLogs(logs.flat().filter((row) => Number(row.opponentId) === Number(opponentTeamId)));
+}
+
+function renderPlayerTeamTable(type, rows, pitchingRows = []) {
   const seasonRows = aggregatePlayerTeamRows(rows);
+  const pitchingBySeason = new Map(pitchingRows.map((row) => [String(row.season), row]));
   const columns = type === "pitcher"
     ? [
         ["season", "Season"],
         ["team", "Team"],
+        ["wins", "W"],
+        ["losses", "L"],
+        ["era", "ERA"],
+        ["inningsPitched", "IP"],
         ["plateAppearances", "BF"],
         ["atBats", "AB"],
         ["hits", "H"],
@@ -982,7 +1252,9 @@ function renderPlayerTeamTable(type, rows) {
         .map((row) => `
           <tr>
             ${columns.map(([key]) => {
-              const value = key === "season" ? row.season : key === "team" ? row.team : row.stat?.[key];
+              const pitchingRow = pitchingBySeason.get(String(row.season));
+              const pitchingValue = pitchingRow?.stat?.[key];
+              const value = key === "season" ? row.season : key === "team" ? row.team : pitchingValue ?? row.stat?.[key];
               return `<td>${value ?? "-"}</td>`;
             }).join("")}
           </tr>
@@ -1037,6 +1309,15 @@ async function updatePlayerVsTeam() {
           : `Season: AVG ${profile.season.avg || "-"} | OPS ${profile.season.ops || "-"} | HR ${profile.season.homeRuns || 0}`)
       : "Career regular-season view";
     const seasonRows = aggregatePlayerTeamRows(history.rows);
+    let pitchingRows = [];
+    let pitchingTotalNote = "";
+    if (type === "pitcher") {
+      pitchingRows = await pitcherVsTeamGameLog(player, seasonRows, opponent.id);
+      const pitchingTotals = aggregatePitchingTotals(pitchingRows);
+      if (pitchingRows.length) {
+        pitchingTotalNote = `${pitchingTotals.wins}-${pitchingTotals.losses} | ${pitchingTotals.era} ERA | ${pitchingTotals.inningsPitched} IP | ${pitchingTotals.earnedRuns} ER | ${pitchingTotals.strikeOuts} SO | ${pitchingTotals.baseOnBalls} BB | ${pitchingTotals.homeRuns} HR`;
+      }
+    }
 
     document.querySelector("#player-team-grid").innerHTML = `
       <article class="fantasy-note-card">
@@ -1051,11 +1332,12 @@ async function updatePlayerVsTeam() {
       </article>
       <article class="fantasy-note-card">
         <strong>Career vs Team</strong>
-        <span>${history.total ? totalNote : "No recorded team history"}</span>
+        <span>${pitchingTotalNote || (history.total ? totalNote : "No recorded team history")}</span>
+        ${pitchingTotalNote ? `<span>Opponent hitters: ${totalNote}</span>` : ""}
         <span>${seasonRows.length ? `${seasonRows.length} season rows` : "No season rows available"}</span>
       </article>
     `;
-    renderPlayerTeamTable(type, history.rows);
+    renderPlayerTeamTable(type, history.rows, pitchingRows);
     document.querySelector("#player-team-status").textContent = history.total ? "Loaded" : "No history found";
   } catch (error) {
     document.querySelector("#player-team-status").textContent = "Could not load";
@@ -1068,6 +1350,7 @@ async function updateTeamOffense() {
   const [teamAbbr, teamName] = selectedBattingTeam();
   document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcher.fullName}`;
   document.querySelector("#team-offense-status").textContent = "Loading offense...";
+  document.querySelector("#matchup-roster-snapshot").innerHTML = `<div class="empty-state">Loading roster snapshot...</div>`;
   document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="10" class="empty-row">Loading team offense...</td></tr>`;
   try {
     const hitters = await teamRosterHitters(teamAbbr);
@@ -1076,10 +1359,19 @@ async function updateTeamOffense() {
       headToHead: await headToHeadStats(hitter, pitcher)
     })));
     renderTeamOffense(rows, teamName, pitcher.fullName);
+    renderRosterSnapshot(rows, teamName, pitcher.fullName, null, "Loading Statcast row...");
+    pitcherStatcastProfile(pitcher)
+      .then((statcastRow) => {
+        renderRosterSnapshot(rows, teamName, pitcher.fullName, statcastRow, statcastRow ? "" : "No Statcast pitcher row found for this season.");
+      })
+      .catch(() => {
+        renderRosterSnapshot(rows, teamName, pitcher.fullName, null, "Statcast row loads on the live Netlify site when available.");
+      });
     syncTeamPitcherView();
     if (activeTeamPitcherView === "lens") await updateTeamDecisionLens(rows);
   } catch (error) {
     document.querySelector("#team-offense-status").textContent = "Could not load offense";
+    document.querySelector("#matchup-roster-snapshot").innerHTML = `<div class="empty-state">Could not load this roster snapshot.</div>`;
     document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="10" class="empty-row">Could not load this team's head-to-head history.</td></tr>`;
   }
 }
