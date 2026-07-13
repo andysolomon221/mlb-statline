@@ -302,6 +302,7 @@ const boardConfig = {
       ["auto", "Auto"],
       ["0", "All"],
       ["100", "100+"],
+      ["ab:200", "200+ AB"],
       ["300", "300+"],
       ["500", "500+"]
     ],
@@ -567,9 +568,37 @@ function playerWeight(player) {
 }
 
 function manualQualifierThreshold() {
+  return manualQualifierSpec()?.threshold ?? null;
+}
+
+function manualQualifierSpec() {
   if (activeQualifier === "auto") return null;
+  const [key, rawThreshold] = String(activeQualifier).includes(":")
+    ? String(activeQualifier).split(":")
+    : [config.weightKey, activeQualifier];
+  if (!["pa", "ab", "ipOuts"].includes(key)) return null;
+  const threshold = Number(rawThreshold);
+  return Number.isFinite(threshold) ? { key, threshold } : null;
+}
+
+function manualQualifierLabel() {
+  const option = config.qualifierOptions.find(([value]) => value === activeQualifier);
+  return option?.[1] || "";
+}
+
+function manualQualifierUnit() {
+  const spec = manualQualifierSpec();
+  if (!spec) return boardType === "pitching" ? "IP" : "PA";
+  if (spec.key === "ab") return "AB";
+  return boardType === "pitching" ? "IP" : "PA";
+}
+
+function manualQualifierDisplay() {
+  const label = manualQualifierLabel();
+  if (label) return label;
   const threshold = Number(activeQualifier);
-  return Number.isFinite(threshold) ? threshold : null;
+  if (!Number.isFinite(threshold)) return "";
+  return `${threshold}+ ${manualQualifierUnit()}`;
 }
 
 function mlbStatsUrl(year, sortMetric = activeMetric) {
@@ -861,8 +890,8 @@ function sortedRows(rows) {
 
 function qualifiedRows(rows, metric = activeMetric) {
   const positionRows = positionFilteredRows(rows);
-  const manualThreshold = manualQualifierThreshold();
-  if (manualThreshold !== null) return positionRows.filter((player) => playerWeight(player) >= manualThreshold);
+  const manualSpec = manualQualifierSpec();
+  if (manualSpec) return positionRows.filter((player) => toNumber(player[manualSpec.key]) >= manualSpec.threshold);
   if (activeTeamId !== "all") return positionRows;
   if (!config.rateMetrics.includes(metric)) return positionRows;
   if (activeMode === "date") {
@@ -1630,7 +1659,7 @@ function renderTable() {
   if (note) {
     const qualifierText = activeQualifier === "auto"
       ? ""
-      : ` Minimum ${boardType === "pitching" ? "IP" : "PA"} filter is active.`;
+      : ` Minimum ${manualQualifierDisplay()} filter is active.`;
     if (hasSearch) {
       const label = rows.length === 1 ? rows[0].name : cleanSearchInput(document.querySelector("#player-search")?.value || query);
       note.innerHTML = `
