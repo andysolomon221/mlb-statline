@@ -78,6 +78,16 @@
       "seasons": "1988-2007",
       "careerSo": 3116,
       "rank": 11
+    },
+    {
+      "id": "ohtas001",
+      "mlbamId": 660271,
+      "bbrefId": "ohtansh01",
+      "name": "Shohei Ohtani",
+      "seasons": "2018-2026",
+      "careerSo": 765,
+      "dataThrough": "2026 regular season",
+      "source": "MLB Stats API game feeds"
     }
   ]
 }
