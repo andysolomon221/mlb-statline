@@ -415,7 +415,7 @@ function renderComparePlayerPanel(player, side) {
   return `
     <article class="compare-portrait-card">
       <div class="compare-headshot-frame">
-        <img src="${headshotUrl(player)}" alt="" loading="lazy" />
+        <img src="${headshotUrl(player)}" alt="${escapeHtml(player.fullName)}" loading="lazy" />
       </div>
       <a class="summary-link" href="${escapeHtml(careerUrl(player.fullName))}">${escapeHtml(player.fullName)}</a>
       <small>${escapeHtml(playerScopeLine(player, side))}</small>
@@ -437,7 +437,7 @@ function renderComparison(statsA, statsB) {
   document.querySelector("#compare-player-grid").innerHTML = `
     ${renderComparePlayerPanel(playerA, "a")}
     <div class="compare-vs-mark">
-      <img src="statline-logo.png" alt="" />
+      <img src="statline-logo.png" alt="Stat Line Baseball" />
       <span>${escapeHtml(scopeLabel())}</span>
       <strong>${activeGroup === "hitting" ? "Batting" : "Pitching"}</strong>
     </div>

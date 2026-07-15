@@ -41,6 +41,15 @@ if (!teams.some(([key]) => key === activeTeam)) {
   activeTeam = "all";
 }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 const fallbackSources = [
   ["MLB.com News", "https://www.mlb.com/news"],
   ["CBS Sports MLB", "https://www.cbssports.com/mlb/"],
@@ -205,7 +214,7 @@ function renderStories() {
   document.querySelector("#news-title").textContent = activeTeam === "all" ? "Latest baseball stories" : `${teamRecord()[1]} stories`;
   document.querySelector("#news-grid").innerHTML = data.map((story) => `
     <article class="news-card">
-      ${story.image ? `<img src="${story.image}" alt="" loading="lazy" />` : ""}
+      ${story.image ? `<img src="${story.image}" alt="${escapeHtml(story.title)}" loading="lazy" />` : ""}
       <div>
         <span class="news-source">${story.source} | ${formatDate(story.pubDate)}</span>
         <h3><a href="${story.link}" target="_blank" rel="noopener noreferrer">${story.title}</a></h3>

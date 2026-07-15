@@ -3,22 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Statline Baseball Damage Board</title>
+    <title>Statline Baseball Player vs Pitchers</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="icon" href="favicon-48.png" sizes="48x48" type="image/png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="manifest" href="site.webmanifest" />
-    <meta name="description" content="Build hitter and pitcher damage boards by ranking the opponents a star hurt most by home runs, strikeouts, hits, OPS, and more." />
-    <meta property="og:title" content="Statline Baseball Damage Board" />
-    <meta property="og:description" content="Build hitter and pitcher damage boards by ranking the opponents a star hurt most by home runs, strikeouts, hits, OPS, and more." />
+    <meta name="description" content="Rank the pitchers a hitter has faced by home runs, hits, RBI, OPS, and more." />
+    <meta property="og:title" content="Statline Baseball Player vs Pitchers" />
+    <meta property="og:description" content="Rank the pitchers a hitter has faced by home runs, hits, RBI, OPS, and more." />
     <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Statline Baseball Damage Board" />
-    <meta name="twitter:description" content="Build hitter and pitcher damage boards by ranking the opponents a star hurt most by home runs, strikeouts, hits, OPS, and more." />
+    <meta name="twitter:title" content="Statline Baseball Player vs Pitchers" />
+    <meta name="twitter:description" content="Rank the pitchers a hitter has faced by home runs, hits, RBI, OPS, and more." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
     <link rel="stylesheet" href="styles.css?v=20260710-trends-historic-seasons" />
   </head>
@@ -32,7 +32,8 @@
           <a href="pitching.html">Pitching</a>
           <a href="advanced.html">Advanced Stats</a>
           <a href="matchups.html">Matchups</a>
-          <a class="active" href="damage-board.html">Damage Board</a>
+          <a href="damage-board.html">Damage Board</a>
+          <a class="active" href="player-vs-pitchers.html">Player vs Pitchers</a>
           <a href="standings.html">Standings</a>
           <a href="trends.html">Trends</a>
           <a href="compare.html">Compare</a>
@@ -50,11 +51,11 @@
       <main id="player-vs-pitchers-dashboard">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Statline Baseball Damage Board</p>
+            <p class="eyebrow">Statline Baseball Player vs Pitchers</p>
             <h1 id="player-vs-pitchers-heading">Barry Bonds homers by opposing pitcher.</h1>
           </div>
           <div class="season-control split-search-card" aria-label="Player vs pitchers search">
-            <label for="pvp-player" id="pvp-player-label">Hitter</label>
+            <label for="pvp-player">Player</label>
             <div class="search-action">
               <select id="pvp-player" aria-label="Choose player"></select>
               <button type="button" id="pvp-run">View</button>
@@ -65,28 +66,20 @@
         <section class="panel player-vs-pitchers-controls" aria-label="Player vs pitchers controls">
           <div class="section-head">
             <div>
-              <p class="eyebrow" id="pvp-controls-eyebrow">Opponent Pitchers</p>
-              <h2 id="pvp-controls-intro">Build a shareable top board, then scan the full pitcher list below</h2>
+              <p class="eyebrow">Opponent Pitchers</p>
+              <h2>Build a shareable top board, then scan the full pitcher list below</h2>
             </div>
             <div class="split-status" id="pvp-status">Loading data...</div>
           </div>
           <div class="compare-control-grid">
             <label>
-              <span>Mode</span>
-              <select id="pvp-mode" aria-label="Damage board mode">
-                <option value="hitter">Hitter Damage</option>
-                <option value="pitcher">Pitcher Damage</option>
-              </select>
-            </label>
-            <label>
               <span>Sort By</span>
               <select id="pvp-sort" aria-label="Sort stat">
                 <option value="hr">HR</option>
-                <option value="so">SO</option>
                 <option value="h">H</option>
-                <option value="ab">AB</option>
                 <option value="rbi">RBI</option>
                 <option value="bb">BB</option>
+                <option value="so">SO</option>
                 <option value="ops">OPS</option>
                 <option value="avg">AVG</option>
                 <option value="pa">PA</option>
@@ -108,7 +101,7 @@
                 <option value="10">Top 10</option>
                 <option value="20">Top 20</option>
                 <option value="50">Top 50</option>
-                <option value="all" id="pvp-limit-all">All Pitchers</option>
+                <option value="all">All Pitchers</option>
               </select>
             </label>
             <label>
@@ -125,17 +118,17 @@
 
         <section class="score-strip player-vs-pitchers-summary" aria-label="Player vs pitchers summary">
           <article>
-            <span id="pvp-selected-label">Selected Hitter</span>
+            <span>Selected Hitter</span>
             <strong id="pvp-player-name">Barry Bonds</strong>
             <small id="pvp-player-note">Regular season only</small>
           </article>
           <article>
-            <span id="pvp-faced-label">Pitchers Faced</span>
+            <span>Pitchers Faced</span>
             <strong id="pvp-pitchers-faced">--</strong>
             <small id="pvp-data-through">Retrosheet play-by-play</small>
           </article>
           <article>
-            <span id="pvp-total-label">Total HR</span>
+            <span>Total HR</span>
             <strong id="pvp-total-hr">--</strong>
             <small id="pvp-total-note">Against all opposing pitchers</small>
           </article>
@@ -159,7 +152,7 @@
         <section class="panel leaderboard player-vs-pitchers-table-panel">
           <div class="section-head">
             <div>
-              <p class="eyebrow" id="pvp-table-eyebrow">Pitcher List</p>
+              <p class="eyebrow">Pitcher List</p>
               <h2 id="pvp-table-title">All pitchers: Barry Bonds HR by opposing pitcher</h2>
             </div>
             <div class="pvp-full-actions">
@@ -171,7 +164,7 @@
                   <option value="10">Top 10</option>
                   <option value="20">Top 20</option>
                   <option value="50">Top 50</option>
-                  <option value="all" id="pvp-bottom-all">All Pitchers</option>
+                  <option value="all">All Pitchers</option>
                 </select>
               </label>
             </div>
@@ -180,7 +173,7 @@
             <table class="player-vs-pitchers-table">
               <thead>
                 <tr>
-                  <th id="pvp-first-column">Pitcher</th>
+                  <th>Pitcher</th>
                   <th><button type="button" data-pvp-sort="pa">PA</button></th>
                   <th><button type="button" data-pvp-sort="ab">AB</button></th>
                   <th><button type="button" data-pvp-sort="h">H</button></th>
@@ -195,7 +188,7 @@
               <tbody id="pvp-table"></tbody>
             </table>
           </div>
-          <small class="data-note" id="pvp-data-note">Regular-season Retrosheet play-by-play, with official regular-season tie-breaker games included.</small>
+          <small class="data-note" id="pvp-data-note">Regular-season Retrosheet play-by-play. Local proof dataset currently includes Barry Bonds.</small>
         </section>
 
         <footer class="site-footer">
@@ -207,6 +200,6 @@
       </main>
     </div>
 
-    <script src="damage-board.js?v=20260707-damage-board-career-links"></script>
+    <script src="player-vs-pitchers.js?v=20260707-bottom-default-sortable"></script>
   </body>
 </html>
