@@ -399,12 +399,13 @@ function playerApiUrl() {
   const params = new URLSearchParams({
     season: state.scope === "season" ? String(state.season) : range.end.slice(0, 4),
     group: "pitching",
-    stats: state.scope === "season" ? "season" : "byDateRange",
+    stats: state.scope === "season" ? "statSplits" : "byDateRange",
     playerPool: "ALL",
     sportIds: "1",
     hydrate: "team",
     limit: "5000",
-    sortStat: "inningsPitched"
+    sortStat: "inningsPitched",
+    sitCodes: state.staff === "starters" ? "sp" : "rp"
   });
   if (state.scope !== "season") {
     params.set("startDate", isoToMlbDate(range.start));
@@ -427,9 +428,9 @@ async function fetchRows() {
 }
 
 async function fetchPitcherRoleRows() {
-  const url = `${playerApiUrl()}&staff=${state.staff}`;
+  const url = playerApiUrl();
   if (cache.has(url)) return cache.get(url);
-  const response = await fetch(playerApiUrl());
+  const response = await fetch(url);
   if (!response.ok) throw new Error(`MLB player stats returned ${response.status}`);
   const data = await response.json();
   const teams = new Map();
@@ -439,8 +440,7 @@ async function fetchPitcherRoleRows() {
     const teamId = Number(team?.id) || 0;
     const starts = toNumber(stat.gamesStarted);
     const gamesPitched = toNumber(stat.gamesPitched || stat.gamesPlayed);
-    const reliefGames = Math.max(0, gamesPitched - starts);
-    const roleGames = state.staff === "starters" ? starts : reliefGames;
+    const roleGames = state.staff === "starters" ? (starts || gamesPitched) : Math.max(0, gamesPitched - starts);
     if (!teamId || roleGames <= 0) return;
     const existing = teams.get(teamId) || {
       id: teamId,
