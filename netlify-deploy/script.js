@@ -2109,14 +2109,17 @@ function teamMetricLabel(key = activeTeamMetric) {
 }
 
 function uniqueTeamOptions() {
-  return Array.from(
-    new Map(
-      teamRows
-        .slice()
-        .sort((a, b) => a.name.localeCompare(b.name) || String(a.id).localeCompare(String(b.id)))
-        .map((team) => [team.name, team])
-    ).values()
-  );
+  const teamsByName = new Map();
+  teamRows
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name) || String(a.id).localeCompare(String(b.id)))
+    .forEach((team) => {
+      const existing = teamsByName.get(team.name);
+      const teamIsCurrent = Boolean(currentTeamNamesById[Number(team.id)]);
+      const existingIsCurrent = Boolean(existing && currentTeamNamesById[Number(existing.id)]);
+      if (!existing || (teamIsCurrent && !existingIsCurrent)) teamsByName.set(team.name, team);
+    });
+  return Array.from(teamsByName.values());
 }
 
 function teamOptions() {
