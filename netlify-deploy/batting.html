@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Batting Leaders by Position & Season" />
     <meta name="twitter:description" content="Explore MLB batting leaders by position, season, team, league, player, and custom year range." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260710-trends-historic-seasons" />
+    <link rel="stylesheet" href="styles.css?v=20260715-active-player-filter" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -166,6 +166,13 @@
               <label for="position-filter">Position</label>
               <select id="position-filter" aria-label="Position filter"></select>
             </div>
+            <div class="status-filter">
+              <label for="player-status-filter">Player Status</label>
+              <select id="player-status-filter" aria-label="Player status filter">
+                <option value="all">All players</option>
+                <option value="active">Active players</option>
+              </select>
+            </div>
             <div class="qualifier-filter">
               <label for="qualifier-filter">Min PA</label>
               <select id="qualifier-filter" aria-label="Minimum plate appearances"></select>
@@ -267,6 +274,6 @@
       </main>
     </div>
 
-    <script src="script.js?v=20260713-batting-200-pa"></script>
+    <script src="script.js?v=20260715-active-player-filter"></script>
   </body>
 </html>

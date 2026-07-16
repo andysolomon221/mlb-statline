@@ -812,6 +812,7 @@ h2 {
 
 .team-filter,
 .position-filter,
+.status-filter,
 .qualifier-filter {
   display: grid;
   grid-template-columns: auto minmax(220px, 320px);
@@ -823,6 +824,7 @@ h2 {
 
 .team-filter label,
 .position-filter label,
+.status-filter label,
 .qualifier-filter label {
   color: var(--muted);
   font-size: 12px;
@@ -3785,6 +3787,7 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
   .league-toggle,
   .team-filter,
   .position-filter,
+  .status-filter,
   .qualifier-filter,
   .workbench,
   .data-grid,
@@ -4053,7 +4056,8 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
   }
 
   .team-filter,
-  .position-filter {
+  .position-filter,
+  .status-filter {
     width: 100%;
   }
 

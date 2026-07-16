@@ -116,6 +116,7 @@ let pendingTeamAbbr = new URLSearchParams(window.location.search).get("team") ||
 let activeTeamId = "all";
 let activeTeamName = "All teams";
 let activePosition = "all";
+let activePlayerStatus = "all";
 let activeBoardSize = "leaders";
 let activeTeamMetric = "wins";
 let activeQualifier = "auto";
@@ -137,6 +138,7 @@ const numberFormat = new Intl.NumberFormat("en-US");
 const firstSeason = 1901;
 const lastSeason = 2026;
 const seasonLeaderCache = new Map();
+const activePlayerCache = new Map();
 const dateLeaderCache = new Map();
 const datePlayerCache = new Map();
 const peopleSearchCache = new Map();
@@ -415,6 +417,7 @@ if (initialParams.get("season") && activeMode !== "date") {
 }
 if (["all", "al", "nl"].includes(initialParams.get("league"))) activeLeague = initialParams.get("league");
 if (initialParams.get("position")) activePosition = initialParams.get("position");
+if (["all", "active"].includes(initialParams.get("status"))) activePlayerStatus = initialParams.get("status");
 if (initialParams.get("qualifier")) activeQualifier = initialParams.get("qualifier");
 if (["leaders", "all"].includes(initialParams.get("size"))) activeBoardSize = initialParams.get("size");
 if (["all", "player", "team"].includes(initialParams.get("scope"))) activeSearchScope = initialParams.get("scope");
@@ -665,6 +668,10 @@ function currentPositionFilter() {
   return document.querySelector("#position-filter")?.value || activePosition;
 }
 
+function currentPlayerStatusFilter() {
+  return document.querySelector("#player-status-filter")?.value || activePlayerStatus;
+}
+
 function normalizePosition(position) {
   const clean = String(position || "").toUpperCase();
   if (["LF", "CF", "RF", "OF"].includes(clean)) return "OF";
@@ -737,6 +744,31 @@ async function fetchSeasonLeaders(year) {
   return rows;
 }
 
+async function activePlayerIds() {
+  const cacheKey = `${boardType}:${lastSeason}`;
+  if (activePlayerCache.has(cacheKey)) return activePlayerCache.get(cacheKey);
+  const params = new URLSearchParams({
+    stats: "season",
+    group: config.group,
+    season: String(lastSeason),
+    playerPool: "ALL",
+    limit: "5000"
+  });
+  const response = await fetch(`https://statsapi.mlb.com/api/v1/stats?${params.toString()}`);
+  if (!response.ok) throw new Error(`MLB Stats API returned ${response.status}`);
+  const data = await response.json();
+  const ids = new Set((data.stats?.[0]?.splits || [])
+    .map((split) => String(split.player?.id || split.player?.fullName))
+    .filter(Boolean));
+  activePlayerCache.set(cacheKey, ids);
+  return ids;
+}
+
+async function markActivePlayers(rows) {
+  const ids = await activePlayerIds();
+  return rows.map((row) => ({ ...row, activePlayer: ids.has(String(row.id || row.name)) }));
+}
+
 async function fetchDateRangeLeaders() {
   activeDateRange = normalizeDateRange();
   const cacheKey = `${boardType}:${activeLeague}:${activeTeamId}:${activeDateRange.start}:${activeDateRange.end}`;
@@ -800,12 +832,13 @@ async function refreshSearchedDateRangePlayer() {
 
 async function currentPlayers() {
   if (activeMode === "single") {
-    return (await fetchSeasonLeaders(Number(activeSeason))).slice();
+    return markActivePlayers((await fetchSeasonLeaders(Number(activeSeason))).slice());
   }
   if (activeMode === "date") {
-    return (await fetchDateRangeLeaders()).slice();
+    return markActivePlayers((await fetchDateRangeLeaders()).slice());
   }
 
+  const activeIds = await activePlayerIds();
   const byPlayer = new Map();
   const seasonsInRange = await fetchInBatches(yearList(activeRange.start, activeRange.end), fetchSeasonLeaders);
   seasonsInRange.forEach((players) => {
@@ -813,6 +846,7 @@ async function currentPlayers() {
       const key = player.id || player.name;
       const weight = playerWeight(player);
       const existing = byPlayer.get(key) || {
+        id: player.id,
         name: player.name,
         team: player.team,
         teamNames: new Map(),
@@ -823,8 +857,10 @@ async function currentPlayers() {
         weight: 0,
         qualifier: 0,
         seasons: 0,
-        teams: new Map()
+        teams: new Map(),
+        activePlayer: false
       };
+      existing.activePlayer = existing.activePlayer || activeIds.has(String(player.id || player.name));
       config.columns.forEach(([metric]) => {
         if (config.rateMetrics.includes(metric)) {
           existing.weightedTotals[metric] = (existing.weightedTotals[metric] || 0) + player[metric] * weight;
@@ -855,12 +891,14 @@ async function currentPlayers() {
     const primaryTeamName = Array.from(player.teamNames.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || primaryTeam;
     const primaryPosition = Array.from(player.positions.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "UTIL";
     const row = {
+      id: player.id,
       name: player.name,
       team: primaryTeam,
       teamName: primaryTeamName,
       position: primaryPosition,
       qualifier: player.qualifier,
-      seasons: player.seasons
+      seasons: player.seasons,
+      activePlayer: Boolean(player.activePlayer)
     };
     config.columns.forEach(([metric]) => {
       row[metric] = config.rateMetrics.includes(metric)
@@ -890,17 +928,18 @@ function sortedRows(rows) {
 
 function qualifiedRows(rows, metric = activeMetric) {
   const positionRows = positionFilteredRows(rows);
+  const statusRows = statusFilteredRows(positionRows);
   const manualSpec = manualQualifierSpec();
-  if (manualSpec) return positionRows.filter((player) => toNumber(player[manualSpec.key]) >= manualSpec.threshold);
-  if (activeTeamId !== "all") return positionRows;
-  if (!config.rateMetrics.includes(metric)) return positionRows;
+  if (manualSpec) return statusRows.filter((player) => toNumber(player[manualSpec.key]) >= manualSpec.threshold);
+  if (activeTeamId !== "all") return statusRows;
+  if (!config.rateMetrics.includes(metric)) return statusRows;
   if (activeMode === "date") {
     const days = dateRangeDays();
     const threshold = boardType === "pitching"
       ? Math.max(9, Math.min(90, days * 3))
       : Math.max(10, Math.min(100, days * 2.5));
-    const filtered = positionRows.filter((player) => playerWeight(player) >= threshold);
-    return filtered.length >= 5 ? filtered : positionRows.filter((player) => playerWeight(player) >= Math.max(5, threshold * .5));
+    const filtered = statusRows.filter((player) => playerWeight(player) >= threshold);
+    return filtered.length >= 5 ? filtered : statusRows.filter((player) => playerWeight(player) >= Math.max(5, threshold * .5));
   }
   const years = activeMode === "single" ? 1 : yearList(activeRange.start, activeRange.end).length;
   const isCurrentSeason = Number(activeSeason) === lastSeason && activeMode === "single";
@@ -910,13 +949,17 @@ function qualifiedRows(rows, metric = activeMetric) {
   const maxRangeThreshold = 3000;
   const rangeThreshold = Math.min(years * (boardType === "pitching" ? 360 : 300), maxRangeThreshold);
   const threshold = activeMode === "single" ? seasonThreshold : rangeThreshold;
-  const filtered = positionRows.filter((player) => playerWeight(player) >= threshold);
-  return filtered.length >= 5 ? filtered : positionRows.filter((player) => playerWeight(player) >= Math.max(50, threshold * .5));
+  const filtered = statusRows.filter((player) => playerWeight(player) >= threshold);
+  return filtered.length >= 5 ? filtered : statusRows.filter((player) => playerWeight(player) >= Math.max(50, threshold * .5));
 }
 
 function positionFilteredRows(rows) {
   const position = currentPositionFilter();
   return position === "all" ? rows : rows.filter((player) => player.position === position);
+}
+
+function statusFilteredRows(rows) {
+  return currentPlayerStatusFilter() === "active" ? rows.filter((player) => player.activePlayer) : rows;
 }
 
 function renderLoadingLeaders() {
@@ -1612,7 +1655,7 @@ function renderChart() {
   if (leaderError) return renderLeaderError(leaderError);
   const direction = defaultSortDir(activeMetric);
   const query = currentPlayerSearchQuery();
-  const sourceRows = query && manualQualifierThreshold() === null ? positionFilteredRows(leaderRows) : qualifiedRows(leaderRows);
+  const sourceRows = query && manualQualifierThreshold() === null ? statusFilteredRows(positionFilteredRows(leaderRows)) : qualifiedRows(leaderRows);
   const data = sourceRows.filter((player) => matchesPlayerSearch(player, query)).slice().sort((a, b) => (a[activeMetric] - b[activeMetric]) * direction).slice(0, 7);
   if (!data.length) {
     document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">No players found for this filter.</div>`;
@@ -1650,7 +1693,7 @@ function renderTable() {
   if (leaderError) return renderLeaderError(leaderError);
   const query = currentPlayerSearchQuery();
   const hasSearch = Boolean(query);
-  const sourceRows = hasSearch && manualQualifierThreshold() === null ? positionFilteredRows(leaderRows) : qualifiedRows(leaderRows, activeSort.key);
+  const sourceRows = hasSearch && manualQualifierThreshold() === null ? statusFilteredRows(positionFilteredRows(leaderRows)) : qualifiedRows(leaderRows, activeSort.key);
   const rows = sortedRows(sourceRows
     .filter((player) => matchesPlayerSearch(player, query))
   );
@@ -1660,6 +1703,7 @@ function renderTable() {
     const qualifierText = activeQualifier === "auto"
       ? ""
       : ` Minimum ${manualQualifierDisplay()} filter is active.`;
+    const statusText = currentPlayerStatusFilter() === "active" ? " Active players filter is active." : "";
     if (hasSearch) {
       const label = rows.length === 1 ? rows[0].name : cleanSearchInput(document.querySelector("#player-search")?.value || query);
       note.innerHTML = `
@@ -1667,11 +1711,11 @@ function renderTable() {
           <span>Showing ${escapeHtml(label)}</span>
           <button type="button" id="clear-player-search">Clear</button>
         </span>
-        <span>${rows.length} matching ${config.label} ${rows.length === 1 ? "player" : "players"} in ${escapeHtml(currentSearchScope())} search.${escapeHtml(qualifierText)}</span>
+        <span>${rows.length} matching ${config.label} ${rows.length === 1 ? "player" : "players"} in ${escapeHtml(currentSearchScope())} search.${escapeHtml(qualifierText)}${escapeHtml(statusText)}</span>
       `;
       note.querySelector("#clear-player-search")?.addEventListener("click", clearPlayerSearch);
     } else {
-      note.textContent = qualifierText.trim();
+      note.textContent = `${qualifierText}${statusText}`.trim();
     }
   }
 
@@ -2050,6 +2094,8 @@ function renderBoardControls() {
     .map(([key, label]) => `<option value="${key}">${label}</option>`)
     .join("");
   document.querySelector("#position-filter").value = activePosition;
+  const statusFilter = document.querySelector("#player-status-filter");
+  if (statusFilter) statusFilter.value = activePlayerStatus;
   document.querySelector(".qualifier-filter label").textContent = config.qualifierLabel;
   document.querySelector("#qualifier-filter").innerHTML = config.qualifierOptions
     .map(([value, label]) => `<option value="${value}">${label}</option>`)
@@ -2280,6 +2326,7 @@ function boardShareParams() {
   const selectedTeam = teamRows.find((team) => String(team.id) === String(activeTeamId));
   if (selectedTeam) params.set("team", selectedTeam.abbr);
   if (activePosition !== "all") params.set("position", activePosition);
+  if (activePlayerStatus !== "all") params.set("status", activePlayerStatus);
   if (activeQualifier !== "auto") params.set("qualifier", activeQualifier);
   if (activeBoardSize !== "leaders") params.set("size", activeBoardSize);
   if (activeSearchScope !== "all") params.set("scope", activeSearchScope);
@@ -2402,6 +2449,12 @@ function bindEvents() {
   document.querySelector("#position-filter").addEventListener("change", (event) => {
     activePosition = event.target.value;
     renderSummary();
+    renderChart();
+    renderTable();
+  });
+
+  document.querySelector("#player-status-filter")?.addEventListener("change", (event) => {
+    activePlayerStatus = event.target.value;
     renderChart();
     renderTable();
   });
