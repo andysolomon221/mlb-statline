@@ -2135,6 +2135,17 @@ body[data-board="hitting"] .player-board-table td:not(:first-child):not(:nth-chi
   text-transform: uppercase;
 }
 
+.roster-snapshot-grid .roster-snapshot-section {
+  grid-column: 1 / -1;
+  min-height: 30px;
+  justify-content: start;
+  border-top: 2px solid var(--ink);
+  color: var(--brick);
+  background: #fffdfa;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
 th,
 td {
   padding: 14px 12px;

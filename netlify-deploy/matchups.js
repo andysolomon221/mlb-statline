@@ -838,11 +838,12 @@ function renderRosterSnapshot(rows, teamName, pitcherName, statcastRow = null, s
       <div>${total.so}</div>
       <div>${total.topPaName || "-"}</div>
       <div>${total.topOpsName ? `${total.topOpsName} ${fmt(total.topOps)}` : "-"}</div>
-      <div class="roster-snapshot-label">${activeSeason} EV Allowed</div>
-      <div class="roster-snapshot-label">${activeSeason} LA Allowed</div>
-      <div class="roster-snapshot-label">${activeSeason} xBA Allowed</div>
-      <div class="roster-snapshot-label">${activeSeason} xSLG Allowed</div>
-      <div class="roster-snapshot-label">${activeSeason} xwOBA Allowed</div>
+      <div class="roster-snapshot-section">Pitcher ${activeSeason} allowed profile</div>
+      <div class="roster-snapshot-label">EV Allowed</div>
+      <div class="roster-snapshot-label">LA Allowed</div>
+      <div class="roster-snapshot-label">xBA Allowed</div>
+      <div class="roster-snapshot-label">xSLG Allowed</div>
+      <div class="roster-snapshot-label">xwOBA Allowed</div>
       <div>${fmtStatcastValue("exit_velocity_avg", statcastRow?.exit_velocity_avg)}</div>
       <div>${fmtStatcastValue("launch_angle_avg", statcastRow?.launch_angle_avg)}</div>
       <div>${fmtStatcastValue("xba", statcastRow?.xba)}</div>
