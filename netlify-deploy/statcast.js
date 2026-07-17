@@ -216,7 +216,7 @@ function renderSummary() {
   document.querySelector("#statcast-scope-note").textContent = teamLabel;
   document.querySelector("#statcast-count").textContent = data.length;
   document.querySelector("#statcast-count-note").textContent = `${activeSampleMinimum() ? `${activeSampleMinimum()}+ ${sampleLabel()}` : `All ${sampleLabel()}`} sample`;
-  document.querySelector("#statcast-chart-title").textContent = `${metricLabel()} ${activeType === "batter" ? "hitter" : "pitcher"} leaders`;
+  document.querySelector("#statcast-chart-title").innerHTML = `${metricLabel()} ${activeType === "batter" ? "hitter" : "pitcher"} leaders <span class="chart-scale-note">bars scaled to leader</span>`;
   document.querySelector("#statcast-table-title").textContent = `${teamLabel} ${metricLabel()} Statcast ${activeType === "batter" ? "hitters" : "pitchers"}`;
 }
 

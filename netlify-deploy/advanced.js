@@ -531,7 +531,7 @@ function renderSummary() {
   document.querySelector("#advanced-scope-note").textContent = activeTeamId === "all" ? (activeLeague === "all" ? "All MLB" : activeLeague.toUpperCase()) : activeTeamName;
   document.querySelector("#advanced-count").textContent = data.length;
   document.querySelector("#advanced-count-note").textContent = activeQualifierMinimum() ? `${activeQualifierMinimum()}+ ${qualifierLabel()} sample` : `All ${qualifierLabel()}`;
-  document.querySelector("#advanced-chart-title").textContent = `${metricLabel()} ${activeType === "hitting" ? "hitter" : "pitcher"} leaders`;
+  document.querySelector("#advanced-chart-title").innerHTML = `${metricLabel()} ${activeType === "hitting" ? "hitter" : "pitcher"} leaders <span class="chart-scale-note">bars scaled to leader</span>`;
   document.querySelector("#advanced-table-title").textContent = `${activeTeamId === "all" ? scopeLabel() : activeTeamName} ${metricLabel()} advanced ${config().label}`;
 }
 

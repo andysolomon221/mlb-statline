@@ -1637,7 +1637,7 @@ function renderSummary() {
   }
   document.querySelector("#k-rate").textContent = `${summary.k.toFixed(1)}%`;
   document.querySelector("#save-rate").textContent = boardType === "pitching" ? `${summary.saves}%` : summary.power.toFixed(2);
-  document.querySelector("#chart-title").textContent = `${label} ${config.chartNoun} leaders`;
+  document.querySelector("#chart-title").innerHTML = `${label} ${config.chartNoun} leaders <span class="chart-scale-note">bars scaled to leader</span>`;
   document.querySelector("#compare-title").textContent = `${teamScopeLabel()} club comparison`;
   const tableNoun = activeTeamId === "all" ? "leaders" : "players";
   document.querySelector("#table-title").textContent = activeMode === "single"

@@ -605,7 +605,7 @@ function renderBoard(rows, metric) {
   const maxStat = rows.length ? formatValue(rows[0], metric) : "-";
   const staffText = state.group === "pitching" && state.staff !== "full" ? ` ${staffLabels[state.staff]}` : "";
   els.boardTitle.textContent = `${state.size >= rows.length ? "All Teams" : `Top ${state.size}`}: ${leagueLabels[state.league]} team${staffText} ${metric.label}`;
-  els.boardNote.textContent = `${boardRows.length} of ${rows.length} teams shown`;
+  els.boardNote.textContent = `${boardRows.length} of ${rows.length} teams shown · bars scaled to leader`;
   els.board.innerHTML = boardRows.map((row) => {
     const pct = barPercent(row, rows, metric);
     return `

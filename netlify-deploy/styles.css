@@ -1741,12 +1741,22 @@ input[type="search"] {
 .bar-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--teal), var(--gold));
+  background: var(--teal);
 }
 
 .bar-value {
   text-align: right;
   font-weight: 800;
+}
+
+.chart-scale-note {
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  vertical-align: middle;
 }
 
 .empty-state,
@@ -2796,7 +2806,7 @@ td {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--teal), var(--team-color, var(--gold)) 48%, var(--gold));
+  background: var(--teal);
 }
 
 .trend-value {
