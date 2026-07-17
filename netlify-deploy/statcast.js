@@ -41,8 +41,10 @@ const lowerBetter = {
 
 function applyInitialStatcastParams() {
   if (["batter", "pitcher"].includes(initialParams.get("type"))) activeType = initialParams.get("type");
-  const season = Number(initialParams.get("season"));
-  if (Number.isFinite(season)) activeSeason = String(clamp(season, firstSeason, lastSeason));
+  if (initialParams.has("season")) {
+    const season = Number(initialParams.get("season"));
+    if (Number.isFinite(season)) activeSeason = String(clamp(season, firstSeason, lastSeason));
+  }
   const metric = initialParams.get("metric");
   if (metrics[activeType].some(([key]) => key === metric)) {
     activeMetric = metric;

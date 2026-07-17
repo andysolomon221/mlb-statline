@@ -224,10 +224,12 @@ function applyInitialAgeParams() {
   const team = String(initialParams.get("team") || "").toUpperCase();
   if (teamOptions.some(([value]) => value === team)) activeTeam = team;
   if (["before", "through", "older", "after"].includes(initialParams.get("rule"))) activeRule = initialParams.get("rule");
-  const age = Number(initialParams.get("age"));
-  if (Number.isFinite(age)) activeAge = Math.min(maxPlayerAge, Math.max(minPlayerAge, age));
-  const start = Number(initialParams.get("start"));
-  const end = Number(initialParams.get("end"));
+  if (initialParams.has("age")) {
+    const age = Number(initialParams.get("age"));
+    if (Number.isFinite(age)) activeAge = Math.min(maxPlayerAge, Math.max(minPlayerAge, age));
+  }
+  const start = initialParams.has("start") ? Number(initialParams.get("start")) : null;
+  const end = initialParams.has("end") ? Number(initialParams.get("end")) : null;
   if (Number.isFinite(start) && Number.isFinite(end)) {
     activeRange = {
       start: Math.min(lastAgeSeason, Math.max(firstAgeSeason, start)),
@@ -235,8 +237,8 @@ function applyInitialAgeParams() {
     };
   }
   if (initialParams.get("advanced") === "1") activeAdvancedAgeRange = true;
-  const ageStart = Number(initialParams.get("ageStart"));
-  const ageEnd = Number(initialParams.get("ageEnd"));
+  const ageStart = initialParams.has("ageStart") ? Number(initialParams.get("ageStart")) : null;
+  const ageEnd = initialParams.has("ageEnd") ? Number(initialParams.get("ageEnd")) : null;
   if (Number.isFinite(ageStart) && Number.isFinite(ageEnd)) {
     activeAgeRange = {
       start: Math.min(maxPlayerAge, Math.max(minPlayerAge, ageStart)),
