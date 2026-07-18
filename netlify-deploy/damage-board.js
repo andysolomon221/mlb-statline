@@ -1,4 +1,5 @@
 const initialParams = new URLSearchParams(window.location.search);
+const DAMAGE_BOARD_DATA_VERSION = "20260718-expanded-player-pool";
 const requestedTopLimit = initialParams.get("limit") || "10";
 const requestedMode = initialParams.get("mode") === "pitcher" ? "pitcher" : "hitter";
 const pvpState = {
@@ -109,7 +110,8 @@ function opponentCareerGroup() {
 }
 
 async function fetchJson(url) {
-  const response = await fetch(url);
+  const separator = url.includes("?") ? "&" : "?";
+  const response = await fetch(`${url}${separator}v=${DAMAGE_BOARD_DATA_VERSION}`);
   if (!response.ok) throw new Error(`Request returned ${response.status}`);
   return response.json();
 }
