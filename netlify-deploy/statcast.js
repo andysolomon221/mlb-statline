@@ -51,7 +51,7 @@ function applyInitialStatcastParams() {
     activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
   }
   const min = initialParams.get("min");
-  if (["auto", "all", "25", "50", "100", "250", "500"].includes(min)) activeSampleMin = min;
+  if (["auto", "all", "25", "50", "100", "200", "250", "500"].includes(min)) activeSampleMin = min;
   const sort = initialParams.get("sort");
   const sortableKeys = new Set(["name", "team", "sample", ...metrics[activeType].map(([key]) => key)]);
   if (sortableKeys.has(sort)) {
@@ -192,6 +192,7 @@ function renderControls() {
     ["25", "25+"],
     ["50", "50+"],
     ["100", "100+"],
+    ["200", "200+"],
     ["250", "250+"],
     ["500", "500+"]
   ].map(([value, label]) => `<option value="${value}">${label}</option>`).join("");

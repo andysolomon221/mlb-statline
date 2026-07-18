@@ -502,6 +502,7 @@ function qualifierOptions() {
     return [
       ["auto", `Auto (${autoQualifierMinimum()}+)`],
       ["all", "All"],
+      ["10", "10+"],
       ["25", "25+"],
       ["50", "50+"],
       ["100", "100+"],
@@ -512,8 +513,11 @@ function qualifierOptions() {
   return [
     ["auto", `Auto (${autoQualifierMinimum()}+)`],
     ["all", "All"],
+    ["25", "25+"],
     ["50", "50+"],
     ["100", "100+"],
+    ["150", "150+"],
+    ["200", "200+"],
     ["300", "300+"],
     ["500", "500+"],
     ["1000", "1000+"]
