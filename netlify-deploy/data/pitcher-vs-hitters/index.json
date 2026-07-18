@@ -1,68 +1,72 @@
 {
-  "generated": "2026-07-07",
+  "generated": "2026-07-18",
   "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
   "players": [
-    {
-      "id": "martp001",
-      "name": "Pedro Martinez",
-      "seasons": "1992-2009",
-      "careerSo": 3154,
-      "rank": 1
-    },
     {
       "id": "ryann001",
       "name": "Nolan Ryan",
       "seasons": "1966-1993",
       "careerSo": 5714,
-      "rank": 2
+      "rank": 1
     },
     {
       "id": "johnr005",
       "name": "Randy Johnson",
       "seasons": "1988-2009",
       "careerSo": 4875,
-      "rank": 3
+      "rank": 2
     },
     {
       "id": "clemr001",
       "name": "Roger Clemens",
       "seasons": "1984-2007",
       "careerSo": 4672,
-      "rank": 4
+      "rank": 3
     },
     {
       "id": "carls001",
       "name": "Steve Carlton",
       "seasons": "1965-1988",
       "careerSo": 4136,
-      "rank": 5
+      "rank": 4
     },
     {
       "id": "blylb001",
       "name": "Bert Blyleven",
       "seasons": "1970-1992",
       "careerSo": 3701,
-      "rank": 6
+      "rank": 5
     },
     {
       "id": "seavt001",
       "name": "Tom Seaver",
       "seasons": "1967-1986",
       "careerSo": 3640,
-      "rank": 7
+      "rank": 6
     },
     {
       "id": "suttd001",
       "name": "Don Sutton",
       "seasons": "1966-1988",
       "careerSo": 3574,
-      "rank": 8
+      "rank": 7
     },
     {
       "id": "perrg101",
       "name": "Gaylord Perry",
       "seasons": "1962-1983",
       "careerSo": 3534,
+      "rank": 8
+    },
+    {
+      "id": "maddg002",
+      "name": "Greg Maddux",
+      "seasons": "1986-2008",
+      "dataThrough": "2008 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 118120,
+      "bbrefId": "maddugr01",
+      "careerSo": 3371,
       "rank": 9
     },
     {
@@ -73,11 +77,194 @@
       "rank": 10
     },
     {
+      "id": "jenkf101",
+      "name": "Fergie Jenkins",
+      "seasons": "1965-1983",
+      "dataThrough": "1983 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 116522,
+      "bbrefId": "jenkife01",
+      "careerSo": 3192,
+      "rank": 11
+    },
+    {
+      "id": "martp001",
+      "name": "Pedro Martinez",
+      "seasons": "1992-2009",
+      "careerSo": 3154,
+      "rank": 12
+    },
+    {
       "id": "schic002",
       "name": "Curt Schilling",
       "seasons": "1988-2007",
       "careerSo": 3116,
-      "rank": 11
+      "rank": 13
+    },
+    {
+      "id": "sabac001",
+      "name": "CC Sabathia",
+      "seasons": "2001-2019",
+      "dataThrough": "2019 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 282332,
+      "bbrefId": "sabatc.01",
+      "careerSo": 3093,
+      "rank": 14
+    },
+    {
+      "id": "smolj001",
+      "name": "John Smoltz",
+      "seasons": "1988-2009",
+      "dataThrough": "2009 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 122477,
+      "bbrefId": "smoltjo01",
+      "careerSo": 3084,
+      "rank": 15
+    },
+    {
+      "id": "mussm001",
+      "name": "Mike Mussina",
+      "seasons": "1991-2008",
+      "dataThrough": "2008 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 119608,
+      "bbrefId": "mussimi01",
+      "careerSo": 2813,
+      "rank": 16
+    },
+    {
+      "id": "coned001",
+      "name": "David Cone",
+      "seasons": "1986-2003",
+      "dataThrough": "2003 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 112552,
+      "bbrefId": "coneda01",
+      "careerSo": 2668,
+      "rank": 17
+    },
+    {
+      "id": "koufs101",
+      "name": "Sandy Koufax",
+      "seasons": "1955-1966",
+      "dataThrough": "1966 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 117277,
+      "bbrefId": "koufasa01",
+      "careerSo": 2395,
+      "rank": 18
+    },
+    {
+      "id": "spahw101",
+      "name": "Warren Spahn",
+      "seasons": "1942-1965",
+      "dataThrough": "1965 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 122557,
+      "bbrefId": "spahnwa01",
+      "careerSo": 2386,
+      "rank": 19
+    },
+    {
+      "id": "marij101",
+      "name": "Juan Marichal",
+      "seasons": "1960-1975",
+      "dataThrough": "1975 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 118283,
+      "bbrefId": "maricju01",
+      "careerSo": 2300,
+      "rank": 20
+    },
+    {
+      "id": "goodd001",
+      "name": "Dwight Gooden",
+      "seasons": "1984-2000",
+      "dataThrough": "2000 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 114947,
+      "bbrefId": "goodedw01",
+      "careerSo": 2293,
+      "rank": 21
+    },
+    {
+      "id": "palmj001",
+      "name": "Jim Palmer",
+      "seasons": "1965-1984",
+      "dataThrough": "1984 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 120196,
+      "bbrefId": "palmeji01",
+      "careerSo": 2212,
+      "rank": 22
+    },
+    {
+      "id": "hallr001",
+      "name": "Roy Halladay",
+      "seasons": "1998-2013",
+      "dataThrough": "2013 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 136880,
+      "bbrefId": "hallaro01",
+      "careerSo": 2117,
+      "rank": 23
+    },
+    {
+      "id": "johnw102",
+      "name": "Walter Johnson",
+      "seasons": "1907-1927",
+      "dataThrough": "1927 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 116635,
+      "bbrefId": "johnswa01",
+      "careerSo": 2061,
+      "rank": 24
+    },
+    {
+      "id": "welcb001",
+      "name": "Bob Welch",
+      "seasons": "1978-1994",
+      "dataThrough": "1994 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 124064,
+      "bbrefId": "welchbo01",
+      "careerSo": 1969,
+      "rank": 25
+    },
+    {
+      "id": "wagnb001",
+      "name": "Billy Wagner",
+      "seasons": "1995-2010",
+      "dataThrough": "2010 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 123790,
+      "bbrefId": "wagnebi02",
+      "careerSo": 1196,
+      "rank": 26
+    },
+    {
+      "id": "rivem002",
+      "name": "Mariano Rivera",
+      "seasons": "1995-2013",
+      "dataThrough": "2013 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 121250,
+      "bbrefId": "riverma01",
+      "careerSo": 1173,
+      "rank": 27
+    },
+    {
+      "id": "hofft001",
+      "name": "Trevor Hoffman",
+      "seasons": "1993-2010",
+      "dataThrough": "2010 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 116034,
+      "bbrefId": "hoffmtr01",
+      "careerSo": 1133,
+      "rank": 28
     },
     {
       "id": "ohtas001",
@@ -88,6 +275,28 @@
       "careerSo": 765,
       "dataThrough": "2026 regular season",
       "source": "MLB Stats API game feeds"
+    },
+    {
+      "id": "fellb101",
+      "name": "Bob Feller",
+      "seasons": "1936-1956",
+      "dataThrough": "1956 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 114055,
+      "bbrefId": "fellebo01",
+      "careerSo": 745,
+      "rank": 30
+    },
+    {
+      "id": "gibsb001",
+      "name": "Bob Gibson",
+      "seasons": "1983-1987",
+      "dataThrough": "1987 regular season",
+      "source": "Retrosheet play-by-play, Chadwick Register ID mapping",
+      "mlbamId": 114757,
+      "bbrefId": "gibsobo02",
+      "careerSo": 166,
+      "rank": 31
     }
   ]
 }
