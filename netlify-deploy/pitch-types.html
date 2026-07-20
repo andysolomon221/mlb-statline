@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Pitch Type Leaderboards | Stat Line Baseball</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="favicon-48.png" sizes="48x48" type="image/png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/pitch-types" />
+    <meta name="description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
+    <meta property="og:title" content="MLB Pitch Type Leaderboards" />
+    <meta property="og:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.statlinebaseball.com/pitch-types" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MLB Pitch Type Leaderboards" />
+    <meta name="twitter:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
+    <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <link rel="stylesheet" href="styles.css?v=20260720-pitch-types" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      function loadAnalytics(){
+        if (window.__statlineAnalyticsLoaded) return;
+        window.__statlineAnalyticsLoaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-W9CSMTE5W1";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-W9CSMTE5W1");
+      }
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) requestIdleCallback(loadAnalytics, { timeout: 7000 });
+          else loadAnalytics();
+        }, 4500);
+      });
+    </script>
+  </head>
+  <body data-board="pitch-types">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <a class="brand-mark" href="index.html" aria-label="Statline Baseball home"><img src="statline-logo.png" alt="Stat Line Baseball" /></a>
+        <nav class="rail-nav">
+          <a href="index.html">Home</a>
+          <a href="batting.html">Batting</a>
+          <a href="pitching.html">Pitching</a>
+          <a href="advanced.html">Advanced Stats</a>
+          <a class="active" href="pitch-types.html">Pitch Types</a>
+          <a href="matchups.html">Matchups</a>
+          <a href="damage-board.html">Damage Board</a>
+          <a href="standings.html">Standings</a>
+          <a href="trends.html">Trends</a>
+          <a href="compare.html">Compare</a>
+          <a href="career.html">Career</a>
+          <a href="splits.html">Splits</a>
+          <a href="age.html">Age Leaders</a>
+          <a href="starts.html">First Seasons</a>
+          <a href="span.html">Span Finder</a>
+          <a href="fantasy.html">Fantasy</a>
+          <a href="news.html">News</a>
+          <a href="teams.html">Teams</a>
+        </nav>
+      </aside>
+
+      <main id="pitch-types-dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Pitch Types</p>
+            <h1>Team and player leaderboards by pitch mix and pitch results.</h1>
+          </div>
+          <div class="season-control" aria-label="Pitch type filters">
+            <label for="pitch-types-season">Season</label>
+            <select id="pitch-types-season" aria-label="Select season"></select>
+            <select id="pitch-types-team" aria-label="Filter by team">
+              <option value="all">All teams</option>
+            </select>
+          </div>
+        </header>
+
+        <nav class="page-tabs" aria-label="Advanced stats sections">
+          <a href="advanced.html">Advanced</a>
+          <a href="statcast.html">Statcast</a>
+          <a class="active" href="pitch-types.html">Pitch Types</a>
+        </nav>
+
+        <section class="score-strip news-summary" aria-label="Pitch type summary">
+          <article>
+            <span>Leader</span>
+            <strong id="pitch-types-leader">Loading</strong>
+            <small id="pitch-types-leader-note">Baseball Savant</small>
+          </article>
+          <article>
+            <span>Pitch</span>
+            <strong id="pitch-types-pitch-card">Offspeed</strong>
+            <small id="pitch-types-pitch-note">Selected pitch group</small>
+          </article>
+          <article>
+            <span>Metric</span>
+            <strong id="pitch-types-metric-card">Pitch %</strong>
+            <small id="pitch-types-metric-note">Selected field</small>
+          </article>
+          <article>
+            <span>Rows</span>
+            <strong id="pitch-types-count">0</strong>
+            <small id="pitch-types-count-note">Qualified pool</small>
+          </article>
+        </section>
+
+        <section class="panel news-controls-panel" aria-label="Pitch type controls">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Board Controls</p>
+              <h2>Choose pitch group and view</h2>
+            </div>
+            <select id="pitch-types-metric" aria-label="Pitch type metric"></select>
+          </div>
+          <div class="league-toggle news-topic-toggle" role="group" aria-label="Player type">
+            <button class="active" data-pitch-type-side="batter">Batters</button>
+            <button data-pitch-type-side="pitcher">Pitchers</button>
+          </div>
+          <div class="league-toggle news-topic-toggle" role="group" aria-label="Board view">
+            <button class="active" data-pitch-type-view="teams">Teams</button>
+            <button data-pitch-type-view="players">Players</button>
+          </div>
+          <div class="qualifier-filter statcast-sample-filter">
+            <label for="pitch-types-pitch">Pitch Group</label>
+            <select id="pitch-types-pitch" aria-label="Pitch group"></select>
+          </div>
+          <div class="qualifier-filter statcast-sample-filter">
+            <label for="pitch-types-min-pa">Minimum PA</label>
+            <select id="pitch-types-min-pa" aria-label="Minimum plate appearances"></select>
+          </div>
+          <div class="qualifier-filter statcast-sample-filter">
+            <label for="pitch-types-min-pitches">Minimum Pitches</label>
+            <select id="pitch-types-min-pitches" aria-label="Minimum pitches"></select>
+          </div>
+          <div class="share-action-row">
+            <span class="share-action-label">Share this view</span>
+            <button id="copy-pitch-types-link" class="secondary-action" type="button">Copy Link</button>
+            <span class="copy-status" id="pitch-types-copy-status" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section class="data-grid advanced-grid" id="pitch-types-board">
+          <section class="panel leaderboard">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Leaderboard</p>
+                <h2 id="pitch-types-chart-title">Pitch type leaders</h2>
+              </div>
+              <div class="split-status" id="pitch-types-status">Loading...</div>
+            </div>
+            <div class="bar-chart" id="pitch-types-chart"></div>
+          </section>
+
+          <section class="panel leaderboard" id="pitch-types-table-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Full Board</p>
+                <h2 id="pitch-types-table-title">Pitch type table</h2>
+              </div>
+              <div class="search-action board-search-action">
+                <input id="pitch-types-search" type="search" list="pitch-types-search-options" spellcheck="false" autocorrect="off" autocapitalize="none" placeholder="Search team or player" aria-label="Search pitch type board" />
+                <button type="button" id="pitch-types-search-submit">View</button>
+              </div>
+              <datalist id="pitch-types-search-options"></datalist>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead id="pitch-types-head"></thead>
+                <tbody id="pitch-types-table"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Source Note</p>
+              <h2>Baseball Savant pitch arsenal leaderboards</h2>
+            </div>
+          </div>
+          <p class="data-note">Pitch groups aggregate Baseball Savant pitch arsenal rows. Pitch % is selected pitches divided by all tracked pitches for that team or player. Grouped rate stats are weighted from available pitch-type rows, so they are best read as directional context.</p>
+        </section>
+        <footer class="site-footer">
+          <a href="about.html">About</a>
+          <a href="data-sources.html">Data Sources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+
+    <script src="pitch-types.js?v=20260720-pitch-types"></script>
+  </body>
+</html>

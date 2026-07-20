@@ -149,6 +149,10 @@ select {
   content: "Quality-of-contact and pitch-tracking leaderboards from public Statcast-style data.";
 }
 
+.rail-nav a[href="pitch-types.html"]::after {
+  content: "Team and player leaderboards by fastball, breaking ball, offspeed, and individual pitch types.";
+}
+
 .rail-nav a[href="matchups.html"]::after {
   content: "Pick a batter, pitcher, team, roster, and ballpark for career head-to-head context.";
 }
@@ -1692,6 +1696,10 @@ input[type="search"] {
   min-height: 36px;
 }
 
+.bar-row.no-bar-row {
+  grid-template-columns: minmax(154px, 1fr) auto;
+}
+
 .bar-label {
   display: grid;
   justify-items: start;
@@ -2777,6 +2785,10 @@ td {
   align-items: center;
   gap: 16px;
   min-height: 52px;
+}
+
+.trend-row.no-bar-trend {
+  grid-template-columns: 44px minmax(190px, 1fr) auto;
 }
 
 .trend-rank {
@@ -4097,6 +4109,10 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
     min-height: 32px;
   }
 
+  .bar-row.no-bar-row {
+    grid-template-columns: minmax(136px, 1fr) auto;
+  }
+
   .bar-label strong,
   .bar-label span {
     white-space: normal;
@@ -4524,6 +4540,10 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
   .trend-row {
     grid-template-columns: 34px minmax(0, 1fr) 58px;
     gap: 10px;
+  }
+
+  .trend-row.no-bar-trend {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
   }
 
   .trend-bar-track {
