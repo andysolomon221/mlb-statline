@@ -1,5 +1,6 @@
 const firstPitchTypeSeason = 2015;
 const lastPitchTypeSeason = 2026;
+const pitchTypeLoadTimeoutMs = 15000;
 const pitchTypeParams = new URLSearchParams(window.location.search);
 
 let pitchTypeSide = "batter";
@@ -169,6 +170,20 @@ function formatPitchTypeStat(key, value) {
 function pitchTypeApiUrl() {
   const params = new URLSearchParams({ type: pitchTypeSide, year: pitchTypeSeason });
   return `/.netlify/functions/pitch-types?${params.toString()}`;
+}
+
+async function fetchPitchTypeJson() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), pitchTypeLoadTimeoutMs);
+  try {
+    const response = await fetch(pitchTypeApiUrl(), { signal: controller.signal, cache: "no-cache" });
+    if (!response.ok) throw new Error(`Pitch type function returned ${response.status}`);
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function pitchTypeSearchUrl(name) {
@@ -481,10 +496,9 @@ function focusPitchTypeSearchResult() {
 async function loadPitchTypeData() {
   document.querySelector("#pitch-types-status").textContent = "Loading...";
   document.querySelector("#pitch-types-chart").innerHTML = `<div class="empty-state">Loading Baseball Savant pitch data...</div>`;
+  document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="10" class="empty-row">Loading Baseball Savant pitch data...</td></tr>`;
   try {
-    const response = await fetch(pitchTypeApiUrl());
-    if (!response.ok) throw new Error(`Pitch type function returned ${response.status}`);
-    const data = await response.json();
+    const data = await fetchPitchTypeJson();
     pitchTypeRawRows = data.rows || [];
     renderPitchTypeTeamOptions();
     renderPitchTypeAll();
@@ -494,8 +508,8 @@ async function loadPitchTypeData() {
     pitchTypeRows = [];
     renderPitchTypeTeamOptions();
     document.querySelector("#pitch-types-status").textContent = "Live pitch feed unavailable";
-    document.querySelector("#pitch-types-chart").innerHTML = `<div class="empty-state">Live pitch type data loads on the Netlify site. Localhost cannot run this function.</div>`;
-    document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="10" class="empty-row">Live pitch type data loads on the Netlify site.</td></tr>`;
+    document.querySelector("#pitch-types-chart").innerHTML = `<div class="empty-state">Baseball Savant did not return pitch type data. Refresh the page or try another season.</div>`;
+    document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="10" class="empty-row">Baseball Savant did not return pitch type data. Refresh the page or try another season.</td></tr>`;
   }
 }
 
