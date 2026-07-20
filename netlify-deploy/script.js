@@ -214,14 +214,14 @@ const teamAbbr = {
   "White Sox": "CWS",
   "San Francisco Giants": "SF",
   "Giants": "SF",
-  "Oakland Athletics": "OAK",
-  "Athletics": "OAK",
+  "Oakland Athletics": "ATH",
+  "Athletics": "ATH",
   "Toronto Blue Jays": "TOR",
   "Blue Jays": "TOR",
-  "Arizona D-backs": "AZ",
-  "D-backs": "AZ",
-  "Arizona Diamondbacks": "AZ",
-  "Diamondbacks": "AZ",
+  "Arizona D-backs": "ARI",
+  "D-backs": "ARI",
+  "Arizona Diamondbacks": "ARI",
+  "Diamondbacks": "ARI",
   "Tampa Bay Rays": "TB",
   "Rays": "TB",
   "Cleveland Guardians": "CLE",
@@ -671,6 +671,10 @@ function inningsToOuts(value) {
 
 function defaultSortDir(key) {
   return config?.lowerBetter?.includes(key) ? 1 : -1;
+}
+
+function showMetricBars(key = activeMetric) {
+  return !config.lowerBetter.includes(key);
 }
 
 function currentPositionFilter() {
@@ -1646,7 +1650,8 @@ function renderSummary() {
   }
   document.querySelector("#k-rate").textContent = `${summary.k.toFixed(1)}%`;
   document.querySelector("#save-rate").textContent = boardType === "pitching" ? `${summary.saves}%` : summary.power.toFixed(2);
-  document.querySelector("#chart-title").innerHTML = `${label} ${config.chartNoun} leaders <span class="chart-scale-note">bars scaled to leader</span>`;
+  const scaleNote = showMetricBars() ? ` <span class="chart-scale-note">bars scaled to leader</span>` : "";
+  document.querySelector("#chart-title").innerHTML = `${label} ${config.chartNoun} leaders${scaleNote}`;
   document.querySelector("#compare-title").textContent = `${teamScopeLabel()} club comparison`;
   const tableNoun = activeTeamId === "all" ? "leaders" : "players";
   document.querySelector("#table-title").textContent = activeMode === "single"
@@ -1673,13 +1678,14 @@ function renderChart() {
   const values = data.map((player) => player[activeMetric]);
   const max = Math.max(...values);
   const min = Math.min(...values);
+  const includeBars = showMetricBars();
   const chart = document.querySelector("#bar-chart");
   chart.innerHTML = data.map((player) => {
     const score = config.lowerBetter.includes(activeMetric) ? max + min - player[activeMetric] : player[activeMetric];
     const scoreMax = config.lowerBetter.includes(activeMetric) ? max : Math.max(...values);
     const width = Math.max(8, (score / scoreMax) * 100);
     return `
-      <div class="bar-row">
+      <div class="bar-row${includeBars ? "" : " no-bar-row"}">
         <div class="bar-label">
           <a class="chart-player-link" href="${baseballReferenceSearchUrl(player.name)}" target="_blank" rel="noopener noreferrer">
             <strong>${player.name}</strong>
@@ -1690,7 +1696,7 @@ function renderChart() {
             <a href="${statlinePlayerUrl("splits.html", player.name)}">Splits</a>
           </div>
         </div>
-        <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+        ${includeBars ? `<div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>` : ""}
         <div class="bar-value">${fmtStat(activeMetric, player[activeMetric])}</div>
       </div>
     `;

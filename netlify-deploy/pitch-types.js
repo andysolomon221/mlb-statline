@@ -50,6 +50,36 @@ const teamNames = {
   WSH: "Washington Nationals"
 };
 
+const teamCodeAliases = {
+  AZ: "ARI",
+  ARI: "ARI",
+  CHW: "CWS",
+  CWS: "CWS",
+  KCR: "KC",
+  KC: "KC",
+  OAK: "ATH",
+  ATH: "ATH",
+  SDP: "SD",
+  SD: "SD",
+  SFG: "SF",
+  SF: "SF",
+  TBR: "TB",
+  TB: "TB",
+  WAS: "WSH",
+  WSN: "WSH",
+  WSH: "WSH"
+};
+
+function normalizeTeamCode(value) {
+  const code = String(value || "").trim().toUpperCase();
+  return teamCodeAliases[code] || code || "MLB";
+}
+
+function teamDisplayName(value) {
+  const code = normalizeTeamCode(value);
+  return teamNames[code] || code;
+}
+
 const pitchGroups = [
   ["all", "All pitch types", []],
   ["fastballs", "Fastballs", ["FF", "SI", "FC"]],
@@ -107,7 +137,7 @@ const pitchTypeLowerBetter = {
 };
 
 function applyInitialPitchTypeParams() {
-  if (pitchTypeTeam !== "all") pitchTypeTeam = pitchTypeTeam.toUpperCase();
+  if (pitchTypeTeam !== "all") pitchTypeTeam = normalizeTeamCode(pitchTypeTeam);
   if (["batter", "pitcher"].includes(pitchTypeParams.get("type"))) pitchTypeSide = pitchTypeParams.get("type");
   if (["teams", "players"].includes(pitchTypeParams.get("view"))) pitchTypeView = pitchTypeParams.get("view");
   if (pitchTypeParams.has("season")) {
@@ -252,7 +282,7 @@ function pitchTypeMixSourceRows() {
     .filter((row) => pitchTypeTeam === "all" || row.team === pitchTypeTeam)
     .filter((row) => pitchTypeView === "teams" || toPitchTypeNumber(row.pa) >= toPitchTypeNumber(pitchTypeMinPa))
     .filter((row) => pitchTypeView === "teams" || toPitchTypeNumber(row.pitches) >= toPitchTypeNumber(pitchTypeMinPitches))
-    .filter((row) => pitchTypeView === "teams" || !query || `${row.name} ${row.team} ${teamNames[row.team] || ""}`.toLowerCase().includes(query));
+    .filter((row) => pitchTypeView === "teams" || !query || `${row.name} ${row.team} ${teamDisplayName(row.team)}`.toLowerCase().includes(query));
 }
 
 function aggregatePitchTypeRows() {
@@ -277,9 +307,9 @@ function aggregatePitchTypeRows() {
     const totalPitches = sumRows(allItems, "pitches");
     return {
       key,
-      name: pitchTypeView === "teams" ? (teamNames[key] || key) : first.name,
+      name: pitchTypeView === "teams" ? teamDisplayName(key) : first.name,
       team: pitchTypeView === "teams" ? key : first.team,
-      teamName: teamNames[first.team] || first.team,
+      teamName: teamDisplayName(first.team),
       pitches,
       totalPitches,
       pitch_usage: totalPitches ? pitches / totalPitches * 100 : null,
@@ -353,8 +383,8 @@ function renderPitchTypeControls() {
 
 function renderPitchTypeTeamOptions() {
   const teams = Array.from(new Set(pitchTypeRawRows.map((row) => row.team).filter(Boolean)))
-    .sort((a, b) => (teamNames[a] || a).localeCompare(teamNames[b] || b));
-  document.querySelector("#pitch-types-team").innerHTML = `<option value="all">All teams</option>${teams.map((abbr) => `<option value="${abbr}">${teamNames[abbr] || abbr}</option>`).join("")}`;
+    .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b)));
+  document.querySelector("#pitch-types-team").innerHTML = `<option value="all">All teams</option>${teams.map((abbr) => `<option value="${abbr}">${teamDisplayName(abbr)}</option>`).join("")}`;
   if (pitchTypeTeam !== "all" && !teams.includes(pitchTypeTeam)) pitchTypeTeam = "all";
   document.querySelector("#pitch-types-team").value = pitchTypeTeam;
 }
@@ -397,7 +427,7 @@ function renderPitchTypeMixBoard() {
     .map((key) => aggregatePitchTypeItems(sourceRows, key))
     .filter((row) => row.pitches > 0);
   const selectedTeam = document.querySelector("#pitch-types-team")?.selectedOptions[0]?.textContent;
-  const scope = pitchTypeTeam === "all" ? "All MLB" : selectedTeam || teamNames[pitchTypeTeam] || pitchTypeTeam;
+  const scope = pitchTypeTeam === "all" ? "All MLB" : selectedTeam || teamDisplayName(pitchTypeTeam);
   const subject = pitchTypeView === "teams" ? scope : `${scope} player pool`;
   const roleLabel = pitchTypeSide === "batter" ? "PA" : "BF";
   const pitchLabel = pitchTypeSide === "batter" ? "seen" : "thrown";
@@ -594,7 +624,7 @@ async function loadPitchTypeData() {
   document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="10" class="empty-row">Loading Baseball Savant pitch data...</td></tr>`;
   try {
     const data = await fetchPitchTypeJson();
-    pitchTypeRawRows = data.rows || [];
+    pitchTypeRawRows = (data.rows || []).map((row) => ({ ...row, team: normalizeTeamCode(row.team) }));
     renderPitchTypeTeamOptions();
     renderPitchTypeAll();
     document.querySelector("#pitch-types-status").textContent = `${pitchTypeRows.length} rows loaded`;
@@ -616,7 +646,7 @@ function bindPitchTypeEvents() {
     loadPitchTypeData();
   });
   document.querySelector("#pitch-types-team").addEventListener("change", (event) => {
-    pitchTypeTeam = event.target.value;
+    pitchTypeTeam = event.target.value === "all" ? "all" : normalizeTeamCode(event.target.value);
     renderPitchTypeAll();
   });
   document.querySelector("#pitch-types-pitch").addEventListener("change", (event) => {
