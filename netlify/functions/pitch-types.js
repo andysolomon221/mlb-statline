@@ -14,6 +14,26 @@ const pitchTypeLabels = {
 
 const savantTimeoutMs = 9000;
 
+const teamCodeAliases = {
+  AZ: "ARI",
+  ARI: "ARI",
+  CHW: "CWS",
+  CWS: "CWS",
+  KCR: "KC",
+  KC: "KC",
+  OAK: "ATH",
+  ATH: "ATH",
+  SDP: "SD",
+  SD: "SD",
+  SFG: "SF",
+  SF: "SF",
+  TBR: "TB",
+  TB: "TB",
+  WAS: "WSH",
+  WSN: "WSH",
+  WSH: "WSH"
+};
+
 function savantUrl(type, year) {
   const params = new URLSearchParams({
     type,
@@ -76,6 +96,11 @@ function number(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function normalizeTeamCode(value) {
+  const code = String(value || "").trim().toUpperCase();
+  return teamCodeAliases[code] || code || "MLB";
+}
+
 exports.handler = async (event) => {
   const params = event.queryStringParameters || {};
   const type = params.type === "pitcher" ? "pitcher" : "batter";
@@ -92,7 +117,7 @@ exports.handler = async (event) => {
       return {
         name: displayName(row["last_name, first_name"]),
         playerId: String(row.player_id || ""),
-        team: row.team_name_alt || "MLB",
+        team: normalizeTeamCode(row.team_name_alt),
         pitchType,
         pitchName: row.pitch_name || pitchTypeLabels[pitchType] || pitchType,
         run_value_per_100: number(row.run_value_per_100),
