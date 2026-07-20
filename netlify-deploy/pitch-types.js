@@ -68,6 +68,8 @@ const pitchGroups = [
   ["KN", "Knuckleball", ["KN"]]
 ];
 
+const pitchTypeMixGroups = ["all", "fastballs", "breaking", "offspeed"];
+
 const pitchTypeMetrics = {
   batter: [
     ["pitch_usage", "Pitch % Seen"],
@@ -217,6 +219,40 @@ function addAggregate(map, key, row) {
   map.get(key).push(row);
 }
 
+function aggregatePitchTypeItems(items, groupKey) {
+  const codes = pitchTypeCodes(groupKey);
+  const selected = codes.length ? items.filter((row) => codes.includes(row.pitchType)) : items;
+  const pitches = sumRows(selected, "pitches");
+  const totalPitches = sumRows(items, "pitches");
+  return {
+    key: groupKey,
+    label: pitchTypeLabel(groupKey),
+    codes,
+    pitches,
+    totalPitches,
+    pitch_usage: totalPitches ? pitches / totalPitches * 100 : null,
+    pa: sumRows(selected, "pa"),
+    ba: weightAverage(selected, "ba", "pa"),
+    slg: weightAverage(selected, "slg", "pa"),
+    woba: weightAverage(selected, "woba", "pa"),
+    est_ba: weightAverage(selected, "est_ba", "pa"),
+    est_slg: weightAverage(selected, "est_slg", "pa"),
+    est_woba: weightAverage(selected, "est_woba", "pa"),
+    whiff_percent: weightAverage(selected, "whiff_percent", "pitches"),
+    k_percent: weightAverage(selected, "k_percent", "pa"),
+    hard_hit_percent: weightAverage(selected, "hard_hit_percent", "pa")
+  };
+}
+
+function pitchTypeMixSourceRows() {
+  const query = document.querySelector("#pitch-types-search")?.value.trim().toLowerCase() || "";
+  return pitchTypeRawRows
+    .filter((row) => pitchTypeTeam === "all" || row.team === pitchTypeTeam)
+    .filter((row) => pitchTypeView === "teams" || toPitchTypeNumber(row.pa) >= toPitchTypeNumber(pitchTypeMinPa))
+    .filter((row) => pitchTypeView === "teams" || toPitchTypeNumber(row.pitches) >= toPitchTypeNumber(pitchTypeMinPitches))
+    .filter((row) => pitchTypeView === "teams" || !query || `${row.name} ${row.team} ${teamNames[row.team] || ""}`.toLowerCase().includes(query));
+}
+
 function aggregatePitchTypeRows() {
   const codes = pitchTypeCodes();
   const selected = codes.length ? pitchTypeRawRows.filter((row) => codes.includes(row.pitchType)) : pitchTypeRawRows;
@@ -353,6 +389,60 @@ function renderPitchTypeSummary() {
   document.querySelector("#pitch-types-table-title").textContent = `${scope} ${pitchTypeLabel()} ${pitchTypeSide === "batter" ? "batting" : "pitching"} board`;
 }
 
+function renderPitchTypeMixBoard() {
+  const sourceRows = pitchTypeMixSourceRows();
+  const rows = pitchTypeMixGroups
+    .map((key) => aggregatePitchTypeItems(sourceRows, key))
+    .filter((row) => row.pitches > 0);
+  const selectedTeam = document.querySelector("#pitch-types-team")?.selectedOptions[0]?.textContent;
+  const scope = pitchTypeTeam === "all" ? "All MLB" : selectedTeam || teamNames[pitchTypeTeam] || pitchTypeTeam;
+  const subject = pitchTypeView === "teams" ? scope : `${scope} player pool`;
+  const roleLabel = pitchTypeSide === "batter" ? "PA" : "BF";
+  const pitchLabel = pitchTypeSide === "batter" ? "seen" : "thrown";
+  const resultLabel = pitchTypeSide === "batter" ? "batting" : "pitching allowed";
+  document.querySelector("#pitch-types-mix-title").textContent = `${subject} ${resultLabel} by pitch group`;
+  document.querySelector("#pitch-types-mix-status").textContent = `${pitchTypeSeason} | pitches ${pitchLabel}`;
+  document.querySelector("#pitch-types-mix-board").innerHTML = rows.length ? `
+    <div class="table-wrap pitch-mix-table-wrap">
+      <table class="pitch-mix-table">
+        <thead>
+          <tr>
+            <th>Pitch Group</th>
+            <th>Pitches</th>
+            <th>Pitch %</th>
+            <th>${roleLabel}</th>
+            <th>${pitchTypeSide === "batter" ? "AVG" : "AVG Allowed"}</th>
+            <th>${pitchTypeSide === "batter" ? "SLG" : "SLG Allowed"}</th>
+            <th>${pitchTypeSide === "batter" ? "xwOBA" : "xwOBA Allowed"}</th>
+            <th>Whiff %</th>
+            <th>K %</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row) => `
+            <tr>
+              <td>
+                <span class="pitch-mix-label">
+                  <strong>${row.label}</strong>
+                  <small>${row.codes.length ? row.codes.join("/") : "All tracked pitches"}</small>
+                </span>
+              </td>
+              <td>${formatPitchTypeStat("pitches", row.pitches)}</td>
+              <td>${formatPitchTypeStat("pitch_usage", row.pitch_usage)}</td>
+              <td>${formatPitchTypeStat("pa", row.pa)}</td>
+              <td>${formatPitchTypeStat("ba", row.ba)}</td>
+              <td>${formatPitchTypeStat("slg", row.slg)}</td>
+              <td>${formatPitchTypeStat("est_woba", row.est_woba)}</td>
+              <td>${formatPitchTypeStat("whiff_percent", row.whiff_percent)}</td>
+              <td>${formatPitchTypeStat("k_percent", row.k_percent)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  ` : `<div class="empty-state">No pitch groups match this filter.</div>`;
+}
+
 function renderPitchTypeChart() {
   const data = filteredPitchTypeRows().slice(0, 10);
   const max = Math.max(...data.map((row) => Math.abs(toPitchTypeNumber(row[pitchTypeMetric]))), 1);
@@ -425,6 +515,7 @@ function renderPitchTypeAll() {
   aggregatePitchTypeRows();
   renderPitchTypeSearchOptions();
   renderPitchTypeSummary();
+  renderPitchTypeMixBoard();
   renderPitchTypeChart();
   renderPitchTypeTableHead();
   renderPitchTypeTable();
@@ -495,6 +586,8 @@ function focusPitchTypeSearchResult() {
 
 async function loadPitchTypeData() {
   document.querySelector("#pitch-types-status").textContent = "Loading...";
+  document.querySelector("#pitch-types-mix-status").textContent = "Loading...";
+  document.querySelector("#pitch-types-mix-board").innerHTML = `<div class="empty-state">Loading Baseball Savant pitch data...</div>`;
   document.querySelector("#pitch-types-chart").innerHTML = `<div class="empty-state">Loading Baseball Savant pitch data...</div>`;
   document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="10" class="empty-row">Loading Baseball Savant pitch data...</td></tr>`;
   try {
@@ -508,6 +601,8 @@ async function loadPitchTypeData() {
     pitchTypeRows = [];
     renderPitchTypeTeamOptions();
     document.querySelector("#pitch-types-status").textContent = "Live pitch feed unavailable";
+    document.querySelector("#pitch-types-mix-status").textContent = "Live pitch feed unavailable";
+    document.querySelector("#pitch-types-mix-board").innerHTML = `<div class="empty-state">Baseball Savant did not return pitch type data. Refresh the page or try another season.</div>`;
     document.querySelector("#pitch-types-chart").innerHTML = `<div class="empty-state">Baseball Savant did not return pitch type data. Refresh the page or try another season.</div>`;
     document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="10" class="empty-row">Baseball Savant did not return pitch type data. Refresh the page or try another season.</td></tr>`;
   }
