@@ -498,6 +498,10 @@ function renderPitchTypeTableHead() {
     ["pitch_usage", pitchTypeSide === "batter" ? "Pitch % Seen" : "Pitch % Thrown"],
     ["pitches", "Pitches"],
     ["pa", pitchTypeSide === "batter" ? "PA" : "BF"],
+    ["ba", pitchTypeSide === "batter" ? "AVG" : "AVG Allowed"],
+    ["slg", pitchTypeSide === "batter" ? "SLG" : "SLG Allowed"],
+    ["est_ba", pitchTypeSide === "batter" ? "xBA" : "xBA Allowed"],
+    ["est_slg", pitchTypeSide === "batter" ? "xSLG" : "xSLG Allowed"],
     ["woba", pitchTypeSide === "batter" ? "wOBA" : "wOBA Allowed"],
     ["est_woba", pitchTypeSide === "batter" ? "xwOBA" : "xwOBA Allowed"],
     ["whiff_percent", "Whiff %"],
@@ -534,13 +538,17 @@ function renderPitchTypeTable() {
       <td>${formatPitchTypeStat("pitch_usage", row.pitch_usage)}</td>
       <td>${formatPitchTypeStat("pitches", row.pitches)}</td>
       <td>${formatPitchTypeStat("pa", row.pa)}</td>
+      <td>${formatPitchTypeStat("ba", row.ba)}</td>
+      <td>${formatPitchTypeStat("slg", row.slg)}</td>
+      <td>${formatPitchTypeStat("est_ba", row.est_ba)}</td>
+      <td>${formatPitchTypeStat("est_slg", row.est_slg)}</td>
       <td>${formatPitchTypeStat("woba", row.woba)}</td>
       <td>${formatPitchTypeStat("est_woba", row.est_woba)}</td>
       <td>${formatPitchTypeStat("whiff_percent", row.whiff_percent)}</td>
       <td>${formatPitchTypeStat("k_percent", row.k_percent)}</td>
       <td>${formatPitchTypeStat("hard_hit_percent", row.hard_hit_percent)}</td>
     </tr>
-  `).join("") || `<tr><td colspan="10" class="empty-row">No rows match this filter.</td></tr>`;
+  `).join("") || `<tr><td colspan="14" class="empty-row">No rows match this filter.</td></tr>`;
 }
 
 function renderPitchTypeAll() {
@@ -621,7 +629,7 @@ async function loadPitchTypeData() {
   document.querySelector("#pitch-types-mix-status").textContent = "Loading...";
   document.querySelector("#pitch-types-mix-board").innerHTML = `<div class="empty-state">Loading Baseball Savant pitch data...</div>`;
   document.querySelector("#pitch-types-chart").innerHTML = `<div class="empty-state">Loading Baseball Savant pitch data...</div>`;
-  document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="10" class="empty-row">Loading Baseball Savant pitch data...</td></tr>`;
+  document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="14" class="empty-row">Loading Baseball Savant pitch data...</td></tr>`;
   try {
     const data = await fetchPitchTypeJson();
     pitchTypeRawRows = (data.rows || []).map((row) => ({ ...row, team: normalizeTeamCode(row.team) }));
@@ -636,7 +644,7 @@ async function loadPitchTypeData() {
     document.querySelector("#pitch-types-mix-status").textContent = "Live pitch feed unavailable";
     document.querySelector("#pitch-types-mix-board").innerHTML = `<div class="empty-state">Baseball Savant did not return pitch type data. Refresh the page or try another season.</div>`;
     document.querySelector("#pitch-types-chart").innerHTML = `<div class="empty-state">Baseball Savant did not return pitch type data. Refresh the page or try another season.</div>`;
-    document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="10" class="empty-row">Baseball Savant did not return pitch type data. Refresh the page or try another season.</td></tr>`;
+    document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="14" class="empty-row">Baseball Savant did not return pitch type data. Refresh the page or try another season.</td></tr>`;
   }
 }
 
