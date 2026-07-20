@@ -110,8 +110,10 @@ function applyInitialPitchTypeParams() {
   if (pitchTypeTeam !== "all") pitchTypeTeam = pitchTypeTeam.toUpperCase();
   if (["batter", "pitcher"].includes(pitchTypeParams.get("type"))) pitchTypeSide = pitchTypeParams.get("type");
   if (["teams", "players"].includes(pitchTypeParams.get("view"))) pitchTypeView = pitchTypeParams.get("view");
-  const season = Number(pitchTypeParams.get("season"));
-  if (Number.isFinite(season)) pitchTypeSeason = String(clampPitchType(season, firstPitchTypeSeason, lastPitchTypeSeason));
+  if (pitchTypeParams.has("season")) {
+    const season = Number(pitchTypeParams.get("season"));
+    if (Number.isFinite(season)) pitchTypeSeason = String(clampPitchType(season, firstPitchTypeSeason, lastPitchTypeSeason));
+  }
   const pitch = pitchTypeParams.get("pitch");
   if (pitchGroups.some(([key]) => key === pitch)) pitchTypePitch = pitch;
   const metric = pitchTypeParams.get("metric");
