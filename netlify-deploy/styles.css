@@ -1767,6 +1767,62 @@ input[type="search"] {
   vertical-align: middle;
 }
 
+.pitch-types-leaders-panel {
+  width: min(760px, 100%);
+  margin-right: auto;
+  margin-left: auto;
+  padding: 18px 20px;
+}
+
+.pitch-types-leaders-panel .section-head {
+  margin-bottom: 12px;
+}
+
+.pitch-types-leader-chart {
+  gap: 5px;
+  min-height: 0;
+}
+
+.pitch-type-leader-row {
+  grid-template-columns: 26px minmax(155px, 210px) minmax(110px, 1fr) 58px;
+  gap: 8px;
+  min-height: 31px;
+}
+
+.pitch-type-leader-row.no-bar-row {
+  grid-template-columns: 26px minmax(155px, 1fr) 58px;
+}
+
+.pitch-type-leader-rank {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--navy);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.pitch-type-leader-row .bar-label {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+}
+
+.pitch-type-leader-row .bar-label span {
+  font-size: 10px;
+}
+
+.pitch-type-leader-row .bar-track {
+  height: 8px;
+}
+
+.pitch-type-leader-row .bar-value {
+  font-size: 15px;
+  font-weight: 950;
+}
+
 .empty-state,
 .empty-row {
   color: var(--muted);
@@ -4607,6 +4663,20 @@ body.compare-card-view .compare-history-panel {
 
   .bar-track {
     height: 11px;
+  }
+
+  .pitch-type-leader-row {
+    grid-template-columns: 22px minmax(108px, .9fr) minmax(64px, 1fr) 44px;
+    gap: 6px;
+    min-height: 29px;
+  }
+
+  .pitch-type-leader-row.no-bar-row {
+    grid-template-columns: 22px minmax(108px, 1fr) 44px;
+  }
+
+  .pitch-type-leader-row .bar-track {
+    height: 7px;
   }
 
   .pvp-top-board {
