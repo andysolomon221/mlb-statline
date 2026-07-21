@@ -574,8 +574,8 @@ function setCompareView(view, { run = true } = {}) {
   document.querySelector(".compare-yby-controls").hidden = activeCompareView !== "yearByYear";
   document.querySelector(".compare-yby-results").hidden = activeCompareView !== "yearByYear";
   document.querySelector("#compare-mode-explainer").innerHTML = activeCompareView === "yearByYear"
-    ? "<strong>Year by Year:</strong> Compare one player across separate season columns. Choose the player and the first and last seasons below."
-    : "<strong>Player vs Player:</strong> Compare two players using one shared season, combined year range, or career scope. To see one player in separate season columns, choose <strong>Year by Year</strong>.";
+    ? "<strong>Year over Year:</strong> Compare one player across separate season columns. Choose the player and the first and last seasons below."
+    : "<strong>Player vs Player:</strong> Compare two players using one shared season, combined year range, or career scope. To see one player in separate season columns, choose <strong>Year over Year</strong>.";
   const params = new URLSearchParams(window.location.search);
   if (activeCompareView === "yearByYear") params.set("compareView", "yearByYear");
   else params.delete("compareView");
