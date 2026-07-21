@@ -479,8 +479,9 @@ function renderPitchTypeChart() {
   const data = filteredPitchTypeRows().slice(0, 10);
   const max = Math.max(...data.map((row) => Math.abs(toPitchTypeNumber(row[pitchTypeMetric]))), 1);
   const includeBars = showPitchTypeBars();
-  document.querySelector("#pitch-types-chart").innerHTML = data.map((row) => `
-    <div class="bar-row${includeBars ? "" : " no-bar-row"}">
+  document.querySelector("#pitch-types-chart").innerHTML = data.map((row, index) => `
+    <div class="bar-row pitch-type-leader-row${includeBars ? "" : " no-bar-row"}">
+      <strong class="pitch-type-leader-rank">${index + 1}</strong>
       <div class="bar-label">
         ${pitchTypeView === "players" ? `<a class="chart-player-link" href="${pitchTypeSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer"><strong>${row.name}</strong></a>` : `<strong>${row.name}</strong>`}
         <span>${row.team} | ${formatPitchTypeStat("pitches", row.pitches)} pitches | ${formatPitchTypeStat("pa", row.pa)} ${pitchTypeSide === "batter" ? "PA" : "BF"}</span>

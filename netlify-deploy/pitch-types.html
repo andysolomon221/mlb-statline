@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Pitch Type Leaderboards" />
     <meta name="twitter:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260720-pitch-mix-board" />
+    <link rel="stylesheet" href="styles.css?v=20260721-compact-pitch-leaders" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -161,15 +161,15 @@
         </section>
 
         <section class="data-grid advanced-grid" id="pitch-types-board">
-          <section class="panel leaderboard">
+          <section class="panel leaderboard pitch-types-leaders-panel">
             <div class="section-head">
               <div>
-                <p class="eyebrow">Leaderboard</p>
+                <p class="eyebrow">Top 10 Leaderboard</p>
                 <h2 id="pitch-types-chart-title">Pitch type leaders</h2>
               </div>
               <div class="split-status" id="pitch-types-status">Loading...</div>
             </div>
-            <div class="bar-chart" id="pitch-types-chart"></div>
+            <div class="bar-chart pitch-types-leader-chart" id="pitch-types-chart"></div>
           </section>
 
           <section class="panel leaderboard" id="pitch-types-table-panel">
@@ -211,7 +211,7 @@
       </main>
     </div>
 
-    <script src="pitch-types.js?v=20260720-season-default-fix"></script>
+    <script src="pitch-types.js?v=20260721-compact-top-10"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>
