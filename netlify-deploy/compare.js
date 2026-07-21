@@ -25,6 +25,10 @@ let historyAxis = "season";
 let historyMetric = "homeRuns";
 let historyRowsA = [];
 let historyRowsB = [];
+let activeCompareView = "players";
+let ybyPlayer = { ...playerA };
+let candidatesYby = [ybyPlayer];
+let ybyRange = { start: 2022, end: 2026 };
 
 const metricSets = {
   hitting: [
@@ -60,6 +64,35 @@ const metricSets = {
 const historyDefaultMetric = {
   hitting: "homeRuns",
   pitching: "era"
+};
+
+const yearByYearMetricSets = {
+  hitting: [
+    ["gamesPlayed", "Games", false, 0],
+    ["plateAppearances", "PA", false, 0],
+    ["hits", "Hits", false, 0],
+    ["homeRuns", "Home Runs", false, 0],
+    ["rbi", "RBI", false, 0],
+    ["stolenBases", "Stolen Bases", false, 0],
+    ["avg", "AVG", false, 3],
+    ["obp", "OBP", false, 3],
+    ["slg", "SLG", false, 3],
+    ["ops", "OPS", false, 3],
+    ["bbPct", "BB%", false, 1, true],
+    ["kPct", "K%", true, 1, true]
+  ],
+  pitching: [
+    ["gamesPlayed", "Games", false, 0],
+    ["gamesStarted", "Starts", false, 0],
+    ["inningsPitched", "IP", false, 1],
+    ["wins", "Wins", false, 0],
+    ["saves", "Saves", false, 0],
+    ["strikeOuts", "Strikeouts", false, 0],
+    ["era", "ERA", true, 2],
+    ["whip", "WHIP", true, 2],
+    ["kPct", "K%", false, 1, true],
+    ["bbPct", "BB%", true, 1, true]
+  ]
 };
 
 function escapeHtml(value = "") {
@@ -227,6 +260,30 @@ function renderCandidates(side, people) {
   `).join("");
 }
 
+function renderYearByYearCandidates(people) {
+  const unique = Array.from(new Map(people.map((person) => [Number(person.id), person])).values());
+  candidatesYby = unique;
+  document.querySelector("#compare-yby-player-options").innerHTML = unique.map((person) => `
+    <option value="${escapeHtml(displayPlayerOption(person))}" label="${escapeHtml(person.fullName)}"></option>
+  `).join("");
+}
+
+async function hydrateYearByYearPlayer() {
+  const input = document.querySelector("#compare-yby-player");
+  const clean = cleanPlayerInput(input.value);
+  const rawValue = input.value.trim();
+  let match = candidatesYby.find((person) => normalizeName(displayPlayerOption(person)) === normalizeName(rawValue));
+  if (!match) match = rankPeople(candidatesYby.filter((person) => normalizeName(person.fullName) === normalizeName(clean)), clean)[0];
+  if (!match) {
+    const people = await searchPeople(clean);
+    renderYearByYearCandidates(people);
+    match = rankPeople(people.filter((person) => normalizeName(person.fullName) === normalizeName(clean)), clean)[0] || people[0];
+  }
+  if (!match) throw new Error(`Could not find ${clean}`);
+  ybyPlayer = match;
+  input.value = match.fullName;
+}
+
 async function hydratePlayer(side) {
   const input = document.querySelector(`#compare-player-${side}`);
   const clean = cleanPlayerInput(input.value);
@@ -259,6 +316,7 @@ function mapSeasonStat(stat = {}) {
     gamesPlayed: toNumber(stat.gamesPlayed),
     gamesStarted: toNumber(stat.gamesStarted),
     plateAppearances: toNumber(stat.plateAppearances),
+    battersFaced: toNumber(stat.battersFaced),
     atBats,
     hits,
     homeRuns: toNumber(stat.homeRuns),
@@ -360,6 +418,8 @@ function finalizeStats(stat) {
     stat.inningsPitched = stat.ipOuts / 3;
     stat.era = stat.ipOuts ? (stat.earnedRuns * 27) / stat.ipOuts : 0;
     stat.whip = stat.ipOuts ? ((stat.baseOnBalls + stat.hits) * 3) / stat.ipOuts : 0;
+    stat.kPct = safeRate(stat.strikeOuts, stat.battersFaced);
+    stat.bbPct = safeRate(stat.baseOnBalls, stat.battersFaced);
     return stat;
   }
   const obpDenominator = stat.atBats + stat.baseOnBalls + stat.hitByPitch + stat.sacFlies;
@@ -367,6 +427,8 @@ function finalizeStats(stat) {
   stat.obp = safeRate(stat.hits + stat.baseOnBalls + stat.hitByPitch, obpDenominator);
   stat.slg = safeRate(stat.totalBases, stat.atBats);
   stat.ops = stat.obp + stat.slg;
+  stat.kPct = safeRate(stat.strikeOuts, stat.plateAppearances);
+  stat.bbPct = safeRate(stat.baseOnBalls, stat.plateAppearances);
   return stat;
 }
 
@@ -494,6 +556,112 @@ function renderHistoryComparison() {
     const seasonDetail = historyAxis === "career" ? `<small>${a?.season || "—"} / ${b?.season || "—"}</small>` : "";
     return `<tr><th scope="row">${axisLabel}${seasonDetail}</th><td>${a ? formatValue(metricKey, a.value, digits) : "—"}</td><td>${b ? formatValue(metricKey, b.value, digits) : "—"}</td></tr>`;
   }).join("");
+}
+
+function formatYearByYearValue(key, value, digits, isPercent) {
+  if (isPercent) return `${(toNumber(value) * 100).toFixed(digits)}%`;
+  return formatValue(key, value, digits);
+}
+
+function setCompareView(view, { run = true } = {}) {
+  activeCompareView = view === "yearByYear" ? "yearByYear" : "players";
+  document.querySelectorAll("[data-compare-view]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.compareView === activeCompareView);
+  });
+  document.querySelectorAll(".compare-player-view").forEach((section) => {
+    section.hidden = activeCompareView !== "players";
+  });
+  document.querySelector(".compare-yby-controls").hidden = activeCompareView !== "yearByYear";
+  document.querySelector(".compare-yby-results").hidden = activeCompareView !== "yearByYear";
+  const params = new URLSearchParams(window.location.search);
+  if (activeCompareView === "yearByYear") params.set("compareView", "yearByYear");
+  else params.delete("compareView");
+  if (history.replaceState) history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params}` : ""}`);
+  if (!run) return;
+  if (activeCompareView === "yearByYear") runYearByYearComparison();
+  else runComparison();
+}
+
+function renderYearByYearBoard(rows) {
+  const years = yearList(ybyRange.start, ybyRange.end);
+  const rowsBySeason = new Map(rows.map((row) => [row.season, row]));
+  const metrics = yearByYearMetricSets[activeGroup];
+  document.querySelector("#compare-yby-title").textContent = `${ybyPlayer.fullName} year over year`;
+  document.querySelector("#compare-yby-note").textContent = `${years[0]}-${years[years.length - 1]} ${activeGroup === "hitting" ? "batting" : "pitching"} comparison`;
+
+  const header = `
+    <div class="compare-yby-corner">
+      <img src="${headshotUrl(ybyPlayer)}" alt="" />
+      <strong>${escapeHtml(ybyPlayer.fullName)}</strong>
+      <small>${escapeHtml(ybyPlayer.position || "MLB")}</small>
+    </div>
+    ${years.map((year) => `
+      <div class="compare-yby-season-head">
+        <img src="${headshotUrl(ybyPlayer)}" alt="" loading="lazy" />
+        <strong>${year}</strong>
+        <small>${rowsBySeason.has(year) ? "Season" : "No data"}</small>
+      </div>
+    `).join("")}
+  `;
+
+  const metricRows = metrics.map(([key, label, lowerBetter, digits, isPercent = false]) => {
+    const available = years.map((year) => rowsBySeason.get(year)?.stat[key]).filter((value) => value !== undefined);
+    const minimum = available.length ? Math.min(...available) : 0;
+    const maximum = available.length ? Math.max(...available) : 0;
+    const span = maximum - minimum;
+    return `
+      <div class="compare-yby-stat-label">${escapeHtml(label)}</div>
+      ${years.map((year) => {
+        const seasonRow = rowsBySeason.get(year);
+        if (!seasonRow) return '<div class="compare-yby-cell compare-yby-empty"><span>—</span></div>';
+        const value = toNumber(seasonRow.stat[key]);
+        const score = span ? (lowerBetter ? (maximum - value) / span : (value - minimum) / span) : .5;
+        const width = 28 + score * 72;
+        const tone = score >= .72 ? "high" : score <= .28 ? "low" : "mid";
+        return `
+          <div class="compare-yby-cell compare-yby-${tone}">
+            <div class="compare-yby-track"><span style="width:${width.toFixed(1)}%"></span></div>
+            <strong>${escapeHtml(formatYearByYearValue(key, value, digits, isPercent))}</strong>
+          </div>
+        `;
+      }).join("")}
+    `;
+  }).join("");
+
+  const board = document.querySelector("#compare-yby-board");
+  board.style.setProperty("--compare-season-columns", years.length);
+  board.innerHTML = `<div class="compare-yby-grid">${header}${metricRows}</div>`;
+}
+
+async function runYearByYearComparison() {
+  const status = document.querySelector("#compare-yby-status");
+  status.textContent = "Loading seasons...";
+  try {
+    await hydrateYearByYearPlayer();
+    let start = Number(document.querySelector("#compare-yby-start").value);
+    let end = Number(document.querySelector("#compare-yby-end").value);
+    if (start > end) [start, end] = [end, start];
+    if (end - start > 7) start = end - 7;
+    ybyRange = { start, end };
+    document.querySelector("#compare-yby-start").value = start;
+    document.querySelector("#compare-yby-end").value = end;
+    const rawRows = await fetchFirstSeasonRows(ybyPlayer);
+    const allRows = finalizedSeasonRows(rawRows);
+    let rows = allRows.filter((row) => row.season >= start && row.season <= end);
+    if (!rows.length && allRows.length) {
+      end = allRows[allRows.length - 1].season;
+      start = Math.max(allRows[0].season, end - 4);
+      ybyRange = { start, end };
+      document.querySelector("#compare-yby-start").value = start;
+      document.querySelector("#compare-yby-end").value = end;
+      rows = allRows.filter((row) => row.season >= start && row.season <= end);
+    }
+    renderYearByYearBoard(rows);
+    status.textContent = rows.length ? "Comparison loaded" : "No seasons found";
+  } catch (error) {
+    status.textContent = "Could not load player";
+    document.querySelector("#compare-yby-board").innerHTML = '<p class="empty-note">Could not load that player. Try another name or season range.</p>';
+  }
 }
 
 function mobileSummaryMetrics() {
@@ -690,9 +858,13 @@ function populateYears() {
   document.querySelector("#compare-season").innerHTML = options;
   document.querySelector("#compare-range-start").innerHTML = options;
   document.querySelector("#compare-range-end").innerHTML = options;
+  document.querySelector("#compare-yby-start").innerHTML = options;
+  document.querySelector("#compare-yby-end").innerHTML = options;
   document.querySelector("#compare-season").value = activeSeason;
   document.querySelector("#compare-range-start").value = activeRange.start;
   document.querySelector("#compare-range-end").value = activeRange.end;
+  document.querySelector("#compare-yby-start").value = ybyRange.start;
+  document.querySelector("#compare-yby-end").value = ybyRange.end;
 }
 
 function updateModeControls() {
@@ -728,9 +900,28 @@ function bindAutocomplete(side) {
   });
 }
 
+function bindYearByYearAutocomplete() {
+  const input = document.querySelector("#compare-yby-player");
+  input.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    const query = cleanPlayerInput(input.value);
+    if (query.length < 2) return;
+    searchTimer = setTimeout(async () => {
+      renderYearByYearCandidates(await searchPeople(query));
+    }, 180);
+  });
+}
+
 function bindEvents() {
   bindAutocomplete("a");
   bindAutocomplete("b");
+  bindYearByYearAutocomplete();
+  document.querySelectorAll("[data-compare-view]").forEach((button) => {
+    button.addEventListener("click", () => setCompareView(button.dataset.compareView));
+  });
+  document.querySelector("#run-yby-comparison").addEventListener("click", runYearByYearComparison);
+  document.querySelector("#compare-yby-start").addEventListener("change", runYearByYearComparison);
+  document.querySelector("#compare-yby-end").addEventListener("change", runYearByYearComparison);
   document.querySelector("#run-comparison").addEventListener("click", runComparison);
   document.querySelector("#copy-compare-link").addEventListener("click", copyCompareLink);
   document.querySelector("#compare-card-view-toggle").addEventListener("click", () => {
@@ -750,7 +941,8 @@ function bindEvents() {
   document.querySelector("#compare-group").addEventListener("change", (event) => {
     activeGroup = event.target.value;
     historyMetric = historyDefaultMetric[activeGroup];
-    runComparison();
+    if (activeCompareView === "yearByYear") runYearByYearComparison();
+    else runComparison();
   });
   document.querySelector("#compare-season").addEventListener("change", (event) => {
     activeSeason = event.target.value;
@@ -822,6 +1014,7 @@ function bindEvents() {
 
 function applyUrlParams() {
   const params = new URLSearchParams(window.location.search);
+  activeCompareView = params.get("compareView") === "yearByYear" ? "yearByYear" : "players";
   cardViewActive = params.get("view") === "card";
   const requestedGroup = params.get("group");
   if (requestedGroup === "hitting" || requestedGroup === "pitching") {
@@ -877,7 +1070,9 @@ function initializeComparePage() {
   updateModeControls();
   renderCardViewState();
   bindEvents();
-  runComparison();
+  setCompareView(activeCompareView, { run: false });
+  if (activeCompareView === "yearByYear") runYearByYearComparison();
+  else runComparison();
 }
 
 initializeComparePage();

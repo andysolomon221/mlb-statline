@@ -85,7 +85,12 @@
           </div>
         </header>
 
-        <section class="panel compare-controls-panel" aria-label="Comparison controls">
+        <div class="mode-toggle compare-page-mode" role="group" aria-label="Compare view">
+          <button class="active" type="button" data-compare-view="players">Player vs Player</button>
+          <button type="button" data-compare-view="yearByYear">Year by Year</button>
+        </div>
+
+        <section class="panel compare-controls-panel compare-player-view" aria-label="Comparison controls">
           <div class="section-head">
             <div>
               <p class="eyebrow">Compare Players</p>
@@ -172,7 +177,7 @@
           </div>
         </section>
 
-        <section class="score-strip compare-summary" aria-label="Comparison summary">
+        <section class="score-strip compare-summary compare-player-view" aria-label="Comparison summary">
           <article>
             <span>Player 1</span>
             <strong id="compare-player-a-card">Aaron Judge</strong>
@@ -195,7 +200,7 @@
           </article>
         </section>
 
-        <section class="data-grid advanced-grid">
+        <section class="data-grid advanced-grid compare-player-view">
           <section class="panel leaderboard">
             <div class="section-head">
               <div>
@@ -218,7 +223,7 @@
           </section>
         </section>
 
-        <section class="panel compare-history-panel" aria-labelledby="compare-history-title">
+        <section class="panel compare-history-panel compare-player-view" aria-labelledby="compare-history-title">
           <div class="section-head compare-history-head">
             <div>
               <p class="eyebrow">Year By Year</p>
@@ -254,6 +259,47 @@
           </div>
         </section>
 
+        <section class="panel compare-yby-controls" aria-label="Year by year controls" hidden>
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">One Player, Every Season</p>
+              <h2>Build a year-over-year comparison</h2>
+              <p class="compare-history-note">Choose one player and a season window. Each season becomes its own column.</p>
+            </div>
+          </div>
+          <div class="compare-yby-control-grid">
+            <label>
+              <span>Player</span>
+              <input id="compare-yby-player" type="search" list="compare-yby-player-options" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none" value="Aaron Judge" aria-label="Year by year player" />
+              <datalist id="compare-yby-player-options"></datalist>
+            </label>
+            <label>
+              <span>From</span>
+              <select id="compare-yby-start" aria-label="Year by year start season"></select>
+            </label>
+            <label>
+              <span>To</span>
+              <select id="compare-yby-end" aria-label="Year by year end season"></select>
+            </label>
+            <button id="run-yby-comparison" type="button">Compare Seasons</button>
+          </div>
+          <small class="data-note">Core MLB statistics are shown as raw values. Bars are scaled across the selected seasons for quick visual comparison.</small>
+        </section>
+
+        <section class="panel compare-yby-results" aria-labelledby="compare-yby-title" hidden>
+          <div class="section-head compare-yby-results-head">
+            <div>
+              <p class="eyebrow">Year By Year</p>
+              <h2 id="compare-yby-title">Aaron Judge year over year</h2>
+              <p class="compare-history-note" id="compare-yby-note">Loading seasons...</p>
+            </div>
+            <div class="split-status" id="compare-yby-status" aria-live="polite">Ready</div>
+          </div>
+          <div class="compare-yby-board-wrap">
+            <div class="compare-yby-board" id="compare-yby-board"></div>
+          </div>
+        </section>
+
         <footer class="site-footer">
           <a href="about.html">About</a>
           <a href="data-sources.html">Data Sources</a>
@@ -263,7 +309,7 @@
       </main>
     </div>
 
-    <script src="compare.js?v=20260720-year-by-year"></script>
+    <script src="compare.js?v=20260720-year-by-year-mode"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>
