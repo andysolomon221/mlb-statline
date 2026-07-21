@@ -278,11 +278,20 @@ function aggregatePitchTypeItems(items, groupKey) {
 
 function pitchTypeMixSourceRows() {
   const query = document.querySelector("#pitch-types-search")?.value.trim().toLowerCase() || "";
-  return pitchTypeRawRows
+  const filteredRows = pitchTypeRawRows
     .filter((row) => pitchTypeTeam === "all" || row.team === pitchTypeTeam)
-    .filter((row) => pitchTypeView === "teams" || toPitchTypeNumber(row.pa) >= toPitchTypeNumber(pitchTypeMinPa))
-    .filter((row) => pitchTypeView === "teams" || toPitchTypeNumber(row.pitches) >= toPitchTypeNumber(pitchTypeMinPitches))
     .filter((row) => pitchTypeView === "teams" || !query || `${row.name} ${row.team} ${teamDisplayName(row.team)}`.toLowerCase().includes(query));
+  if (pitchTypeView === "teams") return filteredRows;
+
+  const playerRows = new Map();
+  filteredRows.forEach((row) => addAggregate(playerRows, row.playerId, row));
+  const qualifiedPlayers = new Set(
+    Array.from(playerRows.entries())
+      .filter(([, rows]) => sumRows(rows, "pa") >= toPitchTypeNumber(pitchTypeMinPa))
+      .filter(([, rows]) => sumRows(rows, "pitches") >= toPitchTypeNumber(pitchTypeMinPitches))
+      .map(([playerId]) => playerId)
+  );
+  return filteredRows.filter((row) => qualifiedPlayers.has(row.playerId));
 }
 
 function aggregatePitchTypeRows() {
