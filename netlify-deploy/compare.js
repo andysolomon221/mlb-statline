@@ -21,6 +21,10 @@ let candidatesB = [playerB];
 let searchTimer;
 let copyStatusTimer;
 let cardViewActive = false;
+let historyAxis = "season";
+let historyMetric = "homeRuns";
+let historyRowsA = [];
+let historyRowsB = [];
 
 const metricSets = {
   hitting: [
@@ -51,6 +55,11 @@ const metricSets = {
     ["era", "ERA", true, 2],
     ["whip", "WHIP", true, 2]
   ]
+};
+
+const historyDefaultMetric = {
+  hitting: "homeRuns",
+  pitching: "era"
 };
 
 function escapeHtml(value = "") {
@@ -383,6 +392,110 @@ function formatValue(key, value, digits) {
   return new Intl.NumberFormat("en-US").format(Math.round(toNumber(value)));
 }
 
+function metricDefinition(key) {
+  return metricSets[activeGroup].find(([metricKey]) => metricKey === key) || metricSets[activeGroup][0];
+}
+
+function finalizedSeasonRows(rows) {
+  return rows.map((row, index) => ({
+    season: row.season,
+    careerYear: index + 1,
+    stat: finalizeStats({ ...row.stat })
+  }));
+}
+
+function historySeries(rows) {
+  return rows.map((row) => ({
+    x: historyAxis === "career" ? row.careerYear : row.season,
+    season: row.season,
+    value: toNumber(row.stat[historyMetric])
+  }));
+}
+
+function renderHistoryMetricOptions() {
+  const select = document.querySelector("#compare-history-metric");
+  if (!metricSets[activeGroup].some(([key]) => key === historyMetric)) {
+    historyMetric = historyDefaultMetric[activeGroup];
+  }
+  select.innerHTML = metricSets[activeGroup].map(([key, label]) => `
+    <option value="${escapeHtml(key)}">${escapeHtml(label)}</option>
+  `).join("");
+  select.value = historyMetric;
+}
+
+function renderHistoryComparison() {
+  const svg = document.querySelector("#compare-history-chart");
+  const rowsA = historySeries(historyRowsA);
+  const rowsB = historySeries(historyRowsB);
+  const [metricKey, metricLabel, , digits] = metricDefinition(historyMetric);
+  const allPoints = [...rowsA, ...rowsB];
+  if (!allPoints.length) {
+    svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle">No year-by-year data available.</text>';
+    document.querySelector("#compare-history-table").innerHTML = '<tr><td colspan="3" class="empty-row">No year-by-year data available.</td></tr>';
+    return;
+  }
+
+  const width = 960;
+  const height = 430;
+  const margin = { top: 26, right: 30, bottom: 54, left: 72 };
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const xValues = allPoints.map((point) => point.x);
+  const minX = Math.min(...xValues);
+  const maxX = Math.max(...xValues);
+  const maxValue = Math.max(...allPoints.map((point) => point.value), 1);
+  const minValue = metricKey === "era" || metricKey === "whip" ? Math.min(...allPoints.map((point) => point.value), 0) : 0;
+  const valueSpan = Math.max(maxValue - minValue, 1);
+  const xPosition = (value) => margin.left + (maxX === minX ? plotWidth / 2 : ((value - minX) / (maxX - minX)) * plotWidth);
+  const yPosition = (value) => margin.top + plotHeight - ((value - minValue) / valueSpan) * plotHeight;
+  const linePath = (points) => points.map((point, index) => `${index ? "L" : "M"}${xPosition(point.x).toFixed(1)},${yPosition(point.value).toFixed(1)}`).join(" ");
+  const tickCount = 5;
+  const yTicks = Array.from({ length: tickCount }, (_, index) => minValue + (valueSpan * index) / (tickCount - 1));
+  const uniqueX = [...new Set(xValues)].sort((a, b) => a - b);
+  const xStep = Math.max(1, Math.ceil(uniqueX.length / 8));
+  const xTicks = uniqueX.filter((value, index) => index % xStep === 0 || index === uniqueX.length - 1);
+  const pointMarkup = (points, className, playerName) => points.map((point) => `
+    <circle class="${className}" cx="${xPosition(point.x).toFixed(1)}" cy="${yPosition(point.value).toFixed(1)}" r="5" tabindex="0">
+      <title>${escapeHtml(playerName)} — ${historyAxis === "career" ? `career year ${point.x} (${point.season})` : point.season}: ${escapeHtml(formatValue(metricKey, point.value, digits))} ${escapeHtml(metricLabel)}</title>
+    </circle>
+  `).join("");
+
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.innerHTML = `
+    <title id="compare-history-chart-title">${escapeHtml(metricLabel)} by ${historyAxis === "career" ? "career year" : "season"} for ${escapeHtml(playerA.fullName)} and ${escapeHtml(playerB.fullName)}</title>
+    <desc id="compare-history-chart-desc">A line chart comparing each player's ${escapeHtml(metricLabel)} in every MLB season with available data.</desc>
+    ${yTicks.map((value) => `<g class="compare-chart-grid"><line x1="${margin.left}" x2="${width - margin.right}" y1="${yPosition(value)}" y2="${yPosition(value)}"></line><text x="${margin.left - 12}" y="${yPosition(value) + 5}" text-anchor="end">${escapeHtml(formatValue(metricKey, value, digits))}</text></g>`).join("")}
+    ${xTicks.map((value) => `<text class="compare-chart-x-label" x="${xPosition(value)}" y="${height - 20}" text-anchor="middle">${value}</text>`).join("")}
+    <path class="compare-history-line compare-history-line-a" d="${linePath(rowsA)}"></path>
+    <path class="compare-history-line compare-history-line-b" d="${linePath(rowsB)}"></path>
+    ${pointMarkup(rowsA, "compare-history-point compare-history-point-a", playerA.fullName)}
+    ${pointMarkup(rowsB, "compare-history-point compare-history-point-b", playerB.fullName)}
+  `;
+
+  document.querySelector("#compare-history-title").textContent = `${metricLabel} by ${historyAxis === "career" ? "career year" : "season"}`;
+  document.querySelector("#compare-history-note").textContent = historyAxis === "career"
+    ? "Each player's first MLB season is aligned as Career Year 1."
+    : "Every dot represents one MLB season with available data.";
+  document.querySelector("#compare-history-legend").innerHTML = `
+    <span><i class="compare-legend-a"></i>${escapeHtml(playerA.fullName)}</span>
+    <span><i class="compare-legend-b"></i>${escapeHtml(playerB.fullName)}</span>
+  `;
+
+  const byXA = new Map(rowsA.map((row) => [row.x, row]));
+  const byXB = new Map(rowsB.map((row) => [row.x, row]));
+  const tableX = [...new Set([...byXA.keys(), ...byXB.keys()])].sort((a, b) => a - b);
+  document.querySelector("#compare-history-axis-heading").textContent = historyAxis === "career" ? "Career year" : "Season";
+  document.querySelector("#compare-history-player-a-heading").textContent = playerA.fullName;
+  document.querySelector("#compare-history-player-b-heading").textContent = playerB.fullName;
+  document.querySelector("#compare-history-table").innerHTML = tableX.map((x) => {
+    const a = byXA.get(x);
+    const b = byXB.get(x);
+    const axisLabel = historyAxis === "career" ? `${x}` : x;
+    const seasonDetail = historyAxis === "career" ? `<small>${a?.season || "—"} / ${b?.season || "—"}</small>` : "";
+    return `<tr><th scope="row">${axisLabel}${seasonDetail}</th><td>${a ? formatValue(metricKey, a.value, digits) : "—"}</td><td>${b ? formatValue(metricKey, b.value, digits) : "—"}</td></tr>`;
+  }).join("");
+}
+
 function mobileSummaryMetrics() {
   return activeGroup === "pitching"
     ? [["inningsPitched", "IP", 1], ["era", "ERA", 2], ["whip", "WHIP", 2], ["strikeOuts", "SO", 0], ["wins", "W", 0], ["saves", "SV", 0]]
@@ -463,8 +576,17 @@ async function runComparison() {
   try {
     await Promise.all([hydratePlayer("a"), hydratePlayer("b")]);
     updateShareUrl();
-    const [statsA, statsB] = await Promise.all([playerStats(playerA, "a"), playerStats(playerB, "b")]);
+    const [statsA, statsB, rawHistoryA, rawHistoryB] = await Promise.all([
+      playerStats(playerA, "a"),
+      playerStats(playerB, "b"),
+      fetchFirstSeasonRows(playerA),
+      fetchFirstSeasonRows(playerB)
+    ]);
+    historyRowsA = finalizedSeasonRows(rawHistoryA);
+    historyRowsB = finalizedSeasonRows(rawHistoryB);
     renderComparison(statsA, statsB);
+    renderHistoryMetricOptions();
+    renderHistoryComparison();
     document.querySelector("#compare-status").textContent = "Comparison loaded";
     document.querySelector("#compare-status-card").textContent = "Loaded";
   } catch (error) {
@@ -614,8 +736,20 @@ function bindEvents() {
   document.querySelector("#compare-card-view-toggle").addEventListener("click", () => {
     setCardView(!cardViewActive);
   });
+  document.querySelector("#compare-history-metric").addEventListener("change", (event) => {
+    historyMetric = event.target.value;
+    renderHistoryComparison();
+  });
+  document.querySelectorAll("[data-history-axis]").forEach((button) => {
+    button.addEventListener("click", () => {
+      historyAxis = button.dataset.historyAxis;
+      document.querySelectorAll("[data-history-axis]").forEach((axisButton) => axisButton.classList.toggle("active", axisButton === button));
+      renderHistoryComparison();
+    });
+  });
   document.querySelector("#compare-group").addEventListener("change", (event) => {
     activeGroup = event.target.value;
+    historyMetric = historyDefaultMetric[activeGroup];
     runComparison();
   });
   document.querySelector("#compare-season").addEventListener("change", (event) => {

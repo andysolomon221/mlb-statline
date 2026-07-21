@@ -218,6 +218,42 @@
           </section>
         </section>
 
+        <section class="panel compare-history-panel" aria-labelledby="compare-history-title">
+          <div class="section-head compare-history-head">
+            <div>
+              <p class="eyebrow">Year By Year</p>
+              <h2 id="compare-history-title">Career comparison</h2>
+              <p class="compare-history-note" id="compare-history-note">See how each player's seasons stack up.</p>
+            </div>
+            <div class="compare-history-controls">
+              <label>
+                <span>Metric</span>
+                <select id="compare-history-metric" aria-label="Year-by-year comparison metric"></select>
+              </label>
+              <div class="mode-toggle compare-history-mode" role="group" aria-label="Year-by-year alignment">
+                <button class="active" type="button" data-history-axis="season">Calendar year</button>
+                <button type="button" data-history-axis="career">Career year</button>
+              </div>
+            </div>
+          </div>
+          <div class="compare-history-legend" id="compare-history-legend" aria-hidden="true"></div>
+          <div class="compare-history-chart-wrap">
+            <svg id="compare-history-chart" class="compare-history-chart" role="img" aria-labelledby="compare-history-chart-title compare-history-chart-desc"></svg>
+          </div>
+          <div class="table-wrap compare-history-table-wrap">
+            <table class="compare-history-table">
+              <thead>
+                <tr>
+                  <th id="compare-history-axis-heading" scope="col">Season</th>
+                  <th id="compare-history-player-a-heading" scope="col">Player 1</th>
+                  <th id="compare-history-player-b-heading" scope="col">Player 2</th>
+                </tr>
+              </thead>
+              <tbody id="compare-history-table"></tbody>
+            </table>
+          </div>
+        </section>
+
         <footer class="site-footer">
           <a href="about.html">About</a>
           <a href="data-sources.html">Data Sources</a>
@@ -227,7 +263,7 @@
       </main>
     </div>
 
-    <script src="compare.js?v=20260714-image-alt-text"></script>
+    <script src="compare.js?v=20260720-year-by-year"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>
