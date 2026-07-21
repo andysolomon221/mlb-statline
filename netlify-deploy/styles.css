@@ -3469,7 +3469,7 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
 
 .compare-page-mode {
   width: fit-content;
-  margin: 0 0 18px;
+  margin: 0 0 8px;
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 5px;
@@ -3479,6 +3479,23 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
 .compare-page-mode button {
   min-height: 40px;
   padding: 0 18px;
+}
+
+.compare-mode-explainer {
+  max-width: 900px;
+  margin: 0 0 18px;
+  border-left: 4px solid var(--teal);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 13px;
+  color: var(--muted);
+  background: #f0f8f7;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.compare-mode-explainer strong {
+  color: var(--navy);
 }
 
 .compare-yby-controls,
