@@ -2472,6 +2472,38 @@ td {
   background: #fff;
 }
 
+.trust-page-card {
+  display: grid;
+  gap: 8px;
+  min-height: 150px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+  color: inherit;
+  background: var(--panel);
+  text-decoration: none;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.trust-page-card:hover,
+.trust-page-card:focus-visible {
+  border-color: var(--teal);
+  box-shadow: 0 8px 22px rgba(20, 43, 60, .1);
+  transform: translateY(-2px);
+}
+
+.trust-grid .trust-page-card strong {
+  color: var(--ink);
+  font-size: 19px;
+}
+
+.trust-grid .trust-page-card span {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .trust-grid strong {
   color: var(--ink);
   font-size: 15px;
