@@ -5191,3 +5191,24 @@ body.compare-card-view .compare-history-panel {
     min-width: 820px;
   }
 }
+.pitch-types-season-control {
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.pitch-types-season-mode {
+  flex-basis: 100%;
+  justify-content: flex-end;
+}
+
+.pitch-types-single-season,
+.pitch-types-range-fields {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pitch-types-season-control[data-active-mode="single"] .pitch-types-range-fields,
+.pitch-types-season-control[data-active-mode="range"] .pitch-types-single-season {
+  display: none;
+}

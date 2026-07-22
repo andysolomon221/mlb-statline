@@ -6,6 +6,9 @@ const pitchTypeParams = new URLSearchParams(window.location.search);
 let pitchTypeSide = "batter";
 let pitchTypeView = "teams";
 let pitchTypeSeason = "2026";
+let pitchTypeSeasonMode = "single";
+let pitchTypeFromSeason = "2024";
+let pitchTypeToSeason = "2026";
 let pitchTypeTeam = pitchTypeParams.get("team") || "all";
 let pitchTypePitch = "all";
 let pitchTypeMetric = "pitch_usage";
@@ -146,6 +149,12 @@ function applyInitialPitchTypeParams() {
     const season = Number(pitchTypeParams.get("season"));
     if (Number.isFinite(season)) pitchTypeSeason = String(clampPitchType(season, firstPitchTypeSeason, lastPitchTypeSeason));
   }
+  if (pitchTypeParams.get("scope") === "range") pitchTypeSeasonMode = "range";
+  const fromSeason = Number(pitchTypeParams.get("from"));
+  const toSeason = Number(pitchTypeParams.get("to"));
+  if (Number.isFinite(fromSeason)) pitchTypeFromSeason = String(clampPitchType(fromSeason, firstPitchTypeSeason, lastPitchTypeSeason));
+  if (Number.isFinite(toSeason)) pitchTypeToSeason = String(clampPitchType(toSeason, firstPitchTypeSeason, lastPitchTypeSeason));
+  normalizePitchTypeRange();
   const pitch = pitchTypeParams.get("pitch");
   if (pitchGroups.some(([key]) => key === pitch)) pitchTypePitch = pitch;
   const metric = pitchTypeParams.get("metric");
@@ -166,6 +175,28 @@ function applyInitialPitchTypeParams() {
 
 function clampPitchType(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizePitchTypeRange(changed = "") {
+  let from = Number(pitchTypeFromSeason);
+  let to = Number(pitchTypeToSeason);
+  if (from > to) {
+    if (changed === "from") to = from;
+    else from = to;
+  }
+  pitchTypeFromSeason = String(from);
+  pitchTypeToSeason = String(to);
+}
+
+function pitchTypeSeasonLabel() {
+  return pitchTypeSeasonMode === "range" ? `${pitchTypeFromSeason}-${pitchTypeToSeason}` : pitchTypeSeason;
+}
+
+function pitchTypeSelectedSeasons() {
+  if (pitchTypeSeasonMode === "single") return [pitchTypeSeason];
+  const seasons = [];
+  for (let year = Number(pitchTypeFromSeason); year <= Number(pitchTypeToSeason); year += 1) seasons.push(String(year));
+  return seasons;
 }
 
 function toPitchTypeNumber(value) {
@@ -203,16 +234,16 @@ function formatPitchTypeStat(key, value) {
   return number.toFixed(1);
 }
 
-function pitchTypeApiUrl() {
-  const params = new URLSearchParams({ type: pitchTypeSide, year: pitchTypeSeason });
+function pitchTypeApiUrl(season = pitchTypeSeason) {
+  const params = new URLSearchParams({ type: pitchTypeSide, year: season });
   return `/.netlify/functions/pitch-types?${params.toString()}`;
 }
 
-async function fetchPitchTypeJson() {
+async function fetchPitchTypeJson(season = pitchTypeSeason) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), pitchTypeLoadTimeoutMs);
   try {
-    const response = await fetch(pitchTypeApiUrl(), { signal: controller.signal, cache: "no-cache" });
+    const response = await fetch(pitchTypeApiUrl(season), { signal: controller.signal, cache: "no-cache" });
     if (!response.ok) throw new Error(`Pitch type function returned ${response.status}`);
     const data = await response.json();
     if (data.error) throw new Error(data.error);
@@ -220,6 +251,16 @@ async function fetchPitchTypeJson() {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchPitchTypeSeasonRange(seasons) {
+  const dataSets = [];
+  for (let index = 0; index < seasons.length; index += 3) {
+    const seasonBatch = seasons.slice(index, index + 3);
+    const batchData = await Promise.all(seasonBatch.map((season) => fetchPitchTypeJson(season)));
+    dataSets.push(...batchData);
+  }
+  return dataSets;
 }
 
 function pitchTypeSearchUrl(name) {
@@ -357,11 +398,18 @@ function filteredPitchTypeRows() {
 }
 
 function renderPitchTypeControls() {
-  document.querySelector("#pitch-types-season").innerHTML = Array.from({ length: lastPitchTypeSeason - firstPitchTypeSeason + 1 }, (_, index) => {
+  const seasonOptions = Array.from({ length: lastPitchTypeSeason - firstPitchTypeSeason + 1 }, (_, index) => {
     const year = lastPitchTypeSeason - index;
     return `<option value="${year}">${year}</option>`;
   }).join("");
+  document.querySelectorAll("#pitch-types-season, #pitch-types-from-season, #pitch-types-to-season").forEach((select) => {
+    select.innerHTML = seasonOptions;
+  });
   document.querySelector("#pitch-types-season").value = pitchTypeSeason;
+  document.querySelector("#pitch-types-from-season").value = pitchTypeFromSeason;
+  document.querySelector("#pitch-types-to-season").value = pitchTypeToSeason;
+  document.querySelector(".pitch-types-season-control").dataset.activeMode = pitchTypeSeasonMode;
+  document.querySelectorAll("[data-pitch-type-season-mode]").forEach((button) => button.classList.toggle("active", button.dataset.pitchTypeSeasonMode === pitchTypeSeasonMode));
   const pitchOptions = pitchGroups.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelectorAll("#pitch-types-pitch, #pitch-types-pitch-board").forEach((select) => {
     select.innerHTML = pitchOptions;
@@ -400,9 +448,11 @@ function renderPitchTypeControls() {
 function renderPitchTypeTeamOptions() {
   const teams = Array.from(new Set(pitchTypeRawRows.map((row) => row.team).filter(Boolean)))
     .sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b)));
-  document.querySelector("#pitch-types-team").innerHTML = `<option value="all">All teams</option>${teams.map((abbr) => `<option value="${abbr}">${teamDisplayName(abbr)}</option>`).join("")}`;
   if (pitchTypeTeam !== "all" && !teams.includes(pitchTypeTeam)) pitchTypeTeam = "all";
-  document.querySelector("#pitch-types-team").value = pitchTypeTeam;
+  document.querySelectorAll("#pitch-types-team, #pitch-types-team-board").forEach((select) => {
+    select.innerHTML = `<option value="all">All teams</option>${teams.map((abbr) => `<option value="${abbr}">${teamDisplayName(abbr)}</option>`).join("")}`;
+    select.value = pitchTypeTeam;
+  });
 }
 
 function renderPitchTypeSearchOptions() {
@@ -426,7 +476,7 @@ function renderPitchTypeSummary() {
   document.querySelector("#pitch-types-leader").textContent = leader ? leader.name : "No rows";
   document.querySelector("#pitch-types-leader-note").textContent = leader ? `${leader.team} | ${pitchTypeMetricLabel()} ${formatPitchTypeStat(pitchTypeMetric, leader[pitchTypeMetric])}` : "Try another filter";
   document.querySelector("#pitch-types-pitch-card").textContent = pitchTypeLabel();
-  document.querySelector("#pitch-types-pitch-note").textContent = `${pitchTypeSeason} | ${scope}`;
+  document.querySelector("#pitch-types-pitch-note").textContent = `${pitchTypeSeasonLabel()} | ${scope}`;
   document.querySelector("#pitch-types-metric-card").textContent = pitchTypeMetricLabel();
   document.querySelector("#pitch-types-count").textContent = data.length;
   document.querySelector("#pitch-types-count-note").textContent = `${pitchTypeMinPa === "0" ? `All ${minPaLabel}` : `${pitchTypeMinPa}+ ${minPaLabel}`} | ${pitchTypeMinPitches === "0" ? "All pitches" : `${pitchTypeMinPitches}+ pitches`}`;
@@ -449,7 +499,7 @@ function renderPitchTypeMixBoard() {
   const pitchLabel = pitchTypeSide === "batter" ? "seen" : "thrown";
   const resultLabel = pitchTypeSide === "batter" ? "batting" : "pitching allowed";
   document.querySelector("#pitch-types-mix-title").textContent = `${subject} ${resultLabel} by pitch group`;
-  document.querySelector("#pitch-types-mix-status").textContent = `${pitchTypeSeason} | pitches ${pitchLabel}`;
+  document.querySelector("#pitch-types-mix-status").textContent = `${pitchTypeSeasonLabel()} | pitches ${pitchLabel}`;
   document.querySelector("#pitch-types-mix-board").innerHTML = rows.length ? `
     <div class="table-wrap pitch-mix-table-wrap">
       <table class="pitch-mix-table">
@@ -586,7 +636,13 @@ function pitchTypeShareParams() {
   const params = new URLSearchParams();
   params.set("type", pitchTypeSide);
   params.set("view", pitchTypeView);
-  params.set("season", pitchTypeSeason);
+  if (pitchTypeSeasonMode === "range") {
+    params.set("scope", "range");
+    params.set("from", pitchTypeFromSeason);
+    params.set("to", pitchTypeToSeason);
+  } else {
+    params.set("season", pitchTypeSeason);
+  }
   params.set("pitch", pitchTypePitch);
   params.set("metric", pitchTypeMetric);
   if (pitchTypeTeam !== "all") params.set("team", pitchTypeTeam);
@@ -652,8 +708,13 @@ async function loadPitchTypeData() {
   document.querySelector("#pitch-types-chart").innerHTML = `<div class="empty-state">Loading Baseball Savant pitch data...</div>`;
   document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="15" class="empty-row">Loading Baseball Savant pitch data...</td></tr>`;
   try {
-    const data = await fetchPitchTypeJson();
-    pitchTypeRawRows = (data.rows || []).map((row) => ({ ...row, team: normalizeTeamCode(row.team) }));
+    const seasons = pitchTypeSelectedSeasons();
+    const dataSets = await fetchPitchTypeSeasonRange(seasons);
+    pitchTypeRawRows = dataSets.flatMap((data, index) => (data.rows || []).map((row) => ({
+      ...row,
+      season: seasons[index],
+      team: normalizeTeamCode(row.team)
+    })));
     renderPitchTypeTeamOptions();
     renderPitchTypeAll();
     document.querySelector("#pitch-types-status").textContent = `${pitchTypeRows.length} rows loaded`;
@@ -674,9 +735,33 @@ function bindPitchTypeEvents() {
     pitchTypeSeason = event.target.value;
     loadPitchTypeData();
   });
-  document.querySelector("#pitch-types-team").addEventListener("change", (event) => {
-    pitchTypeTeam = event.target.value === "all" ? "all" : normalizeTeamCode(event.target.value);
-    renderPitchTypeAll();
+  document.querySelectorAll("[data-pitch-type-season-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      pitchTypeSeasonMode = button.dataset.pitchTypeSeasonMode;
+      renderPitchTypeControls();
+      loadPitchTypeData();
+    });
+  });
+  document.querySelector("#pitch-types-from-season").addEventListener("change", (event) => {
+    pitchTypeFromSeason = event.target.value;
+    normalizePitchTypeRange("from");
+    renderPitchTypeControls();
+    loadPitchTypeData();
+  });
+  document.querySelector("#pitch-types-to-season").addEventListener("change", (event) => {
+    pitchTypeToSeason = event.target.value;
+    normalizePitchTypeRange("to");
+    renderPitchTypeControls();
+    loadPitchTypeData();
+  });
+  document.querySelectorAll("#pitch-types-team, #pitch-types-team-board").forEach((select) => {
+    select.addEventListener("change", (event) => {
+      pitchTypeTeam = event.target.value === "all" ? "all" : normalizeTeamCode(event.target.value);
+      document.querySelectorAll("#pitch-types-team, #pitch-types-team-board").forEach((teamSelect) => {
+        teamSelect.value = pitchTypeTeam;
+      });
+      renderPitchTypeAll();
+    });
   });
   document.querySelectorAll("#pitch-types-pitch, #pitch-types-pitch-board").forEach((select) => {
     select.addEventListener("change", (event) => {

@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Pitch Type Leaderboards" />
     <meta name="twitter:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260722-full-board-pitch-toggle" />
+    <link rel="stylesheet" href="styles.css?v=20260722-pitch-year-range" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -76,9 +76,21 @@
             <p class="eyebrow">Pitch Types</p>
             <h1>Team and player leaderboards by pitch mix and pitch results.</h1>
           </div>
-          <div class="season-control" aria-label="Pitch type filters">
-            <label for="pitch-types-season">Season</label>
-            <select id="pitch-types-season" aria-label="Select season"></select>
+          <div class="season-control pitch-types-season-control" data-active-mode="single" aria-label="Pitch type filters">
+            <div class="league-toggle pitch-types-season-mode" role="group" aria-label="Season scope">
+              <button class="active" type="button" data-pitch-type-season-mode="single">Single year</button>
+              <button type="button" data-pitch-type-season-mode="range">Year range</button>
+            </div>
+            <div class="pitch-types-single-season">
+              <label for="pitch-types-season">Season</label>
+              <select id="pitch-types-season" aria-label="Select season"></select>
+            </div>
+            <div class="pitch-types-range-fields">
+              <label for="pitch-types-from-season">From</label>
+              <select id="pitch-types-from-season" aria-label="Pitch type range starting season"></select>
+              <label for="pitch-types-to-season">To</label>
+              <select id="pitch-types-to-season" aria-label="Pitch type range ending season"></select>
+            </div>
             <select id="pitch-types-team" aria-label="Filter by team">
               <option value="all">All teams</option>
             </select>
@@ -179,6 +191,12 @@
                 <h2 id="pitch-types-table-title">Pitch type table</h2>
               </div>
               <div class="pitch-types-board-tools">
+                <label class="pitch-types-board-pitch-field" for="pitch-types-team-board">
+                  Team
+                  <select id="pitch-types-team-board" aria-label="Full board team filter">
+                    <option value="all">All teams</option>
+                  </select>
+                </label>
                 <label class="pitch-types-board-pitch-field" for="pitch-types-pitch-board">
                   <span>Pitch Group</span>
                   <select id="pitch-types-pitch-board" aria-label="Full board pitch group"></select>
@@ -217,7 +235,7 @@
       </main>
     </div>
 
-    <script src="pitch-types.js?v=20260722-home-runs-by-pitch"></script>
+    <script src="pitch-types.js?v=20260722-pitch-year-range"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>
