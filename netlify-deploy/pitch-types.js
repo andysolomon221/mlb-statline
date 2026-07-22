@@ -358,8 +358,11 @@ function renderPitchTypeControls() {
     return `<option value="${year}">${year}</option>`;
   }).join("");
   document.querySelector("#pitch-types-season").value = pitchTypeSeason;
-  document.querySelector("#pitch-types-pitch").innerHTML = pitchGroups.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
-  document.querySelector("#pitch-types-pitch").value = pitchTypePitch;
+  const pitchOptions = pitchGroups.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
+  document.querySelectorAll("#pitch-types-pitch, #pitch-types-pitch-board").forEach((select) => {
+    select.innerHTML = pitchOptions;
+    select.value = pitchTypePitch;
+  });
   document.querySelector("#pitch-types-metric").innerHTML = pitchTypeMetrics[pitchTypeSide].map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelector("#pitch-types-metric").value = pitchTypeMetric;
   document.querySelector("#pitch-types-min-pa").innerHTML = [
@@ -667,9 +670,14 @@ function bindPitchTypeEvents() {
     pitchTypeTeam = event.target.value === "all" ? "all" : normalizeTeamCode(event.target.value);
     renderPitchTypeAll();
   });
-  document.querySelector("#pitch-types-pitch").addEventListener("change", (event) => {
-    pitchTypePitch = event.target.value;
-    renderPitchTypeAll();
+  document.querySelectorAll("#pitch-types-pitch, #pitch-types-pitch-board").forEach((select) => {
+    select.addEventListener("change", (event) => {
+      pitchTypePitch = event.target.value;
+      document.querySelectorAll("#pitch-types-pitch, #pitch-types-pitch-board").forEach((pitchSelect) => {
+        pitchSelect.value = pitchTypePitch;
+      });
+      renderPitchTypeAll();
+    });
   });
   document.querySelector("#pitch-types-metric").addEventListener("change", (event) => {
     pitchTypeMetric = event.target.value;

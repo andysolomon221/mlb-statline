@@ -446,6 +446,34 @@ h2 {
   width: min(360px, 100%);
 }
 
+.pitch-types-board-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pitch-types-board-pitch-field {
+  display: grid;
+  gap: 5px;
+  min-width: 180px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pitch-types-board-pitch-field select {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  color: var(--ink);
+  background: #fff;
+  font-weight: 800;
+}
+
 .score-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -4175,6 +4203,17 @@ body.compare-card-view .compare-history-panel {
 @media (max-width: 680px) {
   body {
     font-size: 14px;
+  }
+
+  .pitch-types-board-tools {
+    display: grid;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .pitch-types-board-pitch-field,
+  .pitch-types-board-pitch-field select {
+    width: 100%;
   }
 
   main {

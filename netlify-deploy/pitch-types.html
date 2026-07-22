@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Pitch Type Leaderboards" />
     <meta name="twitter:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260721-compact-top-10-v2" />
+    <link rel="stylesheet" href="styles.css?v=20260722-full-board-pitch-toggle" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -178,9 +178,15 @@
                 <p class="eyebrow">Full Board</p>
                 <h2 id="pitch-types-table-title">Pitch type table</h2>
               </div>
-              <div class="search-action board-search-action">
-                <input id="pitch-types-search" type="search" list="pitch-types-search-options" spellcheck="false" autocorrect="off" autocapitalize="none" placeholder="Search team or player" aria-label="Search pitch type board" />
-                <button type="button" id="pitch-types-search-submit">View</button>
+              <div class="pitch-types-board-tools">
+                <label class="pitch-types-board-pitch-field" for="pitch-types-pitch-board">
+                  <span>Pitch Group</span>
+                  <select id="pitch-types-pitch-board" aria-label="Full board pitch group"></select>
+                </label>
+                <div class="search-action board-search-action">
+                  <input id="pitch-types-search" type="search" list="pitch-types-search-options" spellcheck="false" autocorrect="off" autocapitalize="none" placeholder="Search team or player" aria-label="Search pitch type board" />
+                  <button type="button" id="pitch-types-search-submit">View</button>
+                </div>
               </div>
               <datalist id="pitch-types-search-options"></datalist>
             </div>
@@ -211,7 +217,7 @@
       </main>
     </div>
 
-    <script src="pitch-types.js?v=20260722-default-all-pitches"></script>
+    <script src="pitch-types.js?v=20260722-full-board-pitch-toggle"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>
