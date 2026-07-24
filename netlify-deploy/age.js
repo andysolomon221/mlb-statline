@@ -298,6 +298,11 @@ function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
+function agePlayerActions(name, chart = false) {
+  const query = new URLSearchParams({ player: name, group: activeGroup }).toString();
+  return `<div class="player-row-actions${chart ? " chart-player-actions" : ""}" aria-label="Statline player links"><a href="career.html?${query}">Career</a><a href="splits.html?${query}">Splits</a></div>`;
+}
+
 function yearOptions() {
   const years = [];
   for (let year = lastAgeSeason; year >= firstAgeSeason; year -= 1) {
@@ -628,7 +633,7 @@ function renderRows(rows) {
     <tr>
       ${columns.map(([key]) => {
         if (key === "name") {
-          return `<td><a class="player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer"><span class="avatar">${initials(row.name)}</span><span>${escapeHtml(row.name)}</span></a></td>`;
+          return `<td><div class="player-cell-stack"><a class="player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer"><span class="avatar">${initials(row.name)}</span><span>${escapeHtml(row.name)}</span></a>${agePlayerActions(row.name)}</div></td>`;
         }
         return `<td>${fmtStat(key, row[key])}</td>`;
       }).join("")}
@@ -670,6 +675,7 @@ function renderAgeChart(rows) {
             <strong>${escapeHtml(row.name)}</strong>
             <span>${escapeHtml(chartMeta(row))}</span>
           </a>
+          ${agePlayerActions(row.name, true)}
         </div>
         <div class="bar-track" aria-hidden="true">
           <div class="bar-fill" style="width:${percent.toFixed(1)}%"></div>

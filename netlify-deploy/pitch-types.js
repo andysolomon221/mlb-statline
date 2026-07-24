@@ -267,6 +267,12 @@ function pitchTypeSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
+function pitchTypePlayerActions(name, chart = false) {
+  const group = pitchTypeSide === "pitcher" ? "pitching" : "hitting";
+  const query = new URLSearchParams({ player: name, group }).toString();
+  return `<div class="player-row-actions${chart ? " chart-player-actions" : ""}" aria-label="Statline player links"><a href="career.html?${query}">Career</a><a href="splits.html?${query}">Splits</a></div>`;
+}
+
 function initials(name) {
   return String(name || "").split(" ").map((part) => part[0]).join("").slice(0, 3);
 }
@@ -553,6 +559,7 @@ function renderPitchTypeChart() {
       <div class="bar-label">
         ${pitchTypeView === "players" ? `<a class="chart-player-link" href="${pitchTypeSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer"><strong>${row.name}</strong></a>` : `<strong>${row.name}</strong>`}
         <span>${row.team} | ${formatPitchTypeStat("pitches", row.pitches)} pitches | ${formatPitchTypeStat("pa", row.pa)} ${pitchTypeSide === "batter" ? "PA" : "BF"}</span>
+        ${pitchTypeView === "players" ? pitchTypePlayerActions(row.name, true) : ""}
       </div>
       ${includeBars ? `<div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toPitchTypeNumber(row[pitchTypeMetric])) / max * 100)}%"></div></div>` : ""}
       <div class="bar-value">${formatPitchTypeStat(pitchTypeMetric, row[pitchTypeMetric])}</div>
@@ -597,12 +604,13 @@ function renderPitchTypeTable() {
   document.querySelector("#pitch-types-table").innerHTML = data.map((row) => `
     <tr>
       <td>
-        ${pitchTypeView === "players" ? `
+        ${pitchTypeView === "players" ? `<div class="player-cell-stack">
           <a class="player-link" href="${pitchTypeSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer">
             <span class="avatar">${initials(row.name)}</span>
             <span>${row.name}</span>
           </a>
-        ` : row.name}
+          ${pitchTypePlayerActions(row.name)}
+        </div>` : row.name}
       </td>
       <td>${row.team}</td>
       <td>${formatPitchTypeStat("pitch_usage", row.pitch_usage)}</td>

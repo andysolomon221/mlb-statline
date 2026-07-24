@@ -150,6 +150,11 @@ function careerUrl(name) {
   return `career.html?${params.toString()}`;
 }
 
+function comparePlayerActions(name) {
+  const query = new URLSearchParams({ player: name, group: activeGroup }).toString();
+  return `<div class="player-row-actions chart-player-actions" aria-label="Statline player links"><a href="career.html?${query}">Career</a><a href="splits.html?${query}">Splits</a></div>`;
+}
+
 function headshotUrl(player) {
   return `https://img.mlbstatic.com/mlb-photos/image/upload/w_320,q_auto:best/v1/people/${player.id}/headshot/67/current`;
 }
@@ -702,6 +707,7 @@ function renderComparePlayerPanel(player, side) {
         <img src="${headshotUrl(player)}" alt="${escapeHtml(player.fullName)}" loading="lazy" />
       </div>
       <a class="summary-link" href="${escapeHtml(careerUrl(player.fullName))}">${escapeHtml(player.fullName)}</a>
+      ${comparePlayerActions(player.fullName)}
       <small>${escapeHtml(playerScopeLine(player, side))}</small>
     </article>
   `;

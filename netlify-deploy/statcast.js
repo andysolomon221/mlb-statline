@@ -68,6 +68,10 @@ function sortDirection(key) {
   return lowerBetter[activeType].includes(key) ? 1 : -1;
 }
 
+function showMetricBars(key = activeMetric) {
+  return !lowerBetter[activeType].includes(key);
+}
+
 applyInitialStatcastParams();
 
 function toNumber(value) {
@@ -121,6 +125,12 @@ function activeSampleMinimum() {
 
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
+}
+
+function statcastPlayerActions(name, chart = false) {
+  const group = activeType === "pitcher" ? "pitching" : "hitting";
+  const query = new URLSearchParams({ player: name, group }).toString();
+  return `<div class="player-row-actions${chart ? " chart-player-actions" : ""}" aria-label="Statline player links"><a href="career.html?${query}">Career</a><a href="splits.html?${query}">Splits</a></div>`;
 }
 
 function initials(name) {
@@ -217,20 +227,23 @@ function renderSummary() {
   document.querySelector("#statcast-scope-note").textContent = teamLabel;
   document.querySelector("#statcast-count").textContent = data.length;
   document.querySelector("#statcast-count-note").textContent = `${activeSampleMinimum() ? `${activeSampleMinimum()}+ ${sampleLabel()}` : `All ${sampleLabel()}`} sample`;
-  document.querySelector("#statcast-chart-title").innerHTML = `${metricLabel()} ${activeType === "batter" ? "hitter" : "pitcher"} leaders <span class="chart-scale-note">bars scaled to leader</span>`;
+  const scaleNote = showMetricBars() ? ` <span class="chart-scale-note">bars scaled to leader</span>` : "";
+  document.querySelector("#statcast-chart-title").innerHTML = `${metricLabel()} ${activeType === "batter" ? "hitter" : "pitcher"} leaders${scaleNote}`;
   document.querySelector("#statcast-table-title").textContent = `${teamLabel} ${metricLabel()} Statcast ${activeType === "batter" ? "hitters" : "pitchers"}`;
 }
 
 function renderChart() {
   const data = filteredRows().slice(0, 8);
   const max = Math.max(...data.map((row) => Math.abs(toNumber(row[activeMetric]))), 1);
+  const includeBars = showMetricBars();
   document.querySelector("#statcast-chart").innerHTML = data.map((row) => `
-    <div class="bar-row">
+    <div class="bar-row${includeBars ? "" : " no-bar-row"}">
       <div class="bar-label">
         <a class="chart-player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer"><strong>${row.name}</strong></a>
         <span>${row.team}${row.position ? ` | ${row.position}` : ""} | ${fmtStat("sample", row.sample)} ${sampleLabel()}</span>
+        ${statcastPlayerActions(row.name, true)}
       </div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toNumber(row[activeMetric])) / max * 100)}%"></div></div>
+      ${includeBars ? `<div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toNumber(row[activeMetric])) / max * 100)}%"></div></div>` : ""}
       <div class="bar-value">${fmtStat(activeMetric, row[activeMetric])}</div>
     </div>
   `).join("") || `<div class="empty-state">No players match this filter.</div>`;
@@ -258,10 +271,13 @@ function renderTable() {
   document.querySelector("#statcast-table").innerHTML = filteredRows().slice(0, 100).map((row) => `
     <tr>
       <td>
-        <a class="player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer">
-          <span class="avatar">${initials(row.name)}</span>
-          <span>${row.name}</span>
-        </a>
+        <div class="player-cell-stack">
+          <a class="player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer">
+            <span class="avatar">${initials(row.name)}</span>
+            <span>${row.name}</span>
+          </a>
+          ${statcastPlayerActions(row.name)}
+        </div>
       </td>
       <td>${row.team}</td>
       ${columns.map(([key]) => `<td>${fmtStat(key, row[key])}</td>`).join("")}

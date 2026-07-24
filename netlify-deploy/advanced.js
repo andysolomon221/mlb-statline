@@ -149,6 +149,10 @@ function sortDirection(key) {
   return config().lowerBetter.includes(key) ? 1 : -1;
 }
 
+function showMetricBars(key = activeMetric) {
+  return !config().lowerBetter.includes(key);
+}
+
 function fmtStat(key, value) {
   if (value === undefined || value === null || value === "") return "-";
   const number = Number(value);
@@ -169,6 +173,12 @@ function workloadLabel(row) {
 
 function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
+}
+
+function advancedPlayerActions(name) {
+  const group = activeType === "pitching" ? "pitching" : "hitting";
+  const query = new URLSearchParams({ player: name, group }).toString();
+  return `<div class="player-row-actions chart-player-actions" aria-label="Statline player links"><a href="career.html?${query}">Career</a><a href="splits.html?${query}">Splits</a></div>`;
 }
 
 function initials(name) {
@@ -535,20 +545,23 @@ function renderSummary() {
   document.querySelector("#advanced-scope-note").textContent = activeTeamId === "all" ? (activeLeague === "all" ? "All MLB" : activeLeague.toUpperCase()) : activeTeamName;
   document.querySelector("#advanced-count").textContent = data.length;
   document.querySelector("#advanced-count-note").textContent = activeQualifierMinimum() ? `${activeQualifierMinimum()}+ ${qualifierLabel()} sample` : `All ${qualifierLabel()}`;
-  document.querySelector("#advanced-chart-title").innerHTML = `${metricLabel()} ${activeType === "hitting" ? "hitter" : "pitcher"} leaders <span class="chart-scale-note">bars scaled to leader</span>`;
+  const scaleNote = showMetricBars() ? ` <span class="chart-scale-note">bars scaled to leader</span>` : "";
+  document.querySelector("#advanced-chart-title").innerHTML = `${metricLabel()} ${activeType === "hitting" ? "hitter" : "pitcher"} leaders${scaleNote}`;
   document.querySelector("#advanced-table-title").textContent = `${activeTeamId === "all" ? scopeLabel() : activeTeamName} ${metricLabel()} advanced ${config().label}`;
 }
 
 function renderChart() {
   const data = sortedRows().slice(0, 8);
   const max = Math.max(...data.map((row) => Math.abs(toNumber(row[activeMetric]))), 1);
+  const includeBars = showMetricBars();
   document.querySelector("#advanced-chart").innerHTML = data.map((row) => `
-    <div class="bar-row">
+    <div class="bar-row${includeBars ? "" : " no-bar-row"}">
       <div class="bar-label">
         <a class="chart-player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer"><strong>${row.name}</strong></a>
         <span>${row.team} | ${row.position}${activeMode === "range" ? ` | ${workloadLabel(row)}` : ""}</span>
+        ${advancedPlayerActions(row.name)}
       </div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toNumber(row[activeMetric])) / max * 100)}%"></div></div>
+      ${includeBars ? `<div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toNumber(row[activeMetric])) / max * 100)}%"></div></div>` : ""}
       <div class="bar-value">${fmtStat(activeMetric, row[activeMetric])}</div>
     </div>
   `).join("") || `<div class="empty-state">No players match this filter.</div>`;
@@ -576,10 +589,13 @@ function renderTable() {
   document.querySelector("#advanced-table").innerHTML = sortedRows().slice(0, 100).map((row) => `
     <tr>
       <td>
-        <a class="player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer">
-          <span class="avatar">${initials(row.name)}</span>
-          <span>${row.name}</span>
-        </a>
+        <div class="player-cell-stack">
+          <a class="player-link" href="${baseballReferenceSearchUrl(row.name)}" target="_blank" rel="noopener noreferrer">
+            <span class="avatar">${initials(row.name)}</span>
+            <span>${row.name}</span>
+          </a>
+          ${advancedPlayerActions(row.name).replace(" chart-player-actions", "")}
+        </div>
       </td>
       <td>${row.team}</td>
       ${columns.map(([key]) => `<td>${key === "position" ? row.position : fmtStat(key, row[key])}</td>`).join("")}

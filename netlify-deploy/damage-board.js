@@ -101,6 +101,11 @@ function careerLink(name, group) {
   return `<a class="summary-link" href="${escapeHtml(careerUrl(name, group))}">${escapeHtml(name)}</a>`;
 }
 
+function damageBoardPlayerActions(name, group, chart = false) {
+  const query = new URLSearchParams({ player: name, group }).toString();
+  return `<div class="player-row-actions${chart ? " chart-player-actions" : ""}" aria-label="Statline player links"><a href="career.html?${query}">Career</a><a href="splits.html?${query}">Splits</a></div>`;
+}
+
 function selectedCareerGroup() {
   return pvpState.mode === "pitcher" ? "pitching" : "hitting";
 }
@@ -245,7 +250,7 @@ function renderTable(rows, targetSelector) {
   }
   table.innerHTML = rows.map((row) => `
     <tr>
-      <td>${careerLink(rowName(row), opponentCareerGroup())}</td>
+      <td><div class="player-cell-stack">${careerLink(rowName(row), opponentCareerGroup())}${damageBoardPlayerActions(rowName(row), opponentCareerGroup())}</div></td>
       <td>${fmtNumber(row.pa)}</td>
       <td>${fmtNumber(row.ab)}</td>
       <td>${fmtNumber(row.h)}</td>
@@ -283,6 +288,7 @@ function renderTopBoard(rows) {
         <div class="pvp-top-label">
           <strong>${careerLink(rowName(row), opponentCareerGroup())}</strong>
           <span>${fmtNumber(row.pa)} PA | ${fmtNumber(row.ab)} AB | ${fmtNumber(row.h)} H</span>
+          ${damageBoardPlayerActions(rowName(row), opponentCareerGroup(), true)}
         </div>
         <div class="pvp-top-track" aria-hidden="true">
           <div class="pvp-top-fill" style="width:${percent.toFixed(1)}%"></div>

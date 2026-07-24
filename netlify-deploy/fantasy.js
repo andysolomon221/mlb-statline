@@ -178,6 +178,12 @@ function baseballReferenceSearchUrl(name) {
   return `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(name)}`;
 }
 
+function fantasyPlayerActions(name, chart = false) {
+  const group = activeType === "pitching" ? "pitching" : "hitting";
+  const query = new URLSearchParams({ player: name, group }).toString();
+  return `<div class="player-row-actions${chart ? " chart-player-actions" : ""}" aria-label="Statline player links"><a href="career.html?${query}">Career</a><a href="splits.html?${query}">Splits</a></div>`;
+}
+
 function fmtStat(key, value) {
   if (value === undefined || value === null || value === "") return "-";
   if (key === "fantasyScore") return Number(value).toFixed(1);
@@ -564,6 +570,7 @@ function renderChart() {
             <strong>${player.name}</strong>
           </a>
           <span>${player.team}</span>
+          ${fantasyPlayerActions(player.name, true)}
         </div>
         <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
         <div class="bar-value">${fmtStat(chartKey, player[chartKey])}</div>
@@ -599,10 +606,13 @@ function renderTable() {
   document.querySelector("#fantasy-table").innerHTML = data.map((player) => `
     <tr>
       <td>
-        <a class="player-link" href="${baseballReferenceSearchUrl(player.name)}" target="_blank" rel="noopener noreferrer">
-          <span class="avatar">${initials(player.name)}</span>
-          <span>${player.name}</span>
-        </a>
+        <div class="player-cell-stack">
+          <a class="player-link" href="${baseballReferenceSearchUrl(player.name)}" target="_blank" rel="noopener noreferrer">
+            <span class="avatar">${initials(player.name)}</span>
+            <span>${player.name}</span>
+          </a>
+          ${fantasyPlayerActions(player.name)}
+        </div>
       </td>
       <td>${player.team}</td>
       <td>${fmtStat("fantasyScore", player.fantasyScore)}</td>
