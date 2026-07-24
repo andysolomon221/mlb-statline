@@ -492,8 +492,11 @@ function sortedRows() {
 }
 
 function renderControls() {
-  document.querySelector("#advanced-metric").innerHTML = config().metrics.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
-  document.querySelector("#advanced-metric").value = activeMetric;
+  const metricOptions = config().metrics.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
+  document.querySelectorAll("#advanced-metric, #advanced-metric-board").forEach((select) => {
+    select.innerHTML = metricOptions;
+    select.value = activeMetric;
+  });
   document.querySelector(".advanced-qualifier-filter label").textContent = `Minimum ${qualifierLabel()}`;
   document.querySelector("#advanced-qualifier").innerHTML = qualifierOptions().map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
   document.querySelector("#advanced-qualifier").value = activeQualifier;
@@ -576,7 +579,7 @@ function renderTableHead() {
       const metricKeys = config().metrics.map(([metric]) => metric);
       if (metricKeys.includes(key)) {
         activeMetric = key;
-        document.querySelector("#advanced-metric").value = activeMetric;
+        document.querySelectorAll("#advanced-metric, #advanced-metric-board").forEach((select) => { select.value = activeMetric; });
       }
       activeSort = activeSort.key === key ? { key, dir: activeSort.dir * -1 } : { key, dir: sortDirection(key) };
       renderAll();
@@ -644,10 +647,13 @@ function bindEvents() {
     activeTeamName = event.target.selectedOptions[0]?.textContent || "All MLB";
     updatePlayers();
   });
-  document.querySelector("#advanced-metric").addEventListener("change", (event) => {
-    activeMetric = event.target.value;
-    activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
-    renderAll();
+  document.querySelectorAll("#advanced-metric, #advanced-metric-board").forEach((select) => {
+    select.addEventListener("change", (event) => {
+      activeMetric = event.target.value;
+      activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
+      document.querySelectorAll("#advanced-metric, #advanced-metric-board").forEach((metricSelect) => { metricSelect.value = activeMetric; });
+      renderAll();
+    });
   });
   document.querySelector("#advanced-qualifier").addEventListener("change", (event) => {
     activeQualifier = event.target.value;

@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Pitch Type Leaderboards" />
     <meta name="twitter:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260722-pitch-year-range" />
+    <link rel="stylesheet" href="styles.css?v=20260723-board-switcher" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -179,7 +179,10 @@
                 <p class="eyebrow">Top 10 Leaderboard</p>
                 <h2 id="pitch-types-chart-title">Pitch type leaders</h2>
               </div>
-              <div class="split-status" id="pitch-types-status">Loading...</div>
+              <div class="leaderboard-head-controls">
+                <select id="pitch-types-metric-board" aria-label="Leaderboard pitch type metric"></select>
+                <div class="split-status" id="pitch-types-status">Loading...</div>
+              </div>
             </div>
             <div class="bar-chart pitch-types-leader-chart" id="pitch-types-chart"></div>
           </section>
@@ -235,7 +238,7 @@
       </main>
     </div>
 
-    <script src="pitch-types.js?v=20260723-player-actions"></script>
+    <script src="pitch-types.js?v=20260723-board-switcher"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>

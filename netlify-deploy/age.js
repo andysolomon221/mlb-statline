@@ -343,9 +343,12 @@ function populateControls() {
 
 function updateMetricControls() {
   const config = metricConfig[activeGroup];
-  document.querySelector("#age-stat").innerHTML = config.metrics.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  const metricOptions = config.metrics.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
   if (!config.metrics.some(([value]) => value === activeMetric)) activeMetric = config.metrics[0][0];
-  document.querySelector("#age-stat").value = activeMetric;
+  document.querySelectorAll("#age-stat, #age-stat-board").forEach((select) => {
+    select.innerHTML = metricOptions;
+    select.value = activeMetric;
+  });
   document.querySelector("#age-minimum").innerHTML = config.minimums.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
   if (!config.minimums.some(([value]) => value === activeMinimum)) activeMinimum = "auto";
   document.querySelector("#age-minimum").value = activeMinimum;
@@ -762,6 +765,7 @@ async function copyAgeLink() {
 
 async function runAgeSearch() {
   readControls();
+  document.querySelector("#age-stat-board").value = activeMetric;
   const requestId = ++activeRequestId;
   const years = yearList();
   const status = document.querySelector("#age-status");
@@ -843,6 +847,11 @@ function init() {
   document.querySelector("#age-run").addEventListener("click", runAgeSearch);
   document.querySelector("#copy-age-link")?.addEventListener("click", copyAgeLink);
   document.querySelector("#age-chart-size").addEventListener("change", () => renderAgeChart(lastRenderedRows));
+  document.querySelector("#age-stat-board").addEventListener("change", (event) => {
+    activeMetric = event.target.value;
+    document.querySelector("#age-stat").value = activeMetric;
+    runAgeSearch();
+  });
   document.querySelector("#age-advanced-toggle").addEventListener("click", () => {
     const panel = document.querySelector(".age-controls-panel");
     const enabled = panel.toggleAttribute("data-advanced-age-range");

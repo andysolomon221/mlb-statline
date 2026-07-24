@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB First Seasons Leaders & Career Starts" />
     <meta name="twitter:description" content="Find MLB leaders across the first seasons of a player's career, with batting and pitching stats, team filters, era filters, and custom career lengths." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260717-solid-leader-bars" />
+    <link rel="stylesheet" href="styles.css?v=20260723-board-switcher" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -160,10 +160,13 @@
               <p class="eyebrow">First-Seasons Leaderboard</p>
               <h2 id="starts-chart-title">First-season leaders</h2>
             </div>
-            <select id="starts-chart-size" aria-label="First-seasons leaderboard size">
-              <option value="10">Top 10</option>
-              <option value="20">Top 20</option>
-            </select>
+            <div class="leaderboard-head-controls">
+              <select id="starts-stat-board" aria-label="Leaderboard first-seasons stat"></select>
+              <select id="starts-chart-size" aria-label="First-seasons leaderboard size">
+                <option value="10">Top 10</option>
+                <option value="20">Top 20</option>
+              </select>
+            </div>
           </div>
           <div class="bar-chart age-bar-chart" id="starts-bar-chart" aria-label="First-seasons leaderboard chart">
             <div class="empty-state">Choose a first-seasons question, then hit View.</div>
@@ -195,7 +198,7 @@
       </main>
     </div>
 
-    <script src="starts.js?v=20260723-player-actions"></script>
+    <script src="starts.js?v=20260723-board-switcher"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>

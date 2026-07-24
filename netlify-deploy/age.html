@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Age Leaders Before or Through Any Age" />
     <meta name="twitter:description" content="Find MLB batting and pitching age leaders before, through, or after a selected age across season ranges, eras, and active players." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260717-solid-leader-bars" />
+    <link rel="stylesheet" href="styles.css?v=20260723-board-switcher" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -194,10 +194,13 @@
               <p class="eyebrow">Age Leaderboard</p>
               <h2 id="age-chart-title">Age leaders</h2>
             </div>
-            <select id="age-chart-size" aria-label="Age leaderboard size">
-              <option value="10">Top 10</option>
-              <option value="20">Top 20</option>
-            </select>
+            <div class="leaderboard-head-controls">
+              <select id="age-stat-board" aria-label="Leaderboard age stat"></select>
+              <select id="age-chart-size" aria-label="Age leaderboard size">
+                <option value="10">Top 10</option>
+                <option value="20">Top 20</option>
+              </select>
+            </div>
           </div>
           <div class="bar-chart age-bar-chart" id="age-bar-chart" aria-label="Age leaderboard chart">
             <div class="empty-state">Choose an age question, then hit View.</div>
@@ -229,7 +232,7 @@
       </main>
     </div>
 
-  <script src="age.js?v=20260723-player-actions"></script>
+  <script src="age.js?v=20260723-board-switcher"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
 </body>

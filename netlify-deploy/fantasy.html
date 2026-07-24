@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Statline Baseball Fantasy" />
     <meta name="twitter:description" content="Use MLB stat boards organized around fantasy baseball categories, positions, teams, and player pools." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260717-solid-leader-bars" />
+    <link rel="stylesheet" href="styles.css?v=20260723-board-switcher" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -179,6 +179,7 @@
                 <p class="eyebrow">Category Board</p>
                 <h2 id="fantasy-chart-title">Fantasy leaders</h2>
               </div>
+              <select id="fantasy-category-board" aria-label="Leaderboard fantasy category"></select>
             </div>
             <div class="bar-chart" id="fantasy-chart"></div>
           </div>
@@ -218,7 +219,7 @@
       </main>
     </div>
 
-    <script src="fantasy.js?v=20260723-player-actions"></script>
+    <script src="fantasy.js?v=20260723-board-switcher"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>

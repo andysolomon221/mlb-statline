@@ -193,8 +193,11 @@ function renderControls() {
     return `<option value="${year}">${year}</option>`;
   }).join("");
   document.querySelector("#statcast-season").value = activeSeason;
-  document.querySelector("#statcast-metric").innerHTML = metrics[activeType].map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
-  document.querySelector("#statcast-metric").value = activeMetric;
+  const metricOptions = metrics[activeType].map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
+  document.querySelectorAll("#statcast-metric, #statcast-metric-board").forEach((select) => {
+    select.innerHTML = metricOptions;
+    select.value = activeMetric;
+  });
   document.querySelector(".statcast-sample-filter label").textContent = `Minimum ${sampleLabel()}`;
   document.querySelector("#statcast-sample-min").innerHTML = [
     ["auto", `Auto (${autoSampleMinimum()}+)`],
@@ -258,7 +261,7 @@ function renderTableHead() {
       const metricKeys = metrics[activeType].map(([metric]) => metric);
       if (metricKeys.includes(key)) {
         activeMetric = key;
-        document.querySelector("#statcast-metric").value = activeMetric;
+        document.querySelectorAll("#statcast-metric, #statcast-metric-board").forEach((select) => { select.value = activeMetric; });
       }
       activeSort = activeSort.key === key ? { key, dir: activeSort.dir * -1 } : { key, dir: sortDirection(key) };
       renderAll();
@@ -378,10 +381,13 @@ function bindEvents() {
     activeTeam = event.target.value;
     renderAll();
   });
-  document.querySelector("#statcast-metric").addEventListener("change", (event) => {
-    activeMetric = event.target.value;
-    activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
-    renderAll();
+  document.querySelectorAll("#statcast-metric, #statcast-metric-board").forEach((select) => {
+    select.addEventListener("change", (event) => {
+      activeMetric = event.target.value;
+      activeSort = { key: activeMetric, dir: sortDirection(activeMetric) };
+      document.querySelectorAll("#statcast-metric, #statcast-metric-board").forEach((metricSelect) => { metricSelect.value = activeMetric; });
+      renderAll();
+    });
   });
   document.querySelector("#statcast-sample-min").addEventListener("change", (event) => {
     activeSampleMin = event.target.value;

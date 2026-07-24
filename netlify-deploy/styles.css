@@ -5212,3 +5212,14 @@ body.compare-card-view .compare-history-panel {
 .pitch-types-season-control[data-active-mode="range"] .pitch-types-single-season {
   display: none;
 }
+.leaderboard-head-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.leaderboard-head-controls select {
+  max-width: 220px;
+}

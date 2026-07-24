@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="Advanced MLB Stats & Rate Leaderboards" />
     <meta name="twitter:description" content="Explore advanced MLB hitting and pitching leaderboards with rate stats, historical filters, custom year ranges, and sortable player boards." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260720-pitch-types-team-fix" />
+    <link rel="stylesheet" href="styles.css?v=20260723-board-switcher" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -160,7 +160,10 @@
                 <p class="eyebrow">Leaderboard</p>
                 <h2 id="advanced-chart-title">Advanced leaders</h2>
               </div>
-              <div class="split-status" id="advanced-status">Loading...</div>
+              <div class="leaderboard-head-controls">
+                <select id="advanced-metric-board" aria-label="Leaderboard advanced metric"></select>
+                <div class="split-status" id="advanced-status">Loading...</div>
+              </div>
             </div>
             <div class="bar-chart" id="advanced-chart"></div>
           </section>
@@ -204,7 +207,7 @@
       </main>
     </div>
 
-    <script src="advanced.js?v=20260723-player-actions"></script>
+    <script src="advanced.js?v=20260723-board-switcher"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>

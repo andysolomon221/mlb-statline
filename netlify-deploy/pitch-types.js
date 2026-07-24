@@ -421,8 +421,11 @@ function renderPitchTypeControls() {
     select.innerHTML = pitchOptions;
     select.value = pitchTypePitch;
   });
-  document.querySelector("#pitch-types-metric").innerHTML = pitchTypeMetrics[pitchTypeSide].map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
-  document.querySelector("#pitch-types-metric").value = pitchTypeMetric;
+  const metricOptions = pitchTypeMetrics[pitchTypeSide].map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
+  document.querySelectorAll("#pitch-types-metric, #pitch-types-metric-board").forEach((select) => {
+    select.innerHTML = metricOptions;
+    select.value = pitchTypeMetric;
+  });
   document.querySelector("#pitch-types-min-pa").innerHTML = [
     ["0", "All"],
     ["10", "10+"],
@@ -591,7 +594,7 @@ function renderPitchTypeTableHead() {
       const key = header.dataset.sort;
       if (pitchTypeMetrics[pitchTypeSide].some(([metric]) => metric === key)) {
         pitchTypeMetric = key;
-        document.querySelector("#pitch-types-metric").value = pitchTypeMetric;
+        document.querySelectorAll("#pitch-types-metric, #pitch-types-metric-board").forEach((select) => { select.value = pitchTypeMetric; });
       }
       pitchTypeSort = pitchTypeSort.key === key ? { key, dir: pitchTypeSort.dir * -1 } : { key, dir: pitchTypeSortDirection(key) };
       renderPitchTypeAll();
@@ -780,10 +783,13 @@ function bindPitchTypeEvents() {
       renderPitchTypeAll();
     });
   });
-  document.querySelector("#pitch-types-metric").addEventListener("change", (event) => {
-    pitchTypeMetric = event.target.value;
-    pitchTypeSort = { key: pitchTypeMetric, dir: pitchTypeSortDirection(pitchTypeMetric) };
-    renderPitchTypeAll();
+  document.querySelectorAll("#pitch-types-metric, #pitch-types-metric-board").forEach((select) => {
+    select.addEventListener("change", (event) => {
+      pitchTypeMetric = event.target.value;
+      pitchTypeSort = { key: pitchTypeMetric, dir: pitchTypeSortDirection(pitchTypeMetric) };
+      document.querySelectorAll("#pitch-types-metric, #pitch-types-metric-board").forEach((metricSelect) => { metricSelect.value = pitchTypeMetric; });
+      renderPitchTypeAll();
+    });
   });
   document.querySelector("#pitch-types-min-pa").addEventListener("change", (event) => {
     pitchTypeMinPa = event.target.value;

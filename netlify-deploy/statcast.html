@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Statcast & Advanced Stats" />
     <meta name="twitter:description" content="Review MLB Statcast-style leaderboards for contact quality, barrels, exit velocity, launch angle, expected stats, teams, and seasons." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260720-pitch-types-team-fix" />
+    <link rel="stylesheet" href="styles.css?v=20260723-board-switcher" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -144,7 +144,10 @@
                 <p class="eyebrow">Leaderboard</p>
                 <h2 id="statcast-chart-title">Statcast leaders</h2>
               </div>
-              <div class="split-status" id="statcast-status">Loading...</div>
+              <div class="leaderboard-head-controls">
+                <select id="statcast-metric-board" aria-label="Leaderboard Statcast metric"></select>
+                <div class="split-status" id="statcast-status">Loading...</div>
+              </div>
             </div>
             <div class="bar-chart" id="statcast-chart"></div>
           </section>
@@ -188,7 +191,7 @@
       </main>
     </div>
 
-    <script src="statcast.js?v=20260723-player-actions"></script>
+    <script src="statcast.js?v=20260723-board-switcher"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>

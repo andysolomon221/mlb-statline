@@ -502,8 +502,11 @@ function renderControls() {
   document.querySelector("#fantasy-range-end").value = activeRange.end;
   document.querySelector("#fantasy-range-start-value").textContent = activeRange.start;
   document.querySelector("#fantasy-range-end-value").textContent = activeRange.end;
-  document.querySelector("#fantasy-category").innerHTML = config().categories.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
-  document.querySelector("#fantasy-category").value = activeCategory;
+  const categoryOptions = config().categories.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
+  document.querySelectorAll("#fantasy-category, #fantasy-category-board").forEach((select) => {
+    select.innerHTML = categoryOptions;
+    select.value = activeCategory;
+  });
   document.querySelector("#fantasy-need").innerHTML = needs().needs.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelector("#fantasy-need").value = activeNeed;
   document.querySelector("#fantasy-position").innerHTML = config().positions.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
@@ -759,10 +762,13 @@ function bindEvents() {
     activeTeamName = event.target.selectedOptions[0]?.textContent || "All MLB";
     updatePlayers();
   });
-  document.querySelector("#fantasy-category").addEventListener("change", (event) => {
-    activeCategory = event.target.value;
-    activeSort = { key: activeCategory, dir: sortDirection(activeCategory) };
-    renderAll();
+  document.querySelectorAll("#fantasy-category, #fantasy-category-board").forEach((select) => {
+    select.addEventListener("change", (event) => {
+      activeCategory = event.target.value;
+      activeSort = { key: activeCategory, dir: sortDirection(activeCategory) };
+      document.querySelectorAll("#fantasy-category, #fantasy-category-board").forEach((categorySelect) => { categorySelect.value = activeCategory; });
+      renderAll();
+    });
   });
   document.querySelector("#fantasy-need").addEventListener("change", (event) => {
     activeNeed = event.target.value;

@@ -222,9 +222,12 @@ function populateControls() {
 
 function updateMetricControls() {
   const config = metricConfig[activeGroup];
-  document.querySelector("#starts-stat").innerHTML = config.metrics.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  const metricOptions = config.metrics.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
   if (!config.metrics.some(([value]) => value === activeMetric)) activeMetric = config.metrics[0][0];
-  document.querySelector("#starts-stat").value = activeMetric;
+  document.querySelectorAll("#starts-stat, #starts-stat-board").forEach((select) => {
+    select.innerHTML = metricOptions;
+    select.value = activeMetric;
+  });
 }
 
 function readControls() {
@@ -578,6 +581,7 @@ function renderSummary(rows, allRows = rows) {
 
 async function runStartsSearch() {
   readControls();
+  document.querySelector("#starts-stat-board").value = activeMetric;
   const requestId = ++activeRequestId;
   const years = yearList();
   const status = document.querySelector("#starts-status");
@@ -651,6 +655,11 @@ function init() {
   });
   document.querySelector("#starts-run").addEventListener("click", runStartsSearch);
   document.querySelector("#starts-chart-size").addEventListener("change", () => renderStartsChart(lastRenderedRows));
+  document.querySelector("#starts-stat-board").addEventListener("change", (event) => {
+    activeMetric = event.target.value;
+    document.querySelector("#starts-stat").value = activeMetric;
+    runStartsSearch();
+  });
   document.querySelectorAll("[data-starts-example]").forEach((button) => {
     button.addEventListener("click", () => applyExample(button.dataset.startsExample));
   });
