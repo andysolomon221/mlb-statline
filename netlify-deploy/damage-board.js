@@ -342,7 +342,9 @@ function render() {
     : pvpState.bottomLimit === "all"
       ? `${fmtNumber(listRows.length)} ${config.opponentPlural} shown`
       : `${fmtNumber(listRows.length)} of ${fmtNumber(allRows.length)} ${config.opponentPlural} shown`;
-  document.querySelector("#pvp-sort").value = pvpState.activeSort;
+  document.querySelectorAll("#pvp-sort, #pvp-sort-board").forEach((select) => {
+    select.value = pvpState.activeSort;
+  });
   document.querySelector("#pvp-min-pa").value = String(pvpState.minPa);
   document.querySelector("#pvp-limit").value = pvpState.limit;
   renderBottomListControl();
@@ -389,9 +391,11 @@ function bindEvents() {
     pvpState.activePlayerId = event.target.value;
     await loadPlayerData();
   });
-  document.querySelector("#pvp-sort").addEventListener("change", (event) => {
-    pvpState.activeSort = event.target.value;
-    render();
+  document.querySelectorAll("#pvp-sort, #pvp-sort-board").forEach((select) => {
+    select.addEventListener("change", (event) => {
+      pvpState.activeSort = event.target.value;
+      render();
+    });
   });
   document.querySelector("#pvp-min-pa").addEventListener("change", (event) => {
     pvpState.minPa = Number(event.target.value) || 0;

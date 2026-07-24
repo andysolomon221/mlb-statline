@@ -153,6 +153,22 @@
               <p class="eyebrow">Top Board</p>
               <h2 id="pvp-leaderboard-title">Top 10: Barry Bonds HR by opposing pitcher</h2>
             </div>
+            <div class="leaderboard-head-controls">
+              <label>
+                <span>Sort By</span>
+                <select id="pvp-sort-board" aria-label="Sort Damage Board stat">
+                  <option value="hr">HR</option>
+                  <option value="so">SO</option>
+                  <option value="h">H</option>
+                  <option value="ab">AB</option>
+                  <option value="rbi">RBI</option>
+                  <option value="bb">BB</option>
+                  <option value="ops">OPS</option>
+                  <option value="avg">AVG</option>
+                  <option value="pa">PA</option>
+                </select>
+              </label>
+            </div>
           </div>
           <div class="pvp-top-board" id="pvp-leaderboard-table"></div>
         </section>
@@ -208,7 +224,7 @@
       </main>
     </div>
 
-    <script src="damage-board.js?v=20260723-player-actions"></script>
+    <script src="damage-board.js?v=20260723-board-switcher"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>
