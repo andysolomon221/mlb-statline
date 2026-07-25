@@ -141,6 +141,7 @@ exports.handler = async (event) => {
   const params = event.queryStringParameters || {};
   const type = params.type === "pitcher" ? "pitcher" : "batter";
   const year = /^\d{4}$/.test(params.year || "") ? params.year : "2026";
+  const requestedTeam = normalizeTeamCode(params.team || "");
 
   try {
     const controller = new AbortController();
@@ -180,7 +181,7 @@ exports.handler = async (event) => {
         est_woba: number(row.est_woba),
         hard_hit_percent: number(row.hard_hit_percent)
       };
-    });
+    }).filter((row) => !params.team || row.team === requestedTeam);
 
     return {
       statusCode: 200,
