@@ -128,7 +128,7 @@
       if (!response.ok) throw new Error(`Pitch data returned ${response.status}`);
       const data = await response.json();
       if (thisRequest !== requestNumber) return;
-      rows = Array.isArray(data.rows) ? data.rows : [];
+      rows = Array.isArray(data.rows) ? data.rows.filter((row) => row.team === team) : [];
       if (!rows.length) {
         playerSelect.innerHTML = "";
         renderTable();
