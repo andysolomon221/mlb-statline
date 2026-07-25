@@ -90,6 +90,7 @@
     "[data-career-sort]",
     "[data-pvp-sort]",
     "[data-fantasy-sort]",
+    "[data-stat-tooltip]",
     ".metric-label",
     ".stat-label",
     ".snapshot-label",
@@ -189,6 +190,13 @@
   function decorateElement(element) {
     if (!element) return;
     if (element.matches(SKIP_SELECTOR)) return;
+
+    const explicitTooltip = element.dataset.statTooltip;
+    if (explicitTooltip) {
+      element.title = explicitTooltip;
+      element.classList.add("stat-tooltip-label");
+      return;
+    }
 
     const text = element.textContent || "";
     if (text.length > 40) return;

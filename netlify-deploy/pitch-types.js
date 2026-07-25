@@ -549,7 +549,7 @@ function renderPitchTypeMixBoard() {
             <th>Pitch Group</th>
             <th>Pitches</th>
             <th>Pitch %</th>
-            <th>${roleLabel}</th>
+            <th data-stat-tooltip="Plate appearances ending on this pitch type. Includes balls in play, strikeouts, walks, hit-by-pitches, and other final results.">${roleLabel}</th>
             <th>${pitchTypeSide === "batter" ? "HR" : "HR Allowed"}</th>
             <th>${pitchTypeSide === "batter" ? "AVG" : "AVG Allowed"}</th>
             <th>${pitchTypeSide === "batter" ? "SLG" : "SLG Allowed"}</th>
@@ -620,7 +620,7 @@ function renderPitchTypeTableHead() {
     ["k_percent", "K %"],
     ["hard_hit_percent", pitchTypeSide === "batter" ? "Hard-Hit %" : "Hard-Hit % Allowed"]
   ];
-  document.querySelector("#pitch-types-head").innerHTML = `<tr>${columns.map(([key, label]) => `<th data-sort="${key}">${label}</th>`).join("")}</tr>`;
+  document.querySelector("#pitch-types-head").innerHTML = `<tr>${columns.map(([key, label]) => `<th data-sort="${key}"${key === "pa" ? ` data-stat-tooltip="Plate appearances ending on this pitch type. Includes balls in play, strikeouts, walks, hit-by-pitches, and other final results."` : ""}>${label}</th>`).join("")}</tr>`;
   document.querySelectorAll("#pitch-types-head th[data-sort]").forEach((header) => {
     header.addEventListener("click", () => {
       const key = header.dataset.sort;
