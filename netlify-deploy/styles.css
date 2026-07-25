@@ -5224,15 +5224,7 @@ body.compare-card-view .compare-history-panel {
   max-width: 220px;
 }
 
-.pitcher-pitch-mix-panel {
-  margin-top: 18px;
-}
-
-.pitcher-pitch-mix-panel[hidden] {
-  display: none;
-}
-
-.pitch-mix-actions {
+.pitch-types-mix-tools {
   align-items: flex-end;
   display: flex;
   flex-wrap: wrap;
@@ -5240,12 +5232,12 @@ body.compare-card-view .compare-history-panel {
   justify-content: flex-end;
 }
 
-.pitch-mix-actions label {
+.pitch-types-mix-tools label {
   display: grid;
   gap: 5px;
 }
 
-.pitch-mix-actions label span {
+.pitch-types-mix-tools label span {
   color: var(--muted);
   font-size: .72rem;
   font-weight: 900;
@@ -5253,7 +5245,7 @@ body.compare-card-view .compare-history-panel {
   text-transform: uppercase;
 }
 
-.pitch-mix-actions select {
+.pitch-types-mix-tools select {
   min-width: 230px;
 }
 
@@ -5267,15 +5259,14 @@ body.compare-card-view .compare-history-panel {
 }
 
 @media (max-width: 720px) {
-  .pitch-mix-actions {
+  .pitch-types-mix-tools {
     align-items: stretch;
     justify-content: stretch;
     width: 100%;
   }
 
-  .pitch-mix-actions label,
-  .pitch-mix-actions select,
-  .pitch-mix-actions button {
+  .pitch-types-mix-tools label,
+  .pitch-types-mix-tools select {
     width: 100%;
   }
 }

@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Pitch Type Leaderboards" />
     <meta name="twitter:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260723-board-switcher" />
+    <link rel="stylesheet" href="styles.css?v=20260725-player-arsenal" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -167,7 +167,13 @@
               <p class="eyebrow">Pitch Mix Snapshot</p>
               <h2 id="pitch-types-mix-title">All pitch groups</h2>
             </div>
-            <div class="split-status" id="pitch-types-mix-status">Loading...</div>
+            <div class="pitch-types-mix-tools">
+              <label id="pitch-types-mix-player-field" for="pitch-types-mix-player" hidden>
+                <span>Pitcher</span>
+                <select id="pitch-types-mix-player" aria-label="Choose pitcher for pitch mix"></select>
+              </label>
+              <div class="split-status" id="pitch-types-mix-status">Loading...</div>
+            </div>
           </div>
           <div class="pitch-mix-board" id="pitch-types-mix-board"></div>
         </section>
@@ -238,7 +244,7 @@
       </main>
     </div>
 
-    <script src="pitch-types.js?v=20260723-board-switcher"></script>
+    <script src="pitch-types.js?v=20260725-player-arsenal"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>

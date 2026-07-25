@@ -15,6 +15,7 @@ let pitchTypeMetric = "pitch_usage";
 let pitchTypeSort = { key: "pitch_usage", dir: -1 };
 let pitchTypeMinPa = "25";
 let pitchTypeMinPitches = "100";
+let pitchTypeMixPlayer = pitchTypeParams.get("mixPlayer") || "";
 let pitchTypeRawRows = [];
 let pitchTypeRows = [];
 let pitchTypeCopyStatusTimer;
@@ -497,17 +498,48 @@ function renderPitchTypeSummary() {
 }
 
 function renderPitchTypeMixBoard() {
-  const sourceRows = pitchTypeMixSourceRows();
-  const rows = pitchTypeMixGroups
+  const poolRows = pitchTypeMixSourceRows();
+  const playerMode = pitchTypeSide === "pitcher" && pitchTypeView === "players" && pitchTypeTeam !== "all";
+  const playerField = document.querySelector("#pitch-types-mix-player-field");
+  const playerSelect = document.querySelector("#pitch-types-mix-player");
+  let sourceRows = poolRows;
+  let selectedPlayerName = "";
+
+  playerField.hidden = !playerMode;
+  if (playerMode) {
+    const pitcherMap = new Map();
+    poolRows.forEach((row) => {
+      const pitcher = pitcherMap.get(row.playerId) || { id: row.playerId, name: row.name, pitches: 0 };
+      pitcher.pitches += toPitchTypeNumber(row.pitches);
+      pitcherMap.set(row.playerId, pitcher);
+    });
+    const pitchers = Array.from(pitcherMap.values())
+      .sort((a, b) => b.pitches - a.pitches || a.name.localeCompare(b.name));
+    if (!pitchers.some((pitcher) => pitcher.id === pitchTypeMixPlayer)) pitchTypeMixPlayer = pitchers[0]?.id || "";
+    playerSelect.innerHTML = pitchers.map((pitcher) => `<option value="${pitcher.id}">${pitcher.name}</option>`).join("");
+    playerSelect.value = pitchTypeMixPlayer;
+    sourceRows = poolRows.filter((row) => row.playerId === pitchTypeMixPlayer);
+    selectedPlayerName = pitchers.find((pitcher) => pitcher.id === pitchTypeMixPlayer)?.name || "Selected pitcher";
+  } else {
+    pitchTypeMixPlayer = "";
+    playerSelect.innerHTML = "";
+  }
+
+  const mixGroups = playerMode
+    ? ["all", ...Array.from(new Set(sourceRows.map((row) => row.pitchType))).sort((a, b) => sumRows(sourceRows.filter((row) => row.pitchType === b), "pitches") - sumRows(sourceRows.filter((row) => row.pitchType === a), "pitches"))]
+    : pitchTypeMixGroups;
+  const rows = mixGroups
     .map((key) => aggregatePitchTypeItems(sourceRows, key))
     .filter((row) => row.pitches > 0);
   const selectedTeam = document.querySelector("#pitch-types-team")?.selectedOptions[0]?.textContent;
   const scope = pitchTypeTeam === "all" ? "All MLB" : selectedTeam || teamDisplayName(pitchTypeTeam);
-  const subject = pitchTypeView === "teams" ? scope : `${scope} player pool`;
+  const subject = playerMode ? selectedPlayerName : pitchTypeView === "teams" ? scope : `${scope} player pool`;
   const roleLabel = pitchTypeSide === "batter" ? "PA" : "BF";
   const pitchLabel = pitchTypeSide === "batter" ? "seen" : "thrown";
   const resultLabel = pitchTypeSide === "batter" ? "batting" : "pitching allowed";
-  document.querySelector("#pitch-types-mix-title").textContent = `${subject} ${resultLabel} by pitch group`;
+  document.querySelector("#pitch-types-mix-title").textContent = playerMode
+    ? `${subject} pitch mix and results by pitch type`
+    : `${subject} ${resultLabel} by pitch group`;
   document.querySelector("#pitch-types-mix-status").textContent = `${pitchTypeSeasonLabel()} | pitches ${pitchLabel}`;
   document.querySelector("#pitch-types-mix-board").innerHTML = rows.length ? `
     <div class="table-wrap pitch-mix-table-wrap">
@@ -659,6 +691,7 @@ function pitchTypeShareParams() {
   if (pitchTypeTeam !== "all") params.set("team", pitchTypeTeam);
   if (pitchTypeMinPa !== "25") params.set("minPa", pitchTypeMinPa);
   if (pitchTypeMinPitches !== "100") params.set("minPitches", pitchTypeMinPitches);
+  if (pitchTypeMixPlayer) params.set("mixPlayer", pitchTypeMixPlayer);
   const query = document.querySelector("#pitch-types-search")?.value.trim() || "";
   if (query) params.set("q", query);
   if (pitchTypeSort.key && pitchTypeSort.key !== pitchTypeMetric) params.set("sort", pitchTypeSort.key);
@@ -814,6 +847,10 @@ function bindPitchTypeEvents() {
       renderPitchTypeControls();
       renderPitchTypeAll();
     });
+  });
+  document.querySelector("#pitch-types-mix-player").addEventListener("change", (event) => {
+    pitchTypeMixPlayer = event.target.value;
+    renderPitchTypeMixBoard();
   });
   document.querySelector("#pitch-types-search").addEventListener("input", renderPitchTypeAll);
   document.querySelector("#pitch-types-search-submit").addEventListener("click", focusPitchTypeSearchResult);
