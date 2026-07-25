@@ -5223,3 +5223,59 @@ body.compare-card-view .compare-history-panel {
 .leaderboard-head-controls select {
   max-width: 220px;
 }
+
+.pitcher-pitch-mix-panel {
+  margin-top: 18px;
+}
+
+.pitcher-pitch-mix-panel[hidden] {
+  display: none;
+}
+
+.pitch-mix-actions {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.pitch-mix-actions label {
+  display: grid;
+  gap: 5px;
+}
+
+.pitch-mix-actions label span {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.pitch-mix-actions select {
+  min-width: 230px;
+}
+
+.pitch-mix-table-wrap {
+  margin-top: 10px;
+}
+
+.pitch-mix-table-wrap td:first-child {
+  font-weight: 900;
+  min-width: 150px;
+}
+
+@media (max-width: 720px) {
+  .pitch-mix-actions {
+    align-items: stretch;
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .pitch-mix-actions label,
+  .pitch-mix-actions select,
+  .pitch-mix-actions button {
+    width: 100%;
+  }
+}

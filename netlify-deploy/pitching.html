@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Pitching Leaders & Pitching Stats" />
     <meta name="twitter:description" content="Sort MLB pitching leaders and pitching stats by season, team, league, year range, ERA, WHIP, strikeouts, saves, and more." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260718-lower-better-no-bars" />
+    <link rel="stylesheet" href="styles.css?v=20260725-pitch-mix" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -216,6 +216,45 @@
           </div>
         </section>
 
+        <section class="panel pitcher-pitch-mix-panel" id="pitcher-pitch-mix" hidden aria-labelledby="pitch-mix-title">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Pitcher Pitch Mix</p>
+              <h2 id="pitch-mix-title">Individual arsenal</h2>
+              <small class="data-note" id="pitch-mix-note">Choose a team to explore each pitcher's arsenal.</small>
+            </div>
+            <div class="pitch-mix-actions">
+              <label for="pitch-mix-player">
+                <span>Pitcher</span>
+                <select id="pitch-mix-player" aria-label="Choose pitcher"></select>
+              </label>
+              <button class="secondary-action" id="pitch-mix-toggle" type="button" aria-expanded="true" aria-controls="pitch-mix-body">Collapse</button>
+            </div>
+          </div>
+          <div id="pitch-mix-body">
+            <div class="split-status" id="pitch-mix-status" aria-live="polite">Loading pitch mix...</div>
+            <div class="table-wrap pitch-mix-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Pitch</th>
+                    <th>Usage</th>
+                    <th>Pitches</th>
+                    <th>PA</th>
+                    <th>AVG</th>
+                    <th>SLG</th>
+                    <th>xwOBA</th>
+                    <th>Whiff%</th>
+                    <th>K%</th>
+                    <th>HR</th>
+                  </tr>
+                </thead>
+                <tbody id="pitch-mix-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section class="data-grid">
           <div class="panel leaderboard" id="leaders">
             <div class="section-head">
@@ -274,6 +313,7 @@
     </div>
 
     <script src="script.js?v=20260718-lower-better-no-bars"></script>
+    <script src="pitch-mix.js?v=20260725-pitch-mix"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>
