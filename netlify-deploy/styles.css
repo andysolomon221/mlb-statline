@@ -3788,7 +3788,7 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #9aadb6;
+  background: #6689a9;
 }
 
 .compare-yby-cell strong {
@@ -3798,21 +3798,28 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
   border-radius: 999px;
   padding: 4px 7px;
   color: #fff;
-  background: #718994;
+  background: #527797;
   font-size: 13px;
   line-height: 1;
   text-align: center;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, .82);
 }
 
-.compare-yby-high .compare-yby-track span,
-.compare-yby-high strong {
-  background: #d32936;
+.compare-yby-best-cell strong {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .9), 0 0 0 4px #c38a2e;
 }
 
-.compare-yby-low .compare-yby-track span,
-.compare-yby-low strong {
-  background: #3973ae;
+.compare-yby-best {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  z-index: 2;
+  color: #765113;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .compare-yby-empty {
@@ -3853,6 +3860,7 @@ body.compare-yby-card-view .compare-yby-stat-label { padding: 4px 8px; font-size
 body.compare-yby-card-view .compare-yby-cell { padding: 3px 5px; }
 body.compare-yby-card-view .compare-yby-track { inset: 4px; }
 body.compare-yby-card-view .compare-yby-cell strong { min-width: 34px; padding: 2px 5px; font-size: 10px; }
+body.compare-yby-card-view .compare-yby-best { top: 2px; right: 3px; font-size: 6px; }
 
 .compare-history-panel {
   margin-top: 18px;

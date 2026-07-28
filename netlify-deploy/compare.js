@@ -631,7 +631,6 @@ function renderYearByYearBoard(rows) {
       .map((seasonRow) => yearByYearComparisonValue(key, seasonRow));
     const minimum = available.length ? Math.min(...available) : 0;
     const maximum = available.length ? Math.max(...available) : 0;
-    const span = maximum - minimum;
     return `
       <div class="compare-yby-stat-label">${escapeHtml(label)}</div>
       ${years.map((year) => {
@@ -639,15 +638,13 @@ function renderYearByYearBoard(rows) {
         if (!seasonRow) return '<div class="compare-yby-cell compare-yby-empty"><span>—</span></div>';
         const value = toNumber(seasonRow.stat[key]);
         const comparisonValue = yearByYearComparisonValue(key, seasonRow);
-        const score = span
-          ? (lowerBetter ? (maximum - comparisonValue) / span : (comparisonValue - minimum) / span)
-          : .5;
         const width = maximum > 0 ? (comparisonValue / maximum) * 100 : 0;
-        const tone = score >= .72 ? "high" : score <= .28 ? "low" : "mid";
+        const isBest = comparisonValue === (lowerBetter ? minimum : maximum);
         return `
-          <div class="compare-yby-cell compare-yby-${tone}">
+          <div class="compare-yby-cell${isBest ? " compare-yby-best-cell" : ""}">
             <div class="compare-yby-track"><span style="width:${width.toFixed(1)}%"></span></div>
             <strong>${escapeHtml(formatYearByYearValue(key, value, digits, isPercent))}</strong>
+            ${isBest ? '<span class="compare-yby-best" title="Best of the selected seasons">Best</span>' : ""}
           </div>
         `;
       }).join("")}
