@@ -643,8 +643,10 @@ function renderYearByYearBoard(rows) {
         return `
           <div class="compare-yby-cell${isBest ? " compare-yby-best-cell" : ""}">
             <div class="compare-yby-track"><span style="width:${width.toFixed(1)}%"></span></div>
-            <strong>${escapeHtml(formatYearByYearValue(key, value, digits, isPercent))}</strong>
-            ${isBest ? '<span class="compare-yby-best" title="Best of the selected seasons">Best</span>' : ""}
+            <div class="compare-yby-value">
+              <strong>${escapeHtml(formatYearByYearValue(key, value, digits, isPercent))}</strong>
+              ${isBest ? '<span class="compare-yby-best" title="Best of the selected seasons">Best</span>' : ""}
+            </div>
           </div>
         `;
       }).join("")}

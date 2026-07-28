@@ -3791,9 +3791,15 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
   background: #6689a9;
 }
 
-.compare-yby-cell strong {
+.compare-yby-value {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.compare-yby-cell strong {
   min-width: 42px;
   border-radius: 999px;
   padding: 4px 7px;
@@ -3810,12 +3816,11 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
 }
 
 .compare-yby-best {
-  position: absolute;
-  top: 3px;
-  right: 5px;
-  z-index: 2;
-  color: #765113;
-  font-size: 8px;
+  border-radius: 999px;
+  padding: 4px 6px;
+  color: #3f2a05;
+  background: #f2b84b;
+  font-size: 9px;
   font-weight: 900;
   letter-spacing: .04em;
   line-height: 1;
@@ -3860,7 +3865,8 @@ body.compare-yby-card-view .compare-yby-stat-label { padding: 4px 8px; font-size
 body.compare-yby-card-view .compare-yby-cell { padding: 3px 5px; }
 body.compare-yby-card-view .compare-yby-track { inset: 4px; }
 body.compare-yby-card-view .compare-yby-cell strong { min-width: 34px; padding: 2px 5px; font-size: 10px; }
-body.compare-yby-card-view .compare-yby-best { top: 2px; right: 3px; font-size: 6px; }
+body.compare-yby-card-view .compare-yby-value { gap: 4px; }
+body.compare-yby-card-view .compare-yby-best { padding: 3px 6px; font-size: 8px; }
 
 .compare-history-panel {
   margin-top: 18px;
