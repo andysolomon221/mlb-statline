@@ -3659,6 +3659,17 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
   align-items: end;
 }
 
+.compare-yby-legend {
+  margin: 14px 0 0;
+  border-left: 4px solid var(--teal);
+  padding: 8px 12px;
+  color: var(--muted);
+  background: #f0f8f7;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
 .compare-yby-board-wrap {
   width: 100%;
   margin-top: 18px;
