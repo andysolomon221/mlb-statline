@@ -2869,6 +2869,10 @@ td {
   align-items: end;
 }
 
+.compare-control-grid {
+  grid-template-columns: minmax(220px, 1.4fr) minmax(140px, .6fr) minmax(220px, 1.4fr) minmax(140px, .6fr);
+}
+
 .compare-control-grid label,
 .trends-control-grid label,
 .compare-range-fields label,

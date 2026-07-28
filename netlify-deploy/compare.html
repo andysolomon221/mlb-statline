@@ -90,7 +90,7 @@
           <button type="button" data-compare-view="yearByYear">Year over Year</button>
         </div>
         <p class="compare-mode-explainer" id="compare-mode-explainer">
-          <strong>Player vs Player:</strong> Compare two players using one shared season, combined year range, or career scope. To see one player in separate season columns, choose <strong>Year over Year</strong>.
+          <strong>Player vs Player:</strong> Compare two players using separate single seasons, a combined year range, or career scope. To see one player in separate season columns, choose <strong>Year over Year</strong>.
         </p>
 
         <section class="panel compare-controls-panel compare-player-view" aria-label="Comparison controls">
@@ -106,14 +106,18 @@
               <input id="compare-player-a" type="search" list="compare-player-a-options" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none" value="Aaron Judge" aria-label="First player" />
               <datalist id="compare-player-a-options"></datalist>
             </label>
+            <label class="compare-season-field">
+              <span>Player 1 season</span>
+              <select id="compare-season-a" aria-label="First player season"></select>
+            </label>
             <label>
               <span>Player 2</span>
               <input id="compare-player-b" type="search" list="compare-player-b-options" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none" value="Shohei Ohtani" aria-label="Second player" />
               <datalist id="compare-player-b-options"></datalist>
             </label>
             <label class="compare-season-field">
-              <span>Season</span>
-              <select id="compare-season" aria-label="Comparison season"></select>
+              <span>Player 2 season</span>
+              <select id="compare-season-b" aria-label="Second player season"></select>
             </label>
           </div>
           <div class="mode-toggle compare-mode-toggle" role="group" aria-label="Comparison scope">

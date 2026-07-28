@@ -6,7 +6,7 @@ const firstSeasonRowsCache = new Map();
 
 let activeGroup = "hitting";
 let activeMode = "single";
-let activeSeason = "2026";
+let activeSeasons = { a: "2026", b: "2026" };
 let activeRange = { start: 2021, end: 2026 };
 let activeCareerSeasonRange = { start: 1, end: 4 };
 let advancedCareerWindowsOpen = false;
@@ -140,7 +140,7 @@ function yearList(start, end) {
 }
 
 function scopeLabel() {
-  if (activeMode === "single") return activeSeason;
+  if (activeMode === "single") return activeSeasons.a === activeSeasons.b ? activeSeasons.a : `${activeSeasons.a} vs ${activeSeasons.b}`;
   if (activeMode === "career") return "Full career";
   if (activeMode === "careerSeasons") {
     if (advancedCareerWindowsOpen) return "Custom windows";
@@ -425,7 +425,7 @@ async function playerStats(player, side) {
     ? (await fetchFirstSeasonRows(player)).map((row) => row.stat)
     : activeMode === "careerSeasons"
       ? (await fetchFirstSeasonRows(player)).slice(range.start - 1, range.end).map((row) => row.stat)
-      : await Promise.all((activeMode === "single" ? [Number(activeSeason)] : yearList(activeRange.start, activeRange.end)).map((year) => fetchSeasonStat(player, year)));
+      : await Promise.all((activeMode === "single" ? [Number(activeSeasons[side])] : yearList(activeRange.start, activeRange.end)).map((year) => fetchSeasonStat(player, year)));
   return finalizeStats(combineStats(stats));
 }
 
@@ -455,6 +455,7 @@ function playerScopeLine(player, side) {
     const seasonText = years.length ? `${years[0]}-${years[years.length - 1]}` : "all MLB seasons";
     return `Full career (${seasonText})`;
   }
+  if (activeMode === "single") return `${activeSeasons[side]} ${activeGroup === "hitting" ? "batting" : "pitching"} line`;
   if (activeMode !== "careerSeasons") return `${scopeLabel()} ${activeGroup === "hitting" ? "batting" : "pitching"} line`;
   const range = careerWindowForSide(side);
   const rows = (firstSeasonRowsCache.get(firstSeasonRowsKey(player)) || []).slice(range.start - 1, range.end);
@@ -607,7 +608,7 @@ function setCompareView(view, { run = true } = {}) {
   document.querySelector(".compare-yby-results").hidden = activeCompareView !== "yearByYear";
   document.querySelector("#compare-mode-explainer").innerHTML = activeCompareView === "yearByYear"
     ? "<strong>Year over Year:</strong> Compare one player across separate season columns. Choose the player and the first and last seasons below."
-    : "<strong>Player vs Player:</strong> Compare two players using one shared season, combined year range, or career scope. To see one player in separate season columns, choose <strong>Year over Year</strong>.";
+    : "<strong>Player vs Player:</strong> Compare two players using separate single seasons, a combined year range, or career scope. To see one player in separate season columns, choose <strong>Year over Year</strong>.";
   const params = new URLSearchParams(window.location.search);
   if (activeCompareView === "yearByYear") params.set("compareView", "yearByYear");
   else params.delete("compareView");
@@ -825,7 +826,9 @@ function compareShareParams() {
   params.set("aId", playerA.id);
   params.set("b", compactName(playerB.fullName));
   params.set("bId", playerB.id);
-  params.set("season", activeSeason);
+  params.set("season", activeSeasons.a);
+  params.set("aSeason", activeSeasons.a);
+  params.set("bSeason", activeSeasons.b);
   params.set("start", activeRange.start);
   params.set("end", activeRange.end);
   params.set("csStart", careerSeasonRange().start);
@@ -916,12 +919,14 @@ function populateYears() {
     const year = lastSeason - index;
     return `<option value="${year}">${year}</option>`;
   }).join("");
-  document.querySelector("#compare-season").innerHTML = options;
+  document.querySelector("#compare-season-a").innerHTML = options;
+  document.querySelector("#compare-season-b").innerHTML = options;
   document.querySelector("#compare-range-start").innerHTML = options;
   document.querySelector("#compare-range-end").innerHTML = options;
   document.querySelector("#compare-yby-start").innerHTML = options;
   document.querySelector("#compare-yby-end").innerHTML = options;
-  document.querySelector("#compare-season").value = activeSeason;
+  document.querySelector("#compare-season-a").value = activeSeasons.a;
+  document.querySelector("#compare-season-b").value = activeSeasons.b;
   document.querySelector("#compare-range-start").value = activeRange.start;
   document.querySelector("#compare-range-end").value = activeRange.end;
   document.querySelector("#compare-yby-start").value = ybyRange.start;
@@ -1008,11 +1013,13 @@ function bindEvents() {
     if (activeCompareView === "yearByYear") runYearByYearComparison();
     else runComparison();
   });
-  document.querySelector("#compare-season").addEventListener("change", (event) => {
-    activeSeason = event.target.value;
-    activeMode = "single";
-    updateModeControls();
-    runComparison();
+  ["a", "b"].forEach((side) => {
+    document.querySelector(`#compare-season-${side}`).addEventListener("change", (event) => {
+      activeSeasons[side] = event.target.value;
+      activeMode = "single";
+      updateModeControls();
+      runComparison();
+    });
   });
   document.querySelectorAll("[data-compare-mode]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1109,7 +1116,9 @@ function applyUrlParams() {
       candidatesB = [playerB];
     }
   }
-  if (params.get("season")) activeSeason = params.get("season");
+  const legacySeason = params.get("season");
+  activeSeasons.a = params.get("aSeason") || legacySeason || activeSeasons.a;
+  activeSeasons.b = params.get("bSeason") || legacySeason || activeSeasons.b;
   if (params.get("start")) activeRange.start = Number(params.get("start"));
   if (params.get("end")) activeRange.end = Number(params.get("end"));
   if (params.get("csStart")) activeCareerSeasonRange.start = Number(params.get("csStart"));
@@ -1121,7 +1130,8 @@ function applyUrlParams() {
     if (start) activePlayerCareerWindows[side].start = Number(start);
     if (end) activePlayerCareerWindows[side].end = Number(end);
   });
-  document.querySelector("#compare-season").value = activeSeason;
+  document.querySelector("#compare-season-a").value = activeSeasons.a;
+  document.querySelector("#compare-season-b").value = activeSeasons.b;
   document.querySelector("#compare-range-start").value = activeRange.start;
   document.querySelector("#compare-range-end").value = activeRange.end;
   document.querySelector("#compare-career-season-start").value = activeCareerSeasonRange.start;
