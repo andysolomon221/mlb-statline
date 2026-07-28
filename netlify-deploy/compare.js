@@ -21,6 +21,7 @@ let candidatesB = [playerB];
 let searchTimer;
 let copyStatusTimer;
 let cardViewActive = false;
+let ybyCardViewActive = false;
 let historyAxis = "season";
 let historyMetric = "homeRuns";
 let historyRowsA = [];
@@ -580,6 +581,7 @@ function formatYearByYearValue(key, value, digits, isPercent) {
 
 function setCompareView(view, { run = true } = {}) {
   activeCompareView = view === "yearByYear" ? "yearByYear" : "players";
+  if (activeCompareView !== "yearByYear" && ybyCardViewActive) setYearByYearCardView(false);
   document.querySelectorAll("[data-compare-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.compareView === activeCompareView);
   });
@@ -839,6 +841,14 @@ function setCardView(nextValue) {
   }
 }
 
+function setYearByYearCardView(nextValue) {
+  ybyCardViewActive = Boolean(nextValue);
+  document.body.classList.toggle("compare-yby-card-view", ybyCardViewActive);
+  const button = document.querySelector("#compare-yby-card-view-toggle");
+  if (button) button.textContent = ybyCardViewActive ? "Exit Screenshot View" : "Screenshot View";
+  if (ybyCardViewActive) document.querySelector(".compare-yby-results")?.scrollIntoView({ block: "start" });
+}
+
 async function copyText(value) {
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(value);
@@ -945,6 +955,9 @@ function bindEvents() {
     button.addEventListener("click", () => setCompareView(button.dataset.compareView));
   });
   document.querySelector("#run-yby-comparison").addEventListener("click", runYearByYearComparison);
+  document.querySelector("#compare-yby-card-view-toggle").addEventListener("click", () => {
+    setYearByYearCardView(!ybyCardViewActive);
+  });
   document.querySelector("#compare-yby-start").addEventListener("change", runYearByYearComparison);
   document.querySelector("#compare-yby-end").addEventListener("change", runYearByYearComparison);
   document.querySelector("#run-comparison").addEventListener("click", runComparison);
