@@ -3769,9 +3769,11 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
 .compare-yby-cell {
   position: relative;
   display: grid;
-  place-items: center;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
   border-left: 1px solid var(--line);
-  padding: 7px 9px;
+  padding: 8px 9px;
   overflow: hidden;
   background: #f7fbfb;
 }
@@ -3800,31 +3802,57 @@ body.compare-card-view .compare-side-by-side-table .compare-section-row td {
 }
 
 .compare-yby-cell strong {
-  min-width: 42px;
-  border-radius: 999px;
-  padding: 4px 7px;
-  color: #fff;
-  background: #527797;
-  font-size: 13px;
+  color: var(--ink);
+  background: transparent;
+  font-size: 19px;
   line-height: 1;
   text-align: center;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, .82);
 }
 
-.compare-yby-best-cell strong {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, .9), 0 0 0 4px #c38a2e;
+.compare-yby-best-cell:not(.compare-yby-best-pace-cell) strong {
+  color: #24683d;
 }
 
 .compare-yby-best {
+  border: 1px solid #8fc7a1;
   border-radius: 999px;
   padding: 4px 6px;
-  color: #3f2a05;
-  background: #f2b84b;
+  color: #205d35;
+  background: #d9efdf;
   font-size: 9px;
   font-weight: 900;
   letter-spacing: .04em;
   line-height: 1;
   text-transform: uppercase;
+}
+
+.compare-yby-pace,
+.compare-yby-delta {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.compare-yby-pace-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.compare-yby-delta {
+  color: #536979;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.compare-yby-delta-improved {
+  color: #287447;
+}
+
+.compare-yby-delta-declined {
+  color: #9a4d52;
 }
 
 .compare-yby-empty {
@@ -3842,7 +3870,7 @@ body.compare-yby-card-view .compare-yby-controls,
 body.compare-yby-card-view .site-footer,
 body.compare-yby-card-view #compare-yby-status { display: none; }
 body.compare-yby-card-view main { padding: 4px; }
-body.compare-yby-card-view .compare-yby-results { margin: 0; border: 0; box-shadow: none; padding: 8px; background: transparent; }
+body.compare-yby-card-view .compare-yby-results { width: min(100%, calc(180px + (var(--compare-season-columns, 5) * 360px))); margin: 0 auto; border: 0; box-shadow: none; padding: 8px; background: transparent; }
 body.compare-yby-card-view .compare-yby-results-head { align-items: start; margin: 0; }
 body.compare-yby-card-view .compare-yby-actions { position: fixed; top: 8px; right: 8px; z-index: 20; opacity: .08; transition: opacity .16s ease; }
 body.compare-yby-card-view .compare-yby-actions:hover,
@@ -3860,13 +3888,38 @@ body.compare-yby-card-view .compare-yby-season-head strong { margin-top: 1px; fo
 body.compare-yby-card-view .compare-yby-corner small,
 body.compare-yby-card-view .compare-yby-season-head small { display: none; }
 body.compare-yby-card-view .compare-yby-stat-label,
-body.compare-yby-card-view .compare-yby-cell { min-height: 31px; }
+body.compare-yby-card-view .compare-yby-cell { min-height: 38px; }
 body.compare-yby-card-view .compare-yby-stat-label { padding: 4px 8px; font-size: 10px; }
-body.compare-yby-card-view .compare-yby-cell { padding: 3px 5px; }
+body.compare-yby-card-view .compare-yby-cell { gap: 1px; padding: 3px 5px; }
 body.compare-yby-card-view .compare-yby-track { inset: 4px; }
-body.compare-yby-card-view .compare-yby-cell strong { min-width: 34px; padding: 2px 5px; font-size: 10px; }
+body.compare-yby-card-view .compare-yby-cell strong { font-size: 14px; }
 body.compare-yby-card-view .compare-yby-value { gap: 4px; }
 body.compare-yby-card-view .compare-yby-best { padding: 3px 6px; font-size: 8px; }
+body.compare-yby-card-view .compare-yby-pace { font-size: 7px; }
+body.compare-yby-card-view .compare-yby-delta { font-size: 9px; }
+
+@media (min-height: 850px) {
+  body.compare-yby-card-view .compare-yby-results { padding: 12px; }
+  body.compare-yby-card-view .compare-yby-results-head h2 { font-size: 32px; }
+  body.compare-yby-card-view .compare-history-note { font-size: 19px; }
+  body.compare-yby-card-view .compare-yby-legend { margin-top: 10px; padding: 9px 13px; font-size: 14px; }
+  body.compare-yby-card-view .compare-yby-board-wrap { margin-top: 10px; }
+  body.compare-yby-card-view .compare-yby-corner,
+  body.compare-yby-card-view .compare-yby-season-head { min-height: 108px; padding: 8px; }
+  body.compare-yby-card-view .compare-yby-corner { padding-left: 16px; }
+  body.compare-yby-card-view .compare-yby-corner strong { font-size: 24px; }
+  body.compare-yby-card-view .compare-yby-season-head img { width: 64px; height: 64px; }
+  body.compare-yby-card-view .compare-yby-season-head strong { font-size: 23px; }
+  body.compare-yby-card-view .compare-yby-stat-label,
+  body.compare-yby-card-view .compare-yby-cell { min-height: 56px; }
+  body.compare-yby-card-view .compare-yby-stat-label { padding: 7px 12px; font-size: 17px; }
+  body.compare-yby-card-view .compare-yby-cell { gap: 2px; padding: 6px 8px; }
+  body.compare-yby-card-view .compare-yby-cell strong { font-size: 26px; }
+  body.compare-yby-card-view .compare-yby-value { gap: 6px; }
+  body.compare-yby-card-view .compare-yby-best { padding: 5px 8px; font-size: 11px; }
+  body.compare-yby-card-view .compare-yby-pace { font-size: 13px; }
+  body.compare-yby-card-view .compare-yby-delta { font-size: 16px; }
+}
 
 .compare-history-panel {
   margin-top: 18px;

@@ -579,6 +579,21 @@ function formatYearByYearValue(key, value, digits, isPercent) {
   return formatValue(key, value, digits);
 }
 
+function formatYearByYearDelta(key, current, previous, digits, isPercent, usesPace, priorYear) {
+  const difference = usesPace ? Math.round(current) - Math.round(previous) : current - previous;
+  const sign = difference > 0 ? "+" : difference < 0 ? "−" : "";
+  const absolute = Math.abs(difference);
+  if (isPercent) return `${sign}${(absolute * 100).toFixed(digits)} pp vs prior`;
+  if (usesPace) {
+    if (!difference) return `Same pace as ${priorYear}`;
+    return `${Math.round(absolute)} ${difference > 0 ? "more" : "fewer"} per 162 vs ${priorYear}`;
+  }
+  if (["avg", "obp", "slg", "ops"].includes(key)) {
+    return `${sign}${absolute.toFixed(digits).replace(/^0/, "")} vs prior`;
+  }
+  return `${sign}${absolute.toFixed(digits)} vs prior`;
+}
+
 function setCompareView(view, { run = true } = {}) {
   activeCompareView = view === "yearByYear" ? "yearByYear" : "players";
   if (activeCompareView !== "yearByYear" && ybyCardViewActive) setYearByYearCardView(false);
@@ -633,20 +648,31 @@ function renderYearByYearBoard(rows) {
     const maximum = available.length ? Math.max(...available) : 0;
     return `
       <div class="compare-yby-stat-label">${escapeHtml(label)}</div>
-      ${years.map((year) => {
+      ${years.map((year, yearIndex) => {
         const seasonRow = rowsBySeason.get(year);
         if (!seasonRow) return '<div class="compare-yby-cell compare-yby-empty"><span>—</span></div>';
         const value = toNumber(seasonRow.stat[key]);
         const comparisonValue = yearByYearComparisonValue(key, seasonRow);
-        const width = maximum > 0 ? (comparisonValue / maximum) * 100 : 0;
-        const isBest = comparisonValue === (lowerBetter ? minimum : maximum);
+        const usesPace = activeGroup === "hitting" && yearByYearPaceMetrics.has(key);
+        const priorYear = years.slice(0, yearIndex).reverse().find((candidateYear) => rowsBySeason.has(candidateYear));
+        const priorRow = priorYear ? rowsBySeason.get(priorYear) : null;
+        const priorComparisonValue = priorRow ? yearByYearComparisonValue(key, priorRow) : null;
+        const deltaComparisonValue = usesPace ? Math.round(comparisonValue) : comparisonValue;
+        const deltaPriorValue = priorComparisonValue === null ? null : usesPace ? Math.round(priorComparisonValue) : priorComparisonValue;
+        const improved = deltaPriorValue !== null && (lowerBetter ? deltaComparisonValue < deltaPriorValue : deltaComparisonValue > deltaPriorValue);
+        const declined = deltaPriorValue !== null && deltaComparisonValue !== deltaPriorValue && !improved;
+        const bestComparisonValue = lowerBetter ? minimum : maximum;
+        const isBest = usesPace
+          ? Math.round(comparisonValue) === Math.round(bestComparisonValue)
+          : comparisonValue === bestComparisonValue;
         return `
-          <div class="compare-yby-cell${isBest ? " compare-yby-best-cell" : ""}">
-            <div class="compare-yby-track"><span style="width:${width.toFixed(1)}%"></span></div>
+          <div class="compare-yby-cell${isBest ? " compare-yby-best-cell" : ""}${isBest && usesPace ? " compare-yby-best-pace-cell" : ""}">
             <div class="compare-yby-value">
               <strong>${escapeHtml(formatYearByYearValue(key, value, digits, isPercent))}</strong>
-              ${isBest ? '<span class="compare-yby-best" title="Best of the selected seasons">Best</span>' : ""}
+              ${isBest && !usesPace ? '<span class="compare-yby-best" title="Best of the selected seasons">Best</span>' : ""}
             </div>
+            ${usesPace ? `<div class="compare-yby-pace-row"><small class="compare-yby-pace">${escapeHtml(`${Math.round(comparisonValue)} per 162 games`)}</small>${isBest ? '<span class="compare-yby-best" title="Best pace of the selected seasons">Best pace</span>' : ""}</div>` : ""}
+            ${priorComparisonValue === null ? "" : `<small class="compare-yby-delta${improved ? " compare-yby-delta-improved" : declined ? " compare-yby-delta-declined" : ""}">${escapeHtml(formatYearByYearDelta(key, comparisonValue, priorComparisonValue, digits, isPercent, usesPace, priorYear))}</small>`}
           </div>
         `;
       }).join("")}
@@ -655,6 +681,7 @@ function renderYearByYearBoard(rows) {
 
   const board = document.querySelector("#compare-yby-board");
   board.style.setProperty("--compare-season-columns", years.length);
+  document.querySelector(".compare-yby-results").style.setProperty("--compare-season-columns", years.length);
   board.innerHTML = `<div class="compare-yby-grid">${header}${metricRows}</div>`;
 }
 
