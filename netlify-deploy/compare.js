@@ -95,6 +95,8 @@ const yearByYearMetricSets = {
   ]
 };
 
+const yearByYearPaceMetrics = new Set(["plateAppearances", "hits", "homeRuns", "rbi", "stolenBases"]);
+
 function escapeHtml(value = "") {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -107,6 +109,14 @@ function escapeHtml(value = "") {
 function toNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
+}
+
+function yearByYearComparisonValue(key, seasonRow) {
+  const value = toNumber(seasonRow?.stat?.[key]);
+  if (activeGroup !== "hitting" || !yearByYearPaceMetrics.has(key)) return value;
+
+  const games = toNumber(seasonRow?.stat?.gamesPlayed);
+  return games > 0 ? (value * 162) / games : value;
 }
 
 function safeRate(top, bottom) {
@@ -613,7 +623,10 @@ function renderYearByYearBoard(rows) {
   `;
 
   const metricRows = metrics.map(([key, label, lowerBetter, digits, isPercent = false]) => {
-    const available = years.map((year) => rowsBySeason.get(year)?.stat[key]).filter((value) => value !== undefined);
+    const available = years
+      .map((year) => rowsBySeason.get(year))
+      .filter(Boolean)
+      .map((seasonRow) => yearByYearComparisonValue(key, seasonRow));
     const minimum = available.length ? Math.min(...available) : 0;
     const maximum = available.length ? Math.max(...available) : 0;
     const span = maximum - minimum;
@@ -623,7 +636,10 @@ function renderYearByYearBoard(rows) {
         const seasonRow = rowsBySeason.get(year);
         if (!seasonRow) return '<div class="compare-yby-cell compare-yby-empty"><span>—</span></div>';
         const value = toNumber(seasonRow.stat[key]);
-        const score = span ? (lowerBetter ? (maximum - value) / span : (value - minimum) / span) : .5;
+        const comparisonValue = yearByYearComparisonValue(key, seasonRow);
+        const score = span
+          ? (lowerBetter ? (maximum - comparisonValue) / span : (comparisonValue - minimum) / span)
+          : .5;
         const width = 28 + score * 72;
         const tone = score >= .72 ? "high" : score <= .28 ? "low" : "mid";
         return `
