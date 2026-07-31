@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Pitch Type Leaderboards" />
     <meta name="twitter:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260730-date-windows" />
+    <link rel="stylesheet" href="styles.css?v=20260730-last-game" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -183,6 +183,7 @@
                 <span>Pitcher</span>
                 <select id="pitch-types-mix-player" aria-label="Choose pitcher for pitch mix"></select>
               </label>
+              <button class="secondary-button pitch-types-last-game" id="pitch-types-last-game" type="button" hidden>Last Game</button>
               <div class="split-status" id="pitch-types-mix-status">Loading...</div>
             </div>
           </div>
@@ -255,7 +256,7 @@
       </main>
     </div>
 
-    <script src="pitch-types.js?v=20260730-date-windows"></script>
+    <script src="pitch-types.js?v=20260730-last-game"></script>
     <script src="stat-tooltips.js?v=20260725-pitch-ending-tooltip"></script>
 
   </body>

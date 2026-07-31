@@ -18,6 +18,7 @@ let pitchTypeSort = { key: "pitch_usage", dir: -1 };
 let pitchTypeMinPa = "25";
 let pitchTypeMinPitches = "100";
 let pitchTypeMixPlayer = pitchTypeParams.get("mixPlayer") || "";
+let pitchTypeLastGamePlayer = "";
 let pitchTypeRawRows = [];
 let pitchTypeRows = [];
 let pitchTypeCopyStatusTimer;
@@ -283,6 +284,7 @@ function pitchTypeApiUrl(season = pitchTypeSeason) {
   if (pitchTypeSeasonMode === "date") {
     params.set("dateFrom", pitchTypeDateFrom);
     params.set("dateTo", pitchTypeDateTo);
+    if (pitchTypeLastGamePlayer) params.set("lastGamePlayer", pitchTypeLastGamePlayer);
   }
   return `/.netlify/functions/pitch-types?${params.toString()}`;
 }
@@ -550,11 +552,13 @@ function renderPitchTypeMixBoard() {
   const poolRows = pitchTypeMixSourceRows();
   const playerMode = pitchTypeSide === "pitcher" && pitchTypeView === "players" && pitchTypeTeam !== "all";
   const playerField = document.querySelector("#pitch-types-mix-player-field");
+  const lastGameButton = document.querySelector("#pitch-types-last-game");
   const playerSelect = document.querySelector("#pitch-types-mix-player");
   let sourceRows = poolRows;
   let selectedPlayerName = "";
 
   playerField.hidden = !playerMode;
+  lastGameButton.hidden = !playerMode;
   if (playerMode) {
     const pitcherMap = new Map();
     poolRows.forEach((row) => {
@@ -809,6 +813,14 @@ async function loadPitchTypeData() {
     const dataSets = pitchTypeSeasonMode === "date"
       ? [await fetchPitchTypeJson(seasons[0])]
       : await fetchPitchTypeSeasonRange(seasons);
+    const effectiveDate = dataSets[0]?.effectiveDate || "";
+    if (effectiveDate) {
+      pitchTypeDateFrom = effectiveDate;
+      pitchTypeDateTo = effectiveDate;
+      pitchTypeSeason = effectiveDate.slice(0, 4);
+      pitchTypeLastGamePlayer = "";
+      renderPitchTypeControls();
+    }
     pitchTypeRawRows = dataSets.flatMap((data, index) => (data.rows || []).map((row) => ({
       ...row,
       season: seasons[index],
@@ -925,6 +937,20 @@ function bindPitchTypeEvents() {
   document.querySelector("#pitch-types-mix-player").addEventListener("change", (event) => {
     pitchTypeMixPlayer = event.target.value;
     renderPitchTypeMixBoard();
+  });
+  document.querySelector("#pitch-types-last-game").addEventListener("click", () => {
+    if (!pitchTypeMixPlayer) return;
+    const today = new Date();
+    const to = Number(pitchTypeSeason) === today.getFullYear() ? today : new Date(Number(pitchTypeSeason), 8, 30, 12);
+    const from = new Date(to.getTime() - 13 * 86400000);
+    pitchTypeSeasonMode = "date";
+    pitchTypeDateFrom = pitchTypeIsoLocal(from);
+    pitchTypeDateTo = pitchTypeIsoLocal(to);
+    pitchTypeLastGamePlayer = pitchTypeMixPlayer;
+    pitchTypeMinPa = "0";
+    pitchTypeMinPitches = "0";
+    renderPitchTypeControls();
+    loadPitchTypeData();
   });
   document.querySelector("#pitch-types-search").addEventListener("input", renderPitchTypeAll);
   document.querySelector("#pitch-types-search-submit").addEventListener("click", focusPitchTypeSearchResult);

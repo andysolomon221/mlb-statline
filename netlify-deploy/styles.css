@@ -5415,6 +5415,12 @@ body.compare-card-view .compare-history-panel {
   justify-content: flex-end;
 }
 
+.pitch-types-last-game {
+  align-self: flex-end;
+  min-height: 38px;
+  white-space: nowrap;
+}
+
 .pitch-types-mix-tools label {
   display: grid;
   gap: 5px;
