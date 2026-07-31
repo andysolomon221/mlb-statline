@@ -3,6 +3,9 @@ const lastSeason = 2026;
 const initialParams = new URLSearchParams(window.location.search);
 let activeType = "batter";
 let activeSeason = "2026";
+let activeDateMode = "season";
+let activeDateFrom = "2026-07-01";
+let activeDateTo = "2026-07-30";
 let pendingTeam = new URLSearchParams(window.location.search).get("team") || "all";
 let activeTeam = "all";
 let activeMetric = "exit_velocity_avg";
@@ -45,6 +48,9 @@ function applyInitialStatcastParams() {
     const season = Number(initialParams.get("season"));
     if (Number.isFinite(season)) activeSeason = String(clamp(season, firstSeason, lastSeason));
   }
+  if (initialParams.get("scope") === "date") activeDateMode = "date";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(initialParams.get("dateFrom") || "")) activeDateFrom = initialParams.get("dateFrom");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(initialParams.get("dateTo") || "")) activeDateTo = initialParams.get("dateTo");
   const metric = initialParams.get("metric");
   if (metrics[activeType].some(([key]) => key === metric)) {
     activeMetric = metric;
@@ -114,6 +120,10 @@ function roundedMinimum(fullSeasonMinimum, earlyMinimum, step = 25) {
 }
 
 function autoSampleMinimum() {
+  if (activeDateMode === "date") {
+    const days = Math.max(1, Math.round((new Date(activeDateTo) - new Date(activeDateFrom)) / 86400000) + 1);
+    return days <= 7 ? 10 : days <= 30 ? 25 : 50;
+  }
   return activeType === "batter" ? roundedMinimum(250, 50, 25) : roundedMinimum(250, 50, 25);
 }
 
@@ -139,7 +149,46 @@ function initials(name) {
 
 function apiUrl() {
   const params = new URLSearchParams({ type: activeType, year: activeSeason });
+  if (activeDateMode === "date") {
+    params.set("dateFrom", activeDateFrom);
+    params.set("dateTo", activeDateTo);
+  }
   return `/.netlify/functions/statcast?${params.toString()}`;
+}
+
+function isoLocal(date) {
+  const year = date.getFullYear();
+  return `${year}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function normalizeStatcastDates(changed = "") {
+  let from = new Date(`${activeDateFrom}T12:00:00`);
+  let to = new Date(`${activeDateTo}T12:00:00`);
+  if (!Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime())) return;
+  if (from.getFullYear() !== to.getFullYear()) {
+    if (changed === "from") to = new Date(from);
+    else from = new Date(to.getFullYear(), 0, 1, 12);
+  }
+  if (from > to) {
+    if (changed === "from") to = new Date(from);
+    else from = new Date(to);
+  }
+  const maxFrom = new Date(to.getTime() - 30 * 86400000);
+  if (from < maxFrom) from = maxFrom;
+  activeDateFrom = isoLocal(from);
+  activeDateTo = isoLocal(to);
+  activeSeason = String(to.getFullYear());
+}
+
+function setStatcastQuickRange(days) {
+  const now = new Date();
+  const season = Number(activeSeason);
+  const to = season === now.getFullYear() ? now : new Date(season, 8, 30, 12);
+  const from = new Date(to.getTime() - (days - 1) * 86400000);
+  activeDateMode = "date";
+  activeDateFrom = isoLocal(from);
+  activeDateTo = isoLocal(to);
+  normalizeStatcastDates();
 }
 
 function filteredRows() {
@@ -193,6 +242,10 @@ function renderControls() {
     return `<option value="${year}">${year}</option>`;
   }).join("");
   document.querySelector("#statcast-season").value = activeSeason;
+  document.querySelector(".statcast-date-control").dataset.activeMode = activeDateMode;
+  document.querySelector("#statcast-date-from").value = activeDateFrom;
+  document.querySelector("#statcast-date-to").value = activeDateTo;
+  document.querySelectorAll("[data-statcast-date-mode]").forEach((button) => button.classList.toggle("active", button.dataset.statcastDateMode === activeDateMode));
   const metricOptions = metrics[activeType].map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelectorAll("#statcast-metric, #statcast-metric-board").forEach((select) => {
     select.innerHTML = metricOptions;
@@ -226,7 +279,7 @@ function renderSummary() {
   document.querySelector("#statcast-leader").textContent = leader ? leader.name : "No players";
   document.querySelector("#statcast-leader-note").textContent = leader ? `${leader.team} | ${metricLabel()} ${fmtStat(activeMetric, leader[activeMetric])}` : "Try another filter";
   document.querySelector("#statcast-metric-card").textContent = metricLabel();
-  document.querySelector("#statcast-scope-card").textContent = activeSeason;
+  document.querySelector("#statcast-scope-card").textContent = activeDateMode === "date" ? `${activeDateFrom} to ${activeDateTo}` : activeSeason;
   document.querySelector("#statcast-scope-note").textContent = teamLabel;
   document.querySelector("#statcast-count").textContent = data.length;
   document.querySelector("#statcast-count-note").textContent = `${activeSampleMinimum() ? `${activeSampleMinimum()}+ ${sampleLabel()}` : `All ${sampleLabel()}`} sample`;
@@ -299,6 +352,11 @@ function statcastShareParams() {
   const params = new URLSearchParams();
   params.set("type", activeType);
   params.set("season", activeSeason);
+  if (activeDateMode === "date") {
+    params.set("scope", "date");
+    params.set("dateFrom", activeDateFrom);
+    params.set("dateTo", activeDateTo);
+  }
   params.set("metric", activeMetric);
   if (activeTeam !== "all") params.set("team", activeTeam);
   if (activeSampleMin !== "auto") params.set("min", activeSampleMin);
@@ -377,6 +435,33 @@ function bindEvents() {
     renderControls();
     loadStatcast();
   });
+  document.querySelectorAll("[data-statcast-date-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeDateMode = button.dataset.statcastDateMode;
+      renderControls();
+      loadStatcast();
+    });
+  });
+  document.querySelector("#statcast-date-from").addEventListener("change", (event) => {
+    activeDateFrom = event.target.value;
+    normalizeStatcastDates("from");
+    renderControls();
+    loadStatcast();
+  });
+  document.querySelector("#statcast-date-to").addEventListener("change", (event) => {
+    activeDateTo = event.target.value;
+    normalizeStatcastDates("to");
+    renderControls();
+    loadStatcast();
+  });
+  document.querySelectorAll("[data-statcast-quick-days]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setStatcastQuickRange(Number(button.dataset.statcastQuickDays));
+      activeSampleMin = "auto";
+      renderControls();
+      loadStatcast();
+    });
+  });
   document.querySelector("#statcast-team").addEventListener("change", (event) => {
     activeTeam = event.target.value;
     renderAll();
@@ -410,6 +495,7 @@ function bindEvents() {
   document.querySelector("#copy-statcast-link")?.addEventListener("click", copyStatcastLink);
 }
 
+normalizeStatcastDates();
 renderControls();
 applyInitialStatcastSearch();
 bindEvents();

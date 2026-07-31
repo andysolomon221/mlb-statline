@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Pitch Type Leaderboards" />
     <meta name="twitter:description" content="Explore MLB pitch type leaderboards by team or player, including fastballs, breaking balls, offspeed pitches, whiff rate, pitch usage, and expected stats." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260725-player-arsenal" />
+    <link rel="stylesheet" href="styles.css?v=20260730-date-windows" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -80,6 +80,7 @@
             <div class="league-toggle pitch-types-season-mode" role="group" aria-label="Season scope">
               <button class="active" type="button" data-pitch-type-season-mode="single">Single year</button>
               <button type="button" data-pitch-type-season-mode="range">Year range</button>
+              <button type="button" data-pitch-type-season-mode="date">Date range</button>
             </div>
             <div class="pitch-types-single-season">
               <label for="pitch-types-season">Season</label>
@@ -90,6 +91,16 @@
               <select id="pitch-types-from-season" aria-label="Pitch type range starting season"></select>
               <label for="pitch-types-to-season">To</label>
               <select id="pitch-types-to-season" aria-label="Pitch type range ending season"></select>
+            </div>
+            <div class="date-window-fields pitch-types-date-fields">
+              <label for="pitch-types-date-from">From</label>
+              <input id="pitch-types-date-from" type="date" aria-label="Pitch type starting date" />
+              <label for="pitch-types-date-to">To</label>
+              <input id="pitch-types-date-to" type="date" aria-label="Pitch type ending date" />
+            </div>
+            <div class="date-window-quick pitch-types-date-quick" role="group" aria-label="Pitch type quick date ranges">
+              <button type="button" data-pitch-type-quick-days="7">Last 7 Days</button>
+              <button type="button" data-pitch-type-quick-days="30">Last 30 Days</button>
             </div>
             <select id="pitch-types-team" aria-label="Filter by team">
               <option value="all">All teams</option>
@@ -233,7 +244,7 @@
               <h2>Baseball Savant pitch arsenal leaderboards</h2>
             </div>
           </div>
-          <p class="data-note">Pitch groups aggregate Baseball Savant pitch arsenal rows. Pitch % is selected pitches divided by all tracked pitches for that team or player. Home run totals are joined from Baseball Savant's Player &amp; Pitch Type Statcast Search results. Grouped rate stats are weighted from available pitch-type rows, so they are best read as directional context.</p>
+          <p class="data-note">Pitch groups aggregate Baseball Savant pitch arsenal rows. Pitch % is selected pitches divided by all tracked pitches for that team or player. Home run totals are joined from Baseball Savant's Player &amp; Pitch Type Statcast Search results. Grouped rate stats are weighted from available pitch-type rows, so they are best read as directional context. Custom date windows aggregate pitch-level Statcast records and are limited to 31 calendar days.</p>
         </section>
         <footer class="site-footer">
           <a href="about.html">About</a>
@@ -244,7 +255,7 @@
       </main>
     </div>
 
-    <script src="pitch-types.js?v=20260725-player-arsenal"></script>
+    <script src="pitch-types.js?v=20260730-date-windows"></script>
     <script src="stat-tooltips.js?v=20260725-pitch-ending-tooltip"></script>
 
   </body>

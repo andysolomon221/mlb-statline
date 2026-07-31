@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Statcast & Advanced Stats" />
     <meta name="twitter:description" content="Review MLB Statcast-style leaderboards for contact quality, barrels, exit velocity, launch angle, expected stats, teams, and seasons." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260723-board-switcher" />
+    <link rel="stylesheet" href="styles.css?v=20260730-date-windows" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -76,9 +76,25 @@
             <p class="eyebrow">Advanced Stats</p>
             <h1>MLB Statcast leaderboards for contact quality and expected stats.</h1>
           </div>
-          <div class="season-control" aria-label="Statcast filters">
-            <label for="statcast-season">Season</label>
-            <select id="statcast-season" aria-label="Select season"></select>
+          <div class="season-control statcast-date-control" data-active-mode="season" aria-label="Statcast filters">
+            <div class="league-toggle date-window-mode" role="group" aria-label="Statcast time scope">
+              <button class="active" type="button" data-statcast-date-mode="season">Full Season</button>
+              <button type="button" data-statcast-date-mode="date">Date Range</button>
+            </div>
+            <div class="date-window-season">
+              <label for="statcast-season">Season</label>
+              <select id="statcast-season" aria-label="Select season"></select>
+            </div>
+            <div class="date-window-fields">
+              <label for="statcast-date-from">From</label>
+              <input id="statcast-date-from" type="date" aria-label="Statcast starting date" />
+              <label for="statcast-date-to">To</label>
+              <input id="statcast-date-to" type="date" aria-label="Statcast ending date" />
+            </div>
+            <div class="date-window-quick" role="group" aria-label="Statcast quick date ranges">
+              <button type="button" data-statcast-quick-days="7">Last 7 Days</button>
+              <button type="button" data-statcast-quick-days="30">Last 30 Days</button>
+            </div>
             <select id="statcast-team" aria-label="Filter by team">
               <option value="all">All teams</option>
             </select>
@@ -180,7 +196,7 @@
               <h2>Baseball Savant leaderboards</h2>
             </div>
           </div>
-          <p class="data-note">This page uses Baseball Savant Statcast leaderboard CSV data merged with MLB team metadata.</p>
+          <p class="data-note">This page uses Baseball Savant Statcast leaderboard CSV data merged with MLB team metadata. Custom date windows aggregate pitch-level Statcast records and are limited to 31 calendar days.</p>
         </section>
         <footer class="site-footer">
           <a href="about.html">About</a>
@@ -191,7 +207,7 @@
       </main>
     </div>
 
-    <script src="statcast.js?v=20260723-board-switcher"></script>
+    <script src="statcast.js?v=20260730-date-windows"></script>
     <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
 
   </body>

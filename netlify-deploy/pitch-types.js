@@ -1,6 +1,6 @@
 const firstPitchTypeSeason = 2015;
 const lastPitchTypeSeason = 2026;
-const pitchTypeLoadTimeoutMs = 15000;
+const pitchTypeLoadTimeoutMs = 45000;
 const pitchTypeParams = new URLSearchParams(window.location.search);
 
 let pitchTypeSide = "batter";
@@ -9,6 +9,8 @@ let pitchTypeSeason = "2026";
 let pitchTypeSeasonMode = "single";
 let pitchTypeFromSeason = "2024";
 let pitchTypeToSeason = "2026";
+let pitchTypeDateFrom = "2026-07-01";
+let pitchTypeDateTo = "2026-07-30";
 let pitchTypeTeam = pitchTypeParams.get("team") || "all";
 let pitchTypePitch = "all";
 let pitchTypeMetric = "pitch_usage";
@@ -150,11 +152,13 @@ function applyInitialPitchTypeParams() {
     const season = Number(pitchTypeParams.get("season"));
     if (Number.isFinite(season)) pitchTypeSeason = String(clampPitchType(season, firstPitchTypeSeason, lastPitchTypeSeason));
   }
-  if (pitchTypeParams.get("scope") === "range") pitchTypeSeasonMode = "range";
+  if (["range", "date"].includes(pitchTypeParams.get("scope"))) pitchTypeSeasonMode = pitchTypeParams.get("scope");
   const fromSeason = Number(pitchTypeParams.get("from"));
   const toSeason = Number(pitchTypeParams.get("to"));
   if (Number.isFinite(fromSeason)) pitchTypeFromSeason = String(clampPitchType(fromSeason, firstPitchTypeSeason, lastPitchTypeSeason));
   if (Number.isFinite(toSeason)) pitchTypeToSeason = String(clampPitchType(toSeason, firstPitchTypeSeason, lastPitchTypeSeason));
+  if (/^\d{4}-\d{2}-\d{2}$/.test(pitchTypeParams.get("dateFrom") || "")) pitchTypeDateFrom = pitchTypeParams.get("dateFrom");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(pitchTypeParams.get("dateTo") || "")) pitchTypeDateTo = pitchTypeParams.get("dateTo");
   normalizePitchTypeRange();
   const pitch = pitchTypeParams.get("pitch");
   if (pitchGroups.some(([key]) => key === pitch)) pitchTypePitch = pitch;
@@ -190,14 +194,53 @@ function normalizePitchTypeRange(changed = "") {
 }
 
 function pitchTypeSeasonLabel() {
+  if (pitchTypeSeasonMode === "date") return `${pitchTypeDateFrom} to ${pitchTypeDateTo}`;
   return pitchTypeSeasonMode === "range" ? `${pitchTypeFromSeason}-${pitchTypeToSeason}` : pitchTypeSeason;
 }
 
 function pitchTypeSelectedSeasons() {
+  if (pitchTypeSeasonMode === "date") return [String(new Date(`${pitchTypeDateTo}T12:00:00`).getFullYear())];
   if (pitchTypeSeasonMode === "single") return [pitchTypeSeason];
   const seasons = [];
   for (let year = Number(pitchTypeFromSeason); year <= Number(pitchTypeToSeason); year += 1) seasons.push(String(year));
   return seasons;
+}
+
+function pitchTypeIsoLocal(date) {
+  const year = date.getFullYear();
+  return `${year}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function normalizePitchTypeDates(changed = "") {
+  let from = new Date(`${pitchTypeDateFrom}T12:00:00`);
+  let to = new Date(`${pitchTypeDateTo}T12:00:00`);
+  if (!Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime())) return;
+  if (from.getFullYear() !== to.getFullYear()) {
+    if (changed === "from") to = new Date(from);
+    else from = new Date(to.getFullYear(), 0, 1, 12);
+  }
+  if (from > to) {
+    if (changed === "from") to = new Date(from);
+    else from = new Date(to);
+  }
+  const maxFrom = new Date(to.getTime() - 30 * 86400000);
+  if (from < maxFrom) from = maxFrom;
+  pitchTypeDateFrom = pitchTypeIsoLocal(from);
+  pitchTypeDateTo = pitchTypeIsoLocal(to);
+  pitchTypeSeason = String(to.getFullYear());
+}
+
+function setPitchTypeQuickRange(days) {
+  const now = new Date();
+  const season = Number(pitchTypeSeason);
+  const to = season === now.getFullYear() ? now : new Date(season, 8, 30, 12);
+  const from = new Date(to.getTime() - (days - 1) * 86400000);
+  pitchTypeSeasonMode = "date";
+  pitchTypeDateFrom = pitchTypeIsoLocal(from);
+  pitchTypeDateTo = pitchTypeIsoLocal(to);
+  normalizePitchTypeDates();
+  pitchTypeMinPa = days <= 7 ? "0" : "10";
+  pitchTypeMinPitches = days <= 7 ? "10" : "25";
 }
 
 function toPitchTypeNumber(value) {
@@ -237,6 +280,10 @@ function formatPitchTypeStat(key, value) {
 
 function pitchTypeApiUrl(season = pitchTypeSeason) {
   const params = new URLSearchParams({ type: pitchTypeSide, year: season });
+  if (pitchTypeSeasonMode === "date") {
+    params.set("dateFrom", pitchTypeDateFrom);
+    params.set("dateTo", pitchTypeDateTo);
+  }
   return `/.netlify/functions/pitch-types?${params.toString()}`;
 }
 
@@ -416,6 +463,8 @@ function renderPitchTypeControls() {
   document.querySelector("#pitch-types-from-season").value = pitchTypeFromSeason;
   document.querySelector("#pitch-types-to-season").value = pitchTypeToSeason;
   document.querySelector(".pitch-types-season-control").dataset.activeMode = pitchTypeSeasonMode;
+  document.querySelector("#pitch-types-date-from").value = pitchTypeDateFrom;
+  document.querySelector("#pitch-types-date-to").value = pitchTypeDateTo;
   document.querySelectorAll("[data-pitch-type-season-mode]").forEach((button) => button.classList.toggle("active", button.dataset.pitchTypeSeasonMode === pitchTypeSeasonMode));
   const pitchOptions = pitchGroups.map(([key, label]) => `<option value="${key}">${label}</option>`).join("");
   document.querySelectorAll("#pitch-types-pitch, #pitch-types-pitch-board").forEach((select) => {
@@ -679,7 +728,11 @@ function pitchTypeShareParams() {
   const params = new URLSearchParams();
   params.set("type", pitchTypeSide);
   params.set("view", pitchTypeView);
-  if (pitchTypeSeasonMode === "range") {
+  if (pitchTypeSeasonMode === "date") {
+    params.set("scope", "date");
+    params.set("dateFrom", pitchTypeDateFrom);
+    params.set("dateTo", pitchTypeDateTo);
+  } else if (pitchTypeSeasonMode === "range") {
     params.set("scope", "range");
     params.set("from", pitchTypeFromSeason);
     params.set("to", pitchTypeToSeason);
@@ -753,7 +806,9 @@ async function loadPitchTypeData() {
   document.querySelector("#pitch-types-table").innerHTML = `<tr><td colspan="15" class="empty-row">Loading Baseball Savant pitch data...</td></tr>`;
   try {
     const seasons = pitchTypeSelectedSeasons();
-    const dataSets = await fetchPitchTypeSeasonRange(seasons);
+    const dataSets = pitchTypeSeasonMode === "date"
+      ? [await fetchPitchTypeJson(seasons[0])]
+      : await fetchPitchTypeSeasonRange(seasons);
     pitchTypeRawRows = dataSets.flatMap((data, index) => (data.rows || []).map((row) => ({
       ...row,
       season: seasons[index],
@@ -782,6 +837,25 @@ function bindPitchTypeEvents() {
   document.querySelectorAll("[data-pitch-type-season-mode]").forEach((button) => {
     button.addEventListener("click", () => {
       pitchTypeSeasonMode = button.dataset.pitchTypeSeasonMode;
+      renderPitchTypeControls();
+      loadPitchTypeData();
+    });
+  });
+  document.querySelector("#pitch-types-date-from").addEventListener("change", (event) => {
+    pitchTypeDateFrom = event.target.value;
+    normalizePitchTypeDates("from");
+    renderPitchTypeControls();
+    loadPitchTypeData();
+  });
+  document.querySelector("#pitch-types-date-to").addEventListener("change", (event) => {
+    pitchTypeDateTo = event.target.value;
+    normalizePitchTypeDates("to");
+    renderPitchTypeControls();
+    loadPitchTypeData();
+  });
+  document.querySelectorAll("[data-pitch-type-quick-days]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setPitchTypeQuickRange(Number(button.dataset.pitchTypeQuickDays));
       renderPitchTypeControls();
       loadPitchTypeData();
     });
@@ -866,6 +940,7 @@ function applyInitialPitchTypeSearch() {
 }
 
 applyInitialPitchTypeParams();
+normalizePitchTypeDates();
 renderPitchTypeControls();
 applyInitialPitchTypeSearch();
 bindPitchTypeEvents();
