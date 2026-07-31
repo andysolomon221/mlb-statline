@@ -145,17 +145,22 @@ exports.handler = async (event) => {
   const requestedTeam = normalizeTeamCode(params.team || "");
   const dateFrom = /^\d{4}-\d{2}-\d{2}$/.test(params.dateFrom || "") ? params.dateFrom : "";
   const dateTo = /^\d{4}-\d{2}-\d{2}$/.test(params.dateTo || "") ? params.dateTo : "";
+  const lastGamePlayer = /^\d+$/.test(params.lastGamePlayer || "") ? params.lastGamePlayer : "";
 
   try {
     if (dateFrom && dateTo) {
-      const dateRows = await fetchDateRange({ type, from: dateFrom, to: dateTo, mode: "pitch-types" });
+      const dateRows = await fetchDateRange({
+        type, from: dateFrom, to: dateTo, mode: "pitch-types",
+        targetPlayerId: lastGamePlayer,
+        latestGameOnly: Boolean(lastGamePlayer)
+      });
       const rows = dateRows
         .map((row) => ({ ...row, team: normalizeTeamCode(row.team) }))
         .filter((row) => !params.team || row.team === requestedTeam);
       return {
         statusCode: 200,
         headers: { "content-type": "application/json", "cache-control": "public, max-age=900" },
-        body: JSON.stringify({ type, year, dateFrom, dateTo, rows })
+        body: JSON.stringify({ type, year, dateFrom, dateTo, effectiveDate: dateRows.effectiveDate || "", rows })
       };
     }
     const controller = new AbortController();

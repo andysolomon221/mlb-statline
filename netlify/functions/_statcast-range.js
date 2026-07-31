@@ -186,9 +186,10 @@ function finalize(acc, mode, playerPitches) {
   };
 }
 
-async function fetchDateRange({ type, from, to, mode = "statcast" }) {
+async function fetchDateRange({ type, from, to, mode = "statcast", targetPlayerId = "", latestGameOnly = false }) {
   validateDateRange(from, to);
   const groups = new Map();
+  const matchingRows = [];
   const chunks = dateChunks(from, to);
   for (let index = 0; index < chunks.length; index += 3) {
     const batch = chunks.slice(index, index + 3);
@@ -199,6 +200,11 @@ async function fetchDateRange({ type, from, to, mode = "statcast" }) {
     }));
     texts.forEach((text) => parseCsv(text).forEach((row) => {
       const playerId = String((type === "pitcher" ? row.pitcher : row.batter) || "");
+      if (targetPlayerId && playerId !== String(targetPlayerId)) return;
+      if (latestGameOnly) {
+        matchingRows.push(row);
+        return;
+      }
       const pitchType = mode === "pitch-types" ? String(row.pitch_type || "") : "";
       if (!playerId || (mode === "pitch-types" && !pitchType)) return;
       const key = mode === "pitch-types" ? `${playerId}:${pitchType}` : playerId;
@@ -206,9 +212,23 @@ async function fetchDateRange({ type, from, to, mode = "statcast" }) {
       addRow(groups.get(key), row, type);
     }));
   }
+  let effectiveDate = "";
+  if (latestGameOnly) {
+    effectiveDate = matchingRows.reduce((latest, row) => String(row.game_date || "") > latest ? String(row.game_date) : latest, "");
+    matchingRows.filter((row) => row.game_date === effectiveDate).forEach((row) => {
+      const playerId = String((type === "pitcher" ? row.pitcher : row.batter) || "");
+      const pitchType = mode === "pitch-types" ? String(row.pitch_type || "") : "";
+      if (!playerId || (mode === "pitch-types" && !pitchType)) return;
+      const key = mode === "pitch-types" ? `${playerId}:${pitchType}` : playerId;
+      if (!groups.has(key)) groups.set(key, baseAccumulator(row, type, pitchType));
+      addRow(groups.get(key), row, type);
+    });
+  }
   const totals = new Map();
   groups.forEach((acc) => totals.set(acc.playerId, (totals.get(acc.playerId) || 0) + acc.pitches));
-  return Array.from(groups.values()).map((acc) => finalize(acc, mode, totals.get(acc.playerId)));
+  const rows = Array.from(groups.values()).map((acc) => finalize(acc, mode, totals.get(acc.playerId)));
+  rows.effectiveDate = effectiveDate;
+  return rows;
 }
 
 module.exports = { fetchDateRange };
