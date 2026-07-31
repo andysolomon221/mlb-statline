@@ -195,7 +195,14 @@ function normalizePitchTypeRange(changed = "") {
 }
 
 function pitchTypeSeasonLabel() {
-  if (pitchTypeSeasonMode === "date") return `${pitchTypeDateFrom} to ${pitchTypeDateTo}`;
+  if (pitchTypeSeasonMode === "date") {
+    const formatDate = (value, includeYear = true) => new Intl.DateTimeFormat("en-US", {
+      month: "long", day: "numeric", ...(includeYear ? { year: "numeric" } : {})
+    }).format(new Date(`${value}T12:00:00`));
+    if (pitchTypeDateFrom === pitchTypeDateTo) return formatDate(pitchTypeDateTo);
+    const sameYear = pitchTypeDateFrom.slice(0, 4) === pitchTypeDateTo.slice(0, 4);
+    return `${formatDate(pitchTypeDateFrom, !sameYear)} to ${formatDate(pitchTypeDateTo)}`;
+  }
   return pitchTypeSeasonMode === "range" ? `${pitchTypeFromSeason}-${pitchTypeToSeason}` : pitchTypeSeason;
 }
 
