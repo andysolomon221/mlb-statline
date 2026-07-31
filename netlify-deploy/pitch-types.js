@@ -557,7 +557,7 @@ function renderPitchTypeSummary() {
 
 function renderPitchTypeMixBoard() {
   const poolRows = pitchTypeMixSourceRows();
-  const playerMode = pitchTypeSide === "pitcher" && pitchTypeView === "players" && pitchTypeTeam !== "all";
+  const playerMode = pitchTypeView === "players" && pitchTypeTeam !== "all";
   const playerField = document.querySelector("#pitch-types-mix-player-field");
   const lastGameButton = document.querySelector("#pitch-types-last-game");
   const playerSelect = document.querySelector("#pitch-types-mix-player");
@@ -566,20 +566,22 @@ function renderPitchTypeMixBoard() {
 
   playerField.hidden = !playerMode;
   lastGameButton.hidden = !playerMode;
+  playerField.querySelector("span").textContent = pitchTypeSide === "pitcher" ? "Pitcher" : "Batter";
+  playerSelect.setAttribute("aria-label", `Choose ${pitchTypeSide} for pitch mix`);
   if (playerMode) {
-    const pitcherMap = new Map();
+    const playerMap = new Map();
     poolRows.forEach((row) => {
-      const pitcher = pitcherMap.get(row.playerId) || { id: row.playerId, name: row.name, pitches: 0 };
-      pitcher.pitches += toPitchTypeNumber(row.pitches);
-      pitcherMap.set(row.playerId, pitcher);
+      const player = playerMap.get(row.playerId) || { id: row.playerId, name: row.name, pitches: 0 };
+      player.pitches += toPitchTypeNumber(row.pitches);
+      playerMap.set(row.playerId, player);
     });
-    const pitchers = Array.from(pitcherMap.values())
+    const players = Array.from(playerMap.values())
       .sort((a, b) => b.pitches - a.pitches || a.name.localeCompare(b.name));
-    if (!pitchers.some((pitcher) => pitcher.id === pitchTypeMixPlayer)) pitchTypeMixPlayer = pitchers[0]?.id || "";
-    playerSelect.innerHTML = pitchers.map((pitcher) => `<option value="${pitcher.id}">${pitcher.name}</option>`).join("");
+    if (!players.some((player) => player.id === pitchTypeMixPlayer)) pitchTypeMixPlayer = players[0]?.id || "";
+    playerSelect.innerHTML = players.map((player) => `<option value="${player.id}">${player.name}</option>`).join("");
     playerSelect.value = pitchTypeMixPlayer;
     sourceRows = poolRows.filter((row) => row.playerId === pitchTypeMixPlayer);
-    selectedPlayerName = pitchers.find((pitcher) => pitcher.id === pitchTypeMixPlayer)?.name || "Selected pitcher";
+    selectedPlayerName = players.find((player) => player.id === pitchTypeMixPlayer)?.name || `Selected ${pitchTypeSide}`;
   } else {
     pitchTypeMixPlayer = "";
     playerSelect.innerHTML = "";
