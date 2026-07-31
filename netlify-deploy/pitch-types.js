@@ -560,12 +560,15 @@ function renderPitchTypeMixBoard() {
   const playerMode = pitchTypeView === "players" && pitchTypeTeam !== "all";
   const playerField = document.querySelector("#pitch-types-mix-player-field");
   const lastGameButton = document.querySelector("#pitch-types-last-game");
+  const clearPlayerButton = document.querySelector("#pitch-types-clear-player");
   const playerSelect = document.querySelector("#pitch-types-mix-player");
   let sourceRows = poolRows;
   let selectedPlayerName = "";
 
   playerField.hidden = !playerMode;
   lastGameButton.hidden = !playerMode;
+  lastGameButton.disabled = !pitchTypeMixPlayer;
+  clearPlayerButton.hidden = !playerMode || !pitchTypeMixPlayer;
   playerField.querySelector("span").textContent = pitchTypeSide === "pitcher" ? "Pitcher" : "Batter";
   playerSelect.setAttribute("aria-label", `Choose ${pitchTypeSide} for pitch mix`);
   if (playerMode) {
@@ -577,15 +580,17 @@ function renderPitchTypeMixBoard() {
     });
     const players = Array.from(playerMap.values())
       .sort((a, b) => b.pitches - a.pitches || a.name.localeCompare(b.name));
-    if (!players.some((player) => player.id === pitchTypeMixPlayer)) pitchTypeMixPlayer = players[0]?.id || "";
-    playerSelect.innerHTML = players.map((player) => `<option value="${player.id}">${player.name}</option>`).join("");
+    if (!players.some((player) => player.id === pitchTypeMixPlayer)) pitchTypeMixPlayer = "";
+    playerSelect.innerHTML = `<option value="">Choose a ${pitchTypeSide}</option>${players.map((player) => `<option value="${player.id}">${player.name}</option>`).join("")}`;
     playerSelect.value = pitchTypeMixPlayer;
-    sourceRows = poolRows.filter((row) => row.playerId === pitchTypeMixPlayer);
-    selectedPlayerName = players.find((player) => player.id === pitchTypeMixPlayer)?.name || `Selected ${pitchTypeSide}`;
+    sourceRows = pitchTypeMixPlayer ? poolRows.filter((row) => row.playerId === pitchTypeMixPlayer) : [];
+    selectedPlayerName = players.find((player) => player.id === pitchTypeMixPlayer)?.name || "";
   } else {
     pitchTypeMixPlayer = "";
     playerSelect.innerHTML = "";
   }
+  lastGameButton.disabled = !pitchTypeMixPlayer;
+  clearPlayerButton.hidden = !playerMode || !pitchTypeMixPlayer;
 
   const mixGroups = playerMode
     ? ["all", ...Array.from(new Set(sourceRows.map((row) => row.pitchType))).sort((a, b) => sumRows(sourceRows.filter((row) => row.pitchType === b), "pitches") - sumRows(sourceRows.filter((row) => row.pitchType === a), "pitches"))]
@@ -600,7 +605,7 @@ function renderPitchTypeMixBoard() {
   const pitchLabel = pitchTypeSide === "batter" ? "seen" : "thrown";
   const resultLabel = pitchTypeSide === "batter" ? "batting" : "pitching allowed";
   document.querySelector("#pitch-types-mix-title").textContent = playerMode
-    ? `${subject} pitch mix and results by pitch type`
+    ? selectedPlayerName ? `${subject} pitch mix and results by pitch type` : `Choose a ${pitchTypeSide} to view a pitch mix`
     : `${subject} ${resultLabel} by pitch group`;
   document.querySelector("#pitch-types-mix-status").textContent = `${pitchTypeSeasonLabel()} | pitches ${pitchLabel}`;
   document.querySelector("#pitch-types-mix-board").innerHTML = rows.length ? `
@@ -945,6 +950,10 @@ function bindPitchTypeEvents() {
   });
   document.querySelector("#pitch-types-mix-player").addEventListener("change", (event) => {
     pitchTypeMixPlayer = event.target.value;
+    renderPitchTypeMixBoard();
+  });
+  document.querySelector("#pitch-types-clear-player").addEventListener("click", () => {
+    pitchTypeMixPlayer = "";
     renderPitchTypeMixBoard();
   });
   document.querySelector("#pitch-types-last-game").addEventListener("click", () => {
