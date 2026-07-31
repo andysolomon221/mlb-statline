@@ -9,6 +9,7 @@ const selections = [
   "xba",
   "xslg"
 ];
+const { fetchDateRange } = require("./_statcast-range");
 
 const teamAbbr = {
   "Arizona Diamondbacks": "ARI",
@@ -137,8 +138,18 @@ exports.handler = async (event) => {
   const type = params.type === "pitcher" ? "pitcher" : "batter";
   const group = type === "pitcher" ? "pitching" : "hitting";
   const year = /^\d{4}$/.test(params.year || "") ? params.year : "2026";
+  const dateFrom = /^\d{4}-\d{2}-\d{2}$/.test(params.dateFrom || "") ? params.dateFrom : "";
+  const dateTo = /^\d{4}-\d{2}-\d{2}$/.test(params.dateTo || "") ? params.dateTo : "";
 
   try {
+    if (dateFrom && dateTo) {
+      const rows = await fetchDateRange({ type, from: dateFrom, to: dateTo, mode: "statcast" });
+      return {
+        statusCode: 200,
+        headers: { "content-type": "application/json", "cache-control": "public, max-age=900" },
+        body: JSON.stringify({ type, year, dateFrom, dateTo, rows })
+      };
+    }
     const [csvResponse, teams] = await Promise.all([
       fetch(csvUrl(type, year)),
       teamLookup(group, year)

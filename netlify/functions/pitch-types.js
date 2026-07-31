@@ -11,6 +11,7 @@ const pitchTypeLabels = {
   SC: "Screwball",
   KN: "Knuckleball"
 };
+const { fetchDateRange } = require("./_statcast-range");
 
 const savantTimeoutMs = 9000;
 
@@ -141,8 +142,22 @@ exports.handler = async (event) => {
   const params = event.queryStringParameters || {};
   const type = params.type === "pitcher" ? "pitcher" : "batter";
   const year = /^\d{4}$/.test(params.year || "") ? params.year : "2026";
+  const requestedTeam = normalizeTeamCode(params.team || "");
+  const dateFrom = /^\d{4}-\d{2}-\d{2}$/.test(params.dateFrom || "") ? params.dateFrom : "";
+  const dateTo = /^\d{4}-\d{2}-\d{2}$/.test(params.dateTo || "") ? params.dateTo : "";
 
   try {
+    if (dateFrom && dateTo) {
+      const dateRows = await fetchDateRange({ type, from: dateFrom, to: dateTo, mode: "pitch-types" });
+      const rows = dateRows
+        .map((row) => ({ ...row, team: normalizeTeamCode(row.team) }))
+        .filter((row) => !params.team || row.team === requestedTeam);
+      return {
+        statusCode: 200,
+        headers: { "content-type": "application/json", "cache-control": "public, max-age=900" },
+        body: JSON.stringify({ type, year, dateFrom, dateTo, rows })
+      };
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), savantTimeoutMs);
     const [response, homeRunHtml] = await Promise.all([
@@ -180,7 +195,7 @@ exports.handler = async (event) => {
         est_woba: number(row.est_woba),
         hard_hit_percent: number(row.hard_hit_percent)
       };
-    });
+    }).filter((row) => !params.team || row.team === requestedTeam);
 
     return {
       statusCode: 200,
