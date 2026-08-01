@@ -140,14 +140,27 @@ exports.handler = async (event) => {
   const year = /^\d{4}$/.test(params.year || "") ? params.year : "2026";
   const dateFrom = /^\d{4}-\d{2}-\d{2}$/.test(params.dateFrom || "") ? params.dateFrom : "";
   const dateTo = /^\d{4}-\d{2}-\d{2}$/.test(params.dateTo || "") ? params.dateTo : "";
+  const team = /^[A-Z]{2,3}$/.test(params.team || "") ? params.team : "";
 
   try {
     if (dateFrom && dateTo) {
-      const rows = await fetchDateRange({ type, from: dateFrom, to: dateTo, mode: "statcast" });
+      const rows = await fetchDateRange({ type, from: dateFrom, to: dateTo, mode: "statcast", team });
       return {
         statusCode: 200,
         headers: { "content-type": "application/json", "cache-control": "public, max-age=900" },
         body: JSON.stringify({ type, year, dateFrom, dateTo, rows })
+      };
+    }
+    if (team) {
+      const now = new Date();
+      const currentYear = now.getUTCFullYear();
+      const from = `${year}-03-01`;
+      const to = Number(year) === currentYear ? now.toISOString().slice(0, 10) : `${year}-11-30`;
+      const rows = await fetchDateRange({ type, from, to, mode: "statcast", team, maxDays: 300, chunkDays: 31 });
+      return {
+        statusCode: 200,
+        headers: { "content-type": "application/json", "cache-control": "public, max-age=900" },
+        body: JSON.stringify({ type, year, team, rows })
       };
     }
     const [csvResponse, teams] = await Promise.all([
