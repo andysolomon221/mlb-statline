@@ -576,8 +576,8 @@ function renderChart() {
 function metricBarWidth(value, min, max, lowerBetter) {
   if (max === min) return 100;
   if (!lowerBetter) return Math.max(4, Math.abs(value) / Math.max(Math.abs(max), 1) * 100);
-  const scaled = (max - value) / (max - min);
-  return 15 + (Math.max(0, Math.min(1, scaled)) * 85);
+  if (value <= 0) return 100;
+  return Math.max(15, Math.min(100, min / value * 100));
 }
 
 function renderTableHead() {
