@@ -12,6 +12,7 @@ let activeMetric = "exit_velocity_avg";
 let activeSort = { key: "exit_velocity_avg", dir: -1 };
 let activeSampleMin = "auto";
 let rows = [];
+let availableTeams = [];
 let statcastCopyStatusTimer;
 
 const metrics = {
@@ -149,6 +150,8 @@ function initials(name) {
 
 function apiUrl() {
   const params = new URLSearchParams({ type: activeType, year: activeSeason });
+  const requestedTeam = activeTeam !== "all" ? activeTeam : (pendingTeam !== "all" ? pendingTeam.toUpperCase() : "");
+  if (requestedTeam) params.set("team", requestedTeam);
   if (activeDateMode === "date") {
     params.set("dateFrom", activeDateFrom);
     params.set("dateTo", activeDateTo);
@@ -227,12 +230,15 @@ function focusSearchResult() {
 function renderTeamOptions() {
   const teams = Array.from(new Map(rows.filter((row) => row.team !== "MLB").map((row) => [row.team, row.teamName || row.team])).entries())
     .sort((a, b) => a[1].localeCompare(b[1]));
+  if (teams.length > 1 || !availableTeams.length) availableTeams = teams;
   if (pendingTeam !== "all" && teams.some(([abbr]) => abbr === pendingTeam.toUpperCase())) {
     activeTeam = pendingTeam.toUpperCase();
   }
   pendingTeam = "all";
-  document.querySelector("#statcast-team").innerHTML = `<option value="all">All teams</option>${teams.map(([abbr, name]) => `<option value="${abbr}">${name}</option>`).join("")}`;
-  if (activeTeam !== "all" && !teams.some(([abbr]) => abbr === activeTeam)) activeTeam = "all";
+  const allLabel = activeDateMode === "season" ? "All current rosters" : "All teams";
+  const optionTeams = availableTeams.some(([abbr]) => abbr === activeTeam) ? availableTeams : Array.from(new Map([...availableTeams, ...teams]).entries());
+  document.querySelector("#statcast-team").innerHTML = `<option value="all">${allLabel}</option>${optionTeams.map(([abbr, name]) => `<option value="${abbr}">${name}</option>`).join("")}`;
+  if (activeTeam !== "all" && !optionTeams.some(([abbr]) => abbr === activeTeam)) activeTeam = "all";
   document.querySelector("#statcast-team").value = activeTeam;
 }
 
@@ -265,6 +271,10 @@ function renderControls() {
   document.querySelector("#statcast-sample-min").value = activeSampleMin;
   document.querySelector("#statcast-count-note").textContent = `${activeSampleMinimum() ? `${activeSampleMinimum()}+ ${sampleLabel()}` : `All ${sampleLabel()}`} sample`;
   document.querySelectorAll("[data-statcast-type]").forEach((button) => button.classList.toggle("active", button.dataset.statcastType === activeType));
+  const dataNote = document.querySelector("#statcast-data-note");
+  if (dataNote) dataNote.textContent = activeDateMode === "season"
+    ? "All-MLB season views use season totals. Select a team to recalculate the leaderboard from only the Statcast events recorded for that team."
+    : "Custom date windows assign every Statcast event to the team represented on that date and are limited to 31 calendar days.";
 }
 
 function applyInitialStatcastSearch() {
@@ -275,7 +285,9 @@ function applyInitialStatcastSearch() {
 function renderSummary() {
   const data = filteredRows();
   const leader = data[0];
-  const teamLabel = activeTeam === "all" ? "All MLB" : document.querySelector("#statcast-team").selectedOptions[0]?.textContent || activeTeam;
+  const teamLabel = activeTeam === "all"
+    ? (activeDateMode === "season" ? "All current rosters | full-season stats" : "All MLB")
+    : document.querySelector("#statcast-team").selectedOptions[0]?.textContent || activeTeam;
   document.querySelector("#statcast-leader").textContent = leader ? leader.name : "No players";
   document.querySelector("#statcast-leader-note").textContent = leader ? `${leader.team} | ${metricLabel()} ${fmtStat(activeMetric, leader[activeMetric])}` : "Try another filter";
   document.querySelector("#statcast-metric-card").textContent = metricLabel();
@@ -474,7 +486,7 @@ function bindEvents() {
   });
   document.querySelector("#statcast-team").addEventListener("change", (event) => {
     activeTeam = event.target.value;
-    renderAll();
+    loadStatcast();
   });
   document.querySelectorAll("#statcast-metric, #statcast-metric-board").forEach((select) => {
     select.addEventListener("change", (event) => {
