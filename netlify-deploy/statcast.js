@@ -75,7 +75,7 @@ function sortDirection(key) {
 }
 
 function showMetricBars(key = activeMetric) {
-  return !lowerBetter[activeType].includes(key);
+  return metrics[activeType].some(([metric]) => metric === key);
 }
 
 applyInitialStatcastParams();
@@ -290,7 +290,10 @@ function renderSummary() {
 
 function renderChart() {
   const data = filteredRows().slice(0, 8);
-  const max = Math.max(...data.map((row) => Math.abs(toNumber(row[activeMetric]))), 1);
+  const values = data.map((row) => toNumber(row[activeMetric]));
+  const max = values.length ? Math.max(...values) : 0;
+  const min = values.length ? Math.min(...values) : 0;
+  const metricIsLowerBetter = lowerBetter[activeType].includes(activeMetric);
   const includeBars = showMetricBars();
   document.querySelector("#statcast-chart").innerHTML = data.map((row) => `
     <div class="bar-row${includeBars ? "" : " no-bar-row"}">
@@ -299,10 +302,17 @@ function renderChart() {
         <span>${row.team}${row.position ? ` | ${row.position}` : ""} | ${fmtStat("sample", row.sample)} ${sampleLabel()}</span>
         ${statcastPlayerActions(row.name, true)}
       </div>
-      ${includeBars ? `<div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toNumber(row[activeMetric])) / max * 100)}%"></div></div>` : ""}
+      ${includeBars ? `<div class="bar-track"><div class="bar-fill" style="width:${metricBarWidth(toNumber(row[activeMetric]), min, max, metricIsLowerBetter).toFixed(1)}%"></div></div>` : ""}
       <div class="bar-value">${fmtStat(activeMetric, row[activeMetric])}</div>
     </div>
   `).join("") || `<div class="empty-state">No players match this filter.</div>`;
+}
+
+function metricBarWidth(value, min, max, metricIsLowerBetter) {
+  if (max === min) return 100;
+  if (!metricIsLowerBetter) return Math.max(4, Math.abs(value) / Math.max(Math.abs(max), 1) * 100);
+  const scaled = (max - value) / (max - min);
+  return 15 + (Math.max(0, Math.min(1, scaled)) * 85);
 }
 
 function renderTableHead() {
