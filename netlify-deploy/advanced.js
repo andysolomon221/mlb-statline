@@ -150,7 +150,7 @@ function sortDirection(key) {
 }
 
 function showMetricBars(key = activeMetric) {
-  return !config().lowerBetter.includes(key);
+  return config().metrics.some(([metric]) => metric === key);
 }
 
 function fmtStat(key, value) {
@@ -555,7 +555,10 @@ function renderSummary() {
 
 function renderChart() {
   const data = sortedRows().slice(0, 8);
-  const max = Math.max(...data.map((row) => Math.abs(toNumber(row[activeMetric]))), 1);
+  const values = data.map((row) => toNumber(row[activeMetric]));
+  const max = values.length ? Math.max(...values) : 0;
+  const min = values.length ? Math.min(...values) : 0;
+  const lowerBetter = config().lowerBetter.includes(activeMetric);
   const includeBars = showMetricBars();
   document.querySelector("#advanced-chart").innerHTML = data.map((row) => `
     <div class="bar-row${includeBars ? "" : " no-bar-row"}">
@@ -564,10 +567,17 @@ function renderChart() {
         <span>${row.team} | ${row.position}${activeMode === "range" ? ` | ${workloadLabel(row)}` : ""}</span>
         ${advancedPlayerActions(row.name)}
       </div>
-      ${includeBars ? `<div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, Math.abs(toNumber(row[activeMetric])) / max * 100)}%"></div></div>` : ""}
+      ${includeBars ? `<div class="bar-track"><div class="bar-fill" style="width:${metricBarWidth(toNumber(row[activeMetric]), min, max, lowerBetter).toFixed(1)}%"></div></div>` : ""}
       <div class="bar-value">${fmtStat(activeMetric, row[activeMetric])}</div>
     </div>
   `).join("") || `<div class="empty-state">No players match this filter.</div>`;
+}
+
+function metricBarWidth(value, min, max, lowerBetter) {
+  if (max === min) return 100;
+  if (!lowerBetter) return Math.max(4, Math.abs(value) / Math.max(Math.abs(max), 1) * 100);
+  const scaled = (max - value) / (max - min);
+  return 15 + (Math.max(0, Math.min(1, scaled)) * 85);
 }
 
 function renderTableHead() {
