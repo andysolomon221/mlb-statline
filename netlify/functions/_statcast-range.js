@@ -70,7 +70,7 @@ function dateChunks(from, to, days = 3) {
   return chunks;
 }
 
-function validateDateRange(from, to) {
+function validateDateRange(from, to, maxDays = 31) {
   const start = new Date(`${from}T00:00:00Z`);
   const end = new Date(`${to}T00:00:00Z`);
   const span = Math.round((end - start) / 86400000) + 1;
@@ -80,15 +80,17 @@ function validateDateRange(from, to) {
   if (start.getUTCFullYear() !== end.getUTCFullYear()) {
     throw new Error("Date ranges must stay within one season.");
   }
-  if (span > 31) throw new Error("Date ranges are limited to 31 calendar days.");
+  if (span > maxDays) throw new Error(`Date ranges are limited to ${maxDays} calendar days.`);
 }
 
-function searchUrl(type, from, to) {
+function searchUrl(type, from, to, team = "") {
   const params = new URLSearchParams({
-    all: "true", type, player_type: type, game_date_gt: from, game_date_lt: to,
+    all: "true", type: "details", player_type: type, game_date_gt: from, game_date_lt: to,
+    hfGT: "R|", hfSea: `${from.slice(0, 4)}|`,
     group_by: "name-year", sort_col: "pitches", sort_order: "desc",
     min_pitches: "0", min_results: "0", min_pas: "0"
   });
+  if (team) params.set("hfTeam", `${team}|`);
   return `https://baseballsavant.mlb.com/statcast_search/csv?${params.toString()}`;
 }
 
@@ -108,6 +110,11 @@ function teamFor(row, type) {
   const top = String(row.inning_topbot || "").toLowerCase() === "top";
   if (type === "batter") return top ? row.away_team : row.home_team;
   return top ? row.home_team : row.away_team;
+}
+
+function normalizedTeamFor(row, type) {
+  const raw = teamFor(row, type) || "MLB";
+  return teamCodeAliases[raw] || raw;
 }
 
 function addRow(acc, row, type) {
@@ -186,15 +193,15 @@ function finalize(acc, mode, playerPitches) {
   };
 }
 
-async function fetchDateRange({ type, from, to, mode = "statcast", targetPlayerId = "", latestGameOnly = false }) {
-  validateDateRange(from, to);
+async function fetchDateRange({ type, from, to, mode = "statcast", targetPlayerId = "", latestGameOnly = false, team = "", maxDays = 31, chunkDays = 3 }) {
+  validateDateRange(from, to, maxDays);
   const groups = new Map();
   const matchingRows = [];
-  const chunks = dateChunks(from, to);
+  const chunks = dateChunks(from, to, chunkDays);
   for (let index = 0; index < chunks.length; index += 3) {
     const batch = chunks.slice(index, index + 3);
     const texts = await Promise.all(batch.map(async ([start, end]) => {
-      const response = await fetch(searchUrl(type, start, end), { headers: { "user-agent": "Mozilla/5.0" } });
+      const response = await fetch(searchUrl(type, start, end, team), { headers: { "user-agent": "Mozilla/5.0" } });
       if (!response.ok) throw new Error(`Baseball Savant returned ${response.status}`);
       return response.text();
     }));
@@ -207,7 +214,8 @@ async function fetchDateRange({ type, from, to, mode = "statcast", targetPlayerI
       }
       const pitchType = mode === "pitch-types" ? String(row.pitch_type || "") : "";
       if (!playerId || (mode === "pitch-types" && !pitchType)) return;
-      const key = mode === "pitch-types" ? `${playerId}:${pitchType}` : playerId;
+      const team = mode === "statcast" ? normalizedTeamFor(row, type) : "";
+      const key = mode === "pitch-types" ? `${playerId}:${pitchType}` : `${playerId}:${team}`;
       if (!groups.has(key)) groups.set(key, baseAccumulator(row, type, pitchType));
       addRow(groups.get(key), row, type);
     }));
@@ -219,7 +227,8 @@ async function fetchDateRange({ type, from, to, mode = "statcast", targetPlayerI
       const playerId = String((type === "pitcher" ? row.pitcher : row.batter) || "");
       const pitchType = mode === "pitch-types" ? String(row.pitch_type || "") : "";
       if (!playerId || (mode === "pitch-types" && !pitchType)) return;
-      const key = mode === "pitch-types" ? `${playerId}:${pitchType}` : playerId;
+      const team = mode === "statcast" ? normalizedTeamFor(row, type) : "";
+      const key = mode === "pitch-types" ? `${playerId}:${pitchType}` : `${playerId}:${team}`;
       if (!groups.has(key)) groups.set(key, baseAccumulator(row, type, pitchType));
       addRow(groups.get(key), row, type);
     });
