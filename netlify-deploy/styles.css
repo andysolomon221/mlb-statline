@@ -2144,6 +2144,12 @@ body[data-board="hitting"] .player-board-table td:not(:first-child):not(:nth-chi
   min-width: 860px;
 }
 
+#pvp-full-list-wrap {
+  box-sizing: border-box;
+  padding-right: 18px;
+  scrollbar-gutter: stable;
+}
+
 .player-vs-pitchers-table th,
 .player-vs-pitchers-table td {
   padding-right: 8px;
