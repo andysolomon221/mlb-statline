@@ -96,7 +96,9 @@ const yearByYearMetricSets = {
   ]
 };
 
-const yearByYearPaceMetrics = new Set(["plateAppearances", "hits", "homeRuns", "rbi", "stolenBases"]);
+const yearByYearHittingPaceMetrics = new Set(["plateAppearances", "hits", "homeRuns", "rbi", "stolenBases"]);
+const yearByYearPitchingPaceMetrics = new Set(["inningsPitched", "wins", "saves", "strikeOuts"]);
+
 
 function escapeHtml(value = "") {
   return String(value)
@@ -112,12 +114,39 @@ function toNumber(value) {
   return Number.isFinite(number) ? number : 0;
 }
 
-function yearByYearComparisonValue(key, seasonRow) {
-  const value = toNumber(seasonRow?.stat?.[key]);
-  if (activeGroup !== "hitting" || !yearByYearPaceMetrics.has(key)) return value;
+function yearByYearPaceContext(rows = []) {
+  if (activeGroup === "hitting") {
+    return {
+      metrics: yearByYearHittingPaceMetrics,
+      target: 162,
+      denominator: "gamesPlayed",
+      displayLabel: "per 162 games",
+      legendLabel: "162-game"
+    };
+  }
 
-  const games = toNumber(seasonRow?.stat?.gamesPlayed);
-  return games > 0 ? (value * 162) / games : value;
+  const games = rows.reduce((total, row) => total + toNumber(row?.stat?.gamesPlayed), 0);
+  const starts = rows.reduce((total, row) => total + toNumber(row?.stat?.gamesStarted), 0);
+  const isStarter = games > 0 && starts / games >= 0.5;
+  return {
+    metrics: yearByYearPitchingPaceMetrics,
+    target: isStarter ? 32 : 65,
+    denominator: isStarter ? "gamesStarted" : "gamesPlayed",
+    displayLabel: isStarter ? "per 32 starts" : "per 65 appearances",
+    legendLabel: isStarter ? "32-start" : "65-appearance"
+  };
+}
+
+function yearByYearComparisonValue(key, seasonRow, paceContext) {
+  const value = toNumber(seasonRow?.stat?.[key]);
+  if (!paceContext?.metrics?.has(key)) return value;
+
+  const denominator = toNumber(seasonRow?.stat?.[paceContext.denominator]);
+  if (denominator <= 0) return value;
+  if (key === "inningsPitched") {
+    return (inningsToOuts(value) * paceContext.target) / denominator;
+  }
+  return (value * paceContext.target) / denominator;
 }
 
 function safeRate(top, bottom) {
@@ -577,17 +606,26 @@ function renderHistoryComparison() {
 
 function formatYearByYearValue(key, value, digits, isPercent) {
   if (isPercent) return `${(toNumber(value) * 100).toFixed(digits)}%`;
+  if (key === "inningsPitched") return outsToInnings(inningsToOuts(value));
   return formatValue(key, value, digits);
 }
 
-function formatYearByYearDelta(key, current, previous, digits, isPercent, usesPace, priorYear) {
+function formatYearByYearPaceValue(key, value) {
+  if (key === "inningsPitched") return outsToInnings(Math.round(toNumber(value)));
+  return String(Math.round(toNumber(value)));
+}
+
+function formatYearByYearDelta(key, current, previous, digits, isPercent, usesPace, priorYear, paceContext) {
   const difference = usesPace ? Math.round(current) - Math.round(previous) : current - previous;
   const sign = difference > 0 ? "+" : difference < 0 ? "−" : "";
   const absolute = Math.abs(difference);
   if (isPercent) return `${sign}${(absolute * 100).toFixed(digits)} pp vs prior`;
   if (usesPace) {
     if (!difference) return `Same pace as ${priorYear}`;
-    return `${Math.round(absolute)} ${difference > 0 ? "more" : "fewer"} per 162 vs ${priorYear}`;
+    const formattedDifference = key === "inningsPitched"
+      ? outsToInnings(Math.round(absolute))
+      : String(Math.round(absolute));
+    return `${formattedDifference} ${difference > 0 ? "more" : "fewer"} ${paceContext.displayLabel} vs ${priorYear}`;
   }
   if (["avg", "obp", "slg", "ops"].includes(key)) {
     return `${sign}${absolute.toFixed(digits).replace(/^0/, "")} vs prior`;
@@ -622,8 +660,12 @@ function renderYearByYearBoard(rows) {
   const years = yearList(ybyRange.start, ybyRange.end);
   const rowsBySeason = new Map(rows.map((row) => [row.season, row]));
   const metrics = yearByYearMetricSets[activeGroup];
+  const paceContext = yearByYearPaceContext(rows);
   document.querySelector("#compare-yby-title").textContent = `${ybyPlayer.fullName} year over year`;
   document.querySelector("#compare-yby-note").textContent = `${years[0]}-${years[years.length - 1]} ${activeGroup === "hitting" ? "batting" : "pitching"} comparison`;
+  document.querySelector(".compare-yby-legend").textContent = activeGroup === "hitting"
+    ? "Values are actual season totals. PA, H, HR, RBI, and SB also show a 162-game pace for fair partial-season comparison. Rate stats are not projected. Changes are versus the previous available season; “Best pace” refers only to the selected seasons."
+    : `Values are actual season totals. IP, wins, saves, and strikeouts also show a ${paceContext.legendLabel} pace for fair partial-season comparison. ERA, WHIP, K%, and BB% are not projected. Changes are versus the previous available season; “Best pace” refers only to the selected seasons.`;
 
   const header = `
     <div class="compare-yby-corner">
@@ -644,7 +686,7 @@ function renderYearByYearBoard(rows) {
     const available = years
       .map((year) => rowsBySeason.get(year))
       .filter(Boolean)
-      .map((seasonRow) => yearByYearComparisonValue(key, seasonRow));
+      .map((seasonRow) => yearByYearComparisonValue(key, seasonRow, paceContext));
     const minimum = available.length ? Math.min(...available) : 0;
     const maximum = available.length ? Math.max(...available) : 0;
     return `
@@ -653,11 +695,11 @@ function renderYearByYearBoard(rows) {
         const seasonRow = rowsBySeason.get(year);
         if (!seasonRow) return '<div class="compare-yby-cell compare-yby-empty"><span>—</span></div>';
         const value = toNumber(seasonRow.stat[key]);
-        const comparisonValue = yearByYearComparisonValue(key, seasonRow);
-        const usesPace = activeGroup === "hitting" && yearByYearPaceMetrics.has(key);
+        const comparisonValue = yearByYearComparisonValue(key, seasonRow, paceContext);
+        const usesPace = paceContext.metrics.has(key);
         const priorYear = years.slice(0, yearIndex).reverse().find((candidateYear) => rowsBySeason.has(candidateYear));
         const priorRow = priorYear ? rowsBySeason.get(priorYear) : null;
-        const priorComparisonValue = priorRow ? yearByYearComparisonValue(key, priorRow) : null;
+        const priorComparisonValue = priorRow ? yearByYearComparisonValue(key, priorRow, paceContext) : null;
         const deltaComparisonValue = usesPace ? Math.round(comparisonValue) : comparisonValue;
         const deltaPriorValue = priorComparisonValue === null ? null : usesPace ? Math.round(priorComparisonValue) : priorComparisonValue;
         const improved = deltaPriorValue !== null && (lowerBetter ? deltaComparisonValue < deltaPriorValue : deltaComparisonValue > deltaPriorValue);
@@ -672,8 +714,8 @@ function renderYearByYearBoard(rows) {
               <strong>${escapeHtml(formatYearByYearValue(key, value, digits, isPercent))}</strong>
               ${isBest && !usesPace ? '<span class="compare-yby-best" title="Best of the selected seasons">Best</span>' : ""}
             </div>
-            ${usesPace ? `<div class="compare-yby-pace-row"><small class="compare-yby-pace">${escapeHtml(`${Math.round(comparisonValue)} per 162 games`)}</small>${isBest ? '<span class="compare-yby-best" title="Best pace of the selected seasons">Best pace</span>' : ""}</div>` : ""}
-            ${priorComparisonValue === null ? "" : `<small class="compare-yby-delta${improved ? " compare-yby-delta-improved" : declined ? " compare-yby-delta-declined" : ""}">${escapeHtml(formatYearByYearDelta(key, comparisonValue, priorComparisonValue, digits, isPercent, usesPace, priorYear))}</small>`}
+            ${usesPace ? `<div class="compare-yby-pace-row"><small class="compare-yby-pace">${escapeHtml(`${formatYearByYearPaceValue(key, comparisonValue)} ${paceContext.displayLabel}`)}</small>${isBest ? '<span class="compare-yby-best" title="Best pace of the selected seasons">Best pace</span>' : ""}</div>` : ""}
+            ${priorComparisonValue === null ? "" : `<small class="compare-yby-delta${improved ? " compare-yby-delta-improved" : declined ? " compare-yby-delta-declined" : ""}">${escapeHtml(formatYearByYearDelta(key, comparisonValue, priorComparisonValue, digits, isPercent, usesPace, priorYear, paceContext))}</small>`}
           </div>
         `;
       }).join("")}
@@ -694,7 +736,6 @@ async function runYearByYearComparison() {
     let start = Number(document.querySelector("#compare-yby-start").value);
     let end = Number(document.querySelector("#compare-yby-end").value);
     if (start > end) [start, end] = [end, start];
-    if (end - start > 7) start = end - 7;
     ybyRange = { start, end };
     document.querySelector("#compare-yby-start").value = start;
     document.querySelector("#compare-yby-end").value = end;
@@ -714,6 +755,35 @@ async function runYearByYearComparison() {
   } catch (error) {
     status.textContent = "Could not load player";
     document.querySelector("#compare-yby-board").innerHTML = '<p class="empty-note">Could not load that player. Try another name or season range.</p>';
+  }
+}
+
+async function runYearByYearCareerComparison() {
+  const status = document.querySelector("#compare-yby-status");
+  const button = document.querySelector("#compare-yby-career");
+  status.textContent = "Loading career...";
+  button.disabled = true;
+  try {
+    await hydrateYearByYearPlayer();
+    const rows = finalizedSeasonRows(await fetchFirstSeasonRows(ybyPlayer));
+    if (!rows.length) {
+      renderYearByYearBoard([]);
+      status.textContent = "No seasons found";
+      return;
+    }
+    const seasons = rows.map((row) => row.season);
+    const start = Math.min(...seasons);
+    const end = Math.max(...seasons);
+    ybyRange = { start, end };
+    document.querySelector("#compare-yby-start").value = start;
+    document.querySelector("#compare-yby-end").value = end;
+    renderYearByYearBoard(rows);
+    status.textContent = `Career loaded (${start}–${end})`;
+  } catch (error) {
+    status.textContent = "Could not load player";
+    document.querySelector("#compare-yby-board").innerHTML = '<p class="empty-note">Could not load that player. Try another name.</p>';
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -985,7 +1055,8 @@ function bindEvents() {
   document.querySelectorAll("[data-compare-view]").forEach((button) => {
     button.addEventListener("click", () => setCompareView(button.dataset.compareView));
   });
-  document.querySelector("#run-yby-comparison").addEventListener("click", runYearByYearComparison);
+document.querySelector("#run-yby-comparison").addEventListener("click", runYearByYearComparison);
+document.querySelector("#compare-yby-career").addEventListener("click", runYearByYearCareerComparison);
   document.querySelector("#compare-yby-card-view-toggle").addEventListener("click", () => {
     setYearByYearCardView(!ybyCardViewActive);
   });
