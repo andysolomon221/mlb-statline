@@ -31,7 +31,7 @@
         "url": "https://www.statlinebaseball.com/"
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260821-question-discovery" />
+    <link rel="stylesheet" href="styles.css?v=20260821-featured-question" />
     <script>
       const statlineParams = new URLSearchParams(window.location.search);
       if (["mode", "metric", "team", "position", "start", "end", "year"].some((key) => statlineParams.has(key))) {
@@ -120,6 +120,18 @@
             </div>
           </div>
         </header>
+
+        <section class="rabbit-hole-feature-panel" aria-label="Rabbit Hole of the Day">
+          <div>
+            <p class="eyebrow">Rabbit Hole of the Day</p>
+            <h2 id="rabbit-hole-question">Who hit the most home runs before age 25?</h2>
+            <p id="rabbit-hole-note">Open a ready-made baseball question, then change the controls to keep exploring.</p>
+          </div>
+          <div class="rabbit-hole-feature-actions">
+            <a id="rabbit-hole-open" href="age.html?group=hitting&amp;metric=homeRuns&amp;rule=before&amp;age=25&amp;start=1901&amp;end=2026&amp;min=auto">Explore today’s question</a>
+            <button id="rabbit-hole-next" type="button">Show another</button>
+          </div>
+        </section>
 
         <section class="daily-board" aria-label="Start here today">
           <div class="daily-board-copy">
@@ -248,13 +260,9 @@
 
         <section class="rabbit-hole-panel" aria-label="Suggested baseball rabbit holes">
           <div>
-            <p class="eyebrow">Rabbit Hole of the Day</p>
-            <h2 id="rabbit-hole-question">Who hit the most home runs before age 25?</h2>
-            <p id="rabbit-hole-note">Open a ready-made baseball question, then change the controls to keep exploring.</p>
-            <div class="rabbit-hole-feature-actions">
-              <a id="rabbit-hole-open" href="age.html?group=hitting&metric=homeRuns&rule=before&age=25&start=1901&end=2026&min=auto">Explore today’s question</a>
-              <button id="rabbit-hole-next" type="button">Show another</button>
-            </div>
+            <p class="eyebrow">More Questions to Explore</p>
+            <h2>Keep digging</h2>
+            <p>Jump into another ready-made baseball question.</p>
           </div>
           <div class="rabbit-hole-links">
             <a href="most-home-runs-before-age-25.html">Most HR before age 25</a>
