@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Age Leaders Before or Through Any Age" />
     <meta name="twitter:description" content="Find MLB batting and pitching age leaders before, through, or after a selected age across season ranges, eras, and active players." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260821-site-usability" />
+    <link rel="stylesheet" href="styles.css?v=20260821-question-first" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -74,11 +74,32 @@
         <header class="topbar">
           <div>
             <p class="eyebrow">Age Leaders</p>
-            <h1>Find leaders before or through any age.</h1>
+            <h1>Start with an age question. See the answer first.</h1>
           </div>
         </header>
 
-        <section class="panel age-controls-panel" aria-label="Age leader controls">
+        <section class="panel age-answer-panel" aria-labelledby="age-answer-question">
+          <div class="age-answer-copy">
+            <p class="eyebrow">The Answer</p>
+            <h2 id="age-answer-question">Who hit the most home runs before age 25?</h2>
+            <p id="age-answer-context">Checking MLB seasons from 1901 through 2026.</p>
+          </div>
+          <div class="age-answer-result" aria-live="polite">
+            <span id="age-answer-kicker">Loading leader</span>
+            <strong id="age-answer-name">—</strong>
+            <b id="age-answer-value">—</b>
+            <small id="age-answer-detail">Season-level age data from the MLB Stats API.</small>
+          </div>
+          <div class="age-answer-actions share-action-row">
+            <span class="share-action-label">Share result</span>
+            <button type="button" id="age-customize">Customize question</button>
+            <button type="button" id="copy-age-answer" class="secondary-action">Copy Answer</button>
+            <button id="copy-age-link" class="secondary-action" type="button">Copy Link</button>
+            <span class="copy-status" id="age-copy-status" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section class="panel age-controls-panel" id="age-controls" aria-label="Age leader controls">
           <div class="section-head">
             <div>
               <p class="eyebrow">Milestone Finder</p>
@@ -137,11 +158,6 @@
               <select id="age-minimum" aria-label="Minimum sample"></select>
             </label>
             <button type="button" id="age-run">View</button>
-          </div>
-          <div class="share-action-row">
-            <span class="share-action-label">Share this view</span>
-            <button id="copy-age-link" class="secondary-action" type="button">Copy Link</button>
-            <span class="copy-status" id="age-copy-status" aria-live="polite"></span>
           </div>
           <div class="compare-advanced-wrap age-advanced-wrap">
             <button type="button" id="age-advanced-toggle">Advanced age range</button>
@@ -232,8 +248,8 @@
       </main>
     </div>
 
-  <script src="age.js?v=20260723-board-switcher"></script>
-    <script src="stat-tooltips.js?v=20260821-site-usability"></script>
+  <script src="age.js?v=20260821-question-first"></script>
+    <script src="stat-tooltips.js?v=20260821-question-first"></script>
 
 </body>
 </html>

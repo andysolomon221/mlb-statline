@@ -7,10 +7,10 @@ const activePlayerCache = new Map();
 const numberFormat = new Intl.NumberFormat("en-US");
 const initialParams = new URLSearchParams(window.location.search);
 
-let activeGroup = "pitching";
+let activeGroup = "hitting";
 let activePlayerPool = "all";
 let activeTeam = "all";
-let activeMetric = "strikeOuts";
+let activeMetric = "homeRuns";
 let activeRule = "before";
 let activeAge = 25;
 let activeAdvancedAgeRange = false;
@@ -691,13 +691,22 @@ function renderAgeChart(rows) {
 
 function renderSummary(rows, allRows = rows) {
   const leader = rows[0];
-  document.querySelector("#age-question").textContent = questionLabel();
+  const question = questionLabel();
+  document.querySelector("#age-question").textContent = question;
   const poolLabel = activePlayerPool === "active" ? "Active " : "";
   const teamText = activeTeam === "all" ? "All MLB" : teamLabel();
   document.querySelector("#age-question-note").textContent = `${poolLabel}${activeGroup === "pitching" ? "Pitchers" : "Hitters"}, ${teamText}, ${Math.min(activeRange.start, activeRange.end)}-${Math.max(activeRange.start, activeRange.end)}`;
   document.querySelector("#age-player-count").textContent = numberFormat.format(rows.length);
   document.querySelector("#age-leader-name").textContent = leader?.name || "--";
   document.querySelector("#age-leader-note").textContent = leader ? `${metricLabel()}: ${fmtStat(activeMetric, leader[activeMetric])}` : `${numberFormat.format(allRows.length)} raw players before minimum filter`;
+  document.querySelector("#age-answer-question").textContent = question.endsWith("?") ? question : `${question}?`;
+  document.querySelector("#age-answer-context").textContent = `${poolLabel}${activeGroup === "pitching" ? "Pitchers" : "Hitters"} · ${teamText} · ${Math.min(activeRange.start, activeRange.end)}–${Math.max(activeRange.start, activeRange.end)}`;
+  document.querySelector("#age-answer-kicker").textContent = leader ? "MLB leader" : "Waiting for results";
+  document.querySelector("#age-answer-name").textContent = leader?.name || "—";
+  document.querySelector("#age-answer-value").textContent = leader ? `${fmtStat(activeMetric, leader[activeMetric])} ${metricLabel()}` : "—";
+  document.querySelector("#age-answer-detail").textContent = leader
+    ? `${leader.ageLabel ? `Age ${leader.ageLabel}` : "Selected age window"}${leader.seasonLabel ? ` · ${leader.seasonLabel}` : ""}${leader.teams ? ` · ${leader.teams}` : ""}`
+    : "Change the question below or wait for the leader data to load.";
 }
 
 function ageShareParams() {
@@ -763,6 +772,21 @@ async function copyAgeLink() {
   }
 }
 
+async function copyAgeAnswer() {
+  const leader = lastRenderedRows[0];
+  if (!leader) {
+    showAgeCopyStatus("Run the question first");
+    return;
+  }
+  const answer = `${questionLabel()} ${leader.name} — ${fmtStat(activeMetric, leader[activeMetric])} ${metricLabel()}. ${ageShareUrl()}`;
+  try {
+    await copyText(answer);
+    showAgeCopyStatus("Answer copied");
+  } catch (error) {
+    showAgeCopyStatus("Could not copy");
+  }
+}
+
 async function runAgeSearch() {
   readControls();
   document.querySelector("#age-stat-board").value = activeMetric;
@@ -772,6 +796,9 @@ async function runAgeSearch() {
   document.querySelector("#age-progress").textContent = "Loading";
   document.querySelector("#age-progress-note").textContent = `${years.length} seasons requested`;
   status.textContent = `Loading ${years.length} seasons from MLB Stats API...`;
+  document.querySelector("#age-answer-kicker").textContent = "Finding the answer";
+  document.querySelector("#age-answer-name").textContent = "Loading…";
+  document.querySelector("#age-answer-value").textContent = "—";
   renderHead();
   document.querySelector("#age-table").innerHTML = `<tr><td colspan="${metricConfig[activeGroup].columns.length}" class="empty-row">Loading age leaders...</td></tr>`;
   document.querySelector("#age-bar-chart").innerHTML = `<div class="empty-state">Loading age leaders...</div>`;
@@ -799,6 +826,10 @@ async function runAgeSearch() {
     if (requestId !== activeRequestId) return;
     document.querySelector("#age-progress").textContent = "Error";
     document.querySelector("#age-progress-note").textContent = "Could not load MLB data";
+    document.querySelector("#age-answer-kicker").textContent = "Answer unavailable";
+    document.querySelector("#age-answer-name").textContent = "Could not load results";
+    document.querySelector("#age-answer-value").textContent = "Try again below";
+    document.querySelector("#age-answer-detail").textContent = "Use a smaller season range if the MLB data service is slow.";
     status.textContent = "Could not load age leaders. Try a smaller season range or try again.";
     document.querySelector("#age-table").innerHTML = `<tr><td colspan="${metricConfig[activeGroup].columns.length}" class="empty-row">Could not load age leaders.</td></tr>`;
     document.querySelector("#age-bar-chart").innerHTML = `<div class="empty-state">Could not load age leaders.</div>`;
@@ -846,6 +877,10 @@ function init() {
   });
   document.querySelector("#age-run").addEventListener("click", runAgeSearch);
   document.querySelector("#copy-age-link")?.addEventListener("click", copyAgeLink);
+  document.querySelector("#copy-age-answer")?.addEventListener("click", copyAgeAnswer);
+  document.querySelector("#age-customize")?.addEventListener("click", () => {
+    document.querySelector("#age-controls")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   document.querySelector("#age-chart-size").addEventListener("change", () => renderAgeChart(lastRenderedRows));
   document.querySelector("#age-stat-board").addEventListener("change", (event) => {
     activeMetric = event.target.value;
@@ -861,7 +896,7 @@ function init() {
   document.querySelectorAll("[data-age-example]").forEach((button) => {
     button.addEventListener("click", () => applyExample(button.dataset.ageExample));
   });
-  if (initialParams.toString()) runAgeSearch();
+  runAgeSearch();
 }
 
 init();

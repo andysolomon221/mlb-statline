@@ -6,6 +6,10 @@
   const options = document.querySelector("#home-finder-options");
   const destination = document.querySelector("#home-finder-destination");
   const status = document.querySelector("#home-finder-status");
+  const rabbitQuestion = document.querySelector("#rabbit-hole-question");
+  const rabbitNote = document.querySelector("#rabbit-hole-note");
+  const rabbitLink = document.querySelector("#rabbit-hole-open");
+  const rabbitNext = document.querySelector("#rabbit-hole-next");
   const teamNames = {
     "Arizona Diamondbacks": "ARI", "Athletics": "ATH", "Atlanta Braves": "ATL",
     "Baltimore Orioles": "BAL", "Boston Red Sox": "BOS", "Chicago Cubs": "CHC",
@@ -20,6 +24,29 @@
   };
   const normalizedTeams = new Map(Object.entries(teamNames).map(([name, abbr]) => [name.toLowerCase(), { name, abbr }]));
   let timer = 0;
+  const rabbitHoles = [
+    { question: "Who hit the most home runs before age 25?", note: "Rank every qualifying hitter by career production accumulated before his age-25 season.", href: "age.html?group=hitting&metric=homeRuns&rule=before&age=25&start=1901&end=2026&min=auto" },
+    { question: "Who hit the most home runs in his first two MLB seasons?", note: "Compare early-career production across eras, then switch between hitters and pitchers.", href: "starts.html?example=mlb-hr-2" },
+    { question: "Judge or Trout: who owns the stronger career line?", note: "Put two modern stars side by side and change the window from career to individual seasons.", href: "compare.html?playerA=Aaron%20Judge&playerB=Mike%20Trout&mode=career" },
+    { question: "Who led MLB in strikeouts during the 1990s?", note: "Open the decade board, then jump to another era or pitching statistic.", href: "pitching.html?mode=range&start=1990&end=1999&metric=strikeouts" },
+    { question: "What was Kyle Schwarber’s best five-game power stretch?", note: "Use the Span Finder to investigate a player’s hottest rolling stretch.", href: "span.html?player=Kyle%20Schwarber&games=5&metric=homeRuns" },
+    { question: "Which lineup has the best context against tonight’s starter?", note: "Start with probable pitchers, then open the roster history and Decision Lens.", href: "probable-pitcher-matchups-today.html" }
+  ];
+  let rabbitIndex = Math.floor(Date.now() / 86400000) % rabbitHoles.length;
+
+  function renderRabbitHole() {
+    const item = rabbitHoles[rabbitIndex];
+    if (!item || !rabbitQuestion || !rabbitNote || !rabbitLink) return;
+    rabbitQuestion.textContent = item.question;
+    rabbitNote.textContent = item.note;
+    rabbitLink.href = item.href;
+  }
+
+  renderRabbitHole();
+  rabbitNext?.addEventListener("click", () => {
+    rabbitIndex = (rabbitIndex + 1) % rabbitHoles.length;
+    renderRabbitHole();
+  });
 
   function teamMatch(query) {
     const clean = query.trim().toLowerCase();

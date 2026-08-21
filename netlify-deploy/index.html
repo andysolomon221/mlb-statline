@@ -31,7 +31,7 @@
         "url": "https://www.statlinebaseball.com/"
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260821-site-usability" />
+    <link rel="stylesheet" href="styles.css?v=20260821-question-first" />
     <script>
       const statlineParams = new URLSearchParams(window.location.search);
       if (["mode", "metric", "team", "position", "start", "end", "year"].some((key) => statlineParams.has(key))) {
@@ -87,7 +87,8 @@
         <header class="topbar">
           <div>
             <p class="eyebrow">Statline Baseball</p>
-            <h1>MLB stats by season, team, player, and matchup.</h1>
+            <h1>Find the baseball stat behind the argument.</h1>
+            <p class="home-positioning">Explore MLB history, analyze today’s matchups, and turn baseball questions into clear answers.</p>
             <div class="home-hero-actions">
               <a href="probable-pitcher-matchups-today.html">Today's Probables</a>
               <a href="matchups.html?tool=team-pitcher">Check Matchups</a>
@@ -240,8 +241,13 @@
 
         <section class="rabbit-hole-panel" aria-label="Suggested baseball rabbit holes">
           <div>
-            <p class="eyebrow">Try These Rabbit Holes</p>
-            <h2>Low-effort starting points</h2>
+            <p class="eyebrow">Rabbit Hole of the Day</p>
+            <h2 id="rabbit-hole-question">Who hit the most home runs before age 25?</h2>
+            <p id="rabbit-hole-note">Open a ready-made baseball question, then change the controls to keep exploring.</p>
+            <div class="rabbit-hole-feature-actions">
+              <a id="rabbit-hole-open" href="age.html?group=hitting&metric=homeRuns&rule=before&age=25&start=1901&end=2026&min=auto">Explore today’s question</a>
+              <button id="rabbit-hole-next" type="button">Show another</button>
+            </div>
           </div>
           <div class="rabbit-hole-links">
             <a href="compare.html?playerA=Manny%20Machado&playerB=Mike%20Trout&mode=career">Machado vs Trout</a>
@@ -265,8 +271,8 @@
         </footer>
       </main>
     </div>
-    <script src="home.js?v=20260821-site-usability"></script>
-    <script src="stat-tooltips.js?v=20260821-site-usability"></script>
+    <script src="home.js?v=20260821-question-first"></script>
+    <script src="stat-tooltips.js?v=20260821-question-first"></script>
 
 
   </body>

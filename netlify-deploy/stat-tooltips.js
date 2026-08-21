@@ -262,6 +262,32 @@
       hint.textContent = "Swipe table for more →";
       wrap.parentNode.insertBefore(hint, wrap);
     });
+
+    document.querySelectorAll(".share-action-row").forEach((row) => {
+      if (row.dataset.nativeShareReady) return;
+      row.dataset.nativeShareReady = "true";
+      const label = row.querySelector(".share-action-label");
+      if (label) label.textContent = "Share result";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "secondary-action native-share-button";
+      button.textContent = "Share";
+      button.addEventListener("click", async () => {
+        const shareData = { title: document.title, text: document.querySelector("h1")?.textContent || document.title, url: window.location.href };
+        const status = row.querySelector(".copy-status");
+        try {
+          if (navigator.share) await navigator.share(shareData);
+          else if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(window.location.href);
+            if (status) status.textContent = "Link copied";
+          }
+        } catch (error) {
+          if (error?.name !== "AbortError" && status) status.textContent = "Could not share";
+        }
+      });
+      if (label) label.insertAdjacentElement("afterend", button);
+      else row.prepend(button);
+    });
   }
 
   let pending = false;

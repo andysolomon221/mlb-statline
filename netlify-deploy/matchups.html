@@ -22,7 +22,7 @@
     <meta name="twitter:title" content="MLB Batter vs Pitcher & Roster Matchups" />
     <meta name="twitter:description" content="Compare MLB batter-vs-pitcher, roster-vs-pitcher, and player-vs-team matchups with career head-to-head stats and daily context." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260821-site-usability" />
+    <link rel="stylesheet" href="styles.css?v=20260821-question-first" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -127,6 +127,19 @@
           </article>
         </section>
 
+        <section class="panel matchup-answer-panel matchup-workspace" aria-labelledby="matchup-answer-title" hidden>
+          <div>
+            <p class="eyebrow" id="matchup-answer-label">Matchup Answer</p>
+            <h2 id="matchup-answer-title">Choose a matchup to see the clearest supported read.</h2>
+            <p id="matchup-answer-reason">The answer combines the relevant split profiles, park context, and available history.</p>
+          </div>
+          <div class="matchup-answer-read">
+            <span>Evidence-aware read</span>
+            <strong id="matchup-answer-value">Waiting for matchup</strong>
+            <small id="matchup-answer-caution">Head-to-head history is context, not a projection.</small>
+          </div>
+        </section>
+
         <section class="panel matchup-controls-panel matchup-workspace" aria-label="Matchup controls">
           <div class="section-head">
             <div>
@@ -187,6 +200,7 @@
           <small class="data-note" id="matchup-tool-note">Team vs Pitcher shows every hitter from the selected batting team against the selected pitcher.</small>
           <div class="share-action-row">
             <span class="share-action-label">Share this view</span>
+            <button id="copy-matchup-answer" class="secondary-action" type="button">Copy Answer</button>
             <button id="copy-matchup-link" class="secondary-action" type="button">Copy Link</button>
             <span class="copy-status" id="matchup-copy-status" aria-live="polite"></span>
           </div>
@@ -311,8 +325,8 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260821-site-usability"></script>
-    <script src="stat-tooltips.js?v=20260821-site-usability"></script>
+    <script src="matchups.js?v=20260821-question-first"></script>
+    <script src="stat-tooltips.js?v=20260821-question-first"></script>
 
   </body>
 </html>

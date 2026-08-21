@@ -96,6 +96,7 @@ let activeGameDayDate = localDateValue();
 let matchupWorkspaceOpen = true;
 let gameDayOpen = false;
 let matchupCopyStatusTimer;
+let matchupAnswerText = "";
 
 function localDateValue(date = new Date()) {
   const year = date.getFullYear();
@@ -582,6 +583,34 @@ function showMatchupCopyStatus(message) {
   matchupCopyStatusTimer = setTimeout(() => { status.textContent = ""; }, 2200);
 }
 
+function setMatchupAnswer({ label = "Matchup Answer", title, value, reason, caution }) {
+  document.querySelector("#matchup-answer-label").textContent = label;
+  document.querySelector("#matchup-answer-title").textContent = title;
+  document.querySelector("#matchup-answer-value").textContent = value;
+  document.querySelector("#matchup-answer-reason").textContent = reason;
+  document.querySelector("#matchup-answer-caution").textContent = caution;
+  matchupAnswerText = `${title} ${value}. ${reason} ${caution}`;
+}
+
+function headToHeadSampleNote(plateAppearances) {
+  if (plateAppearances < 10) return `Very small head-to-head sample (${plateAppearances} PA). Favor the handedness and season profiles.`;
+  if (plateAppearances < 25) return `Limited head-to-head sample (${plateAppearances} PA). Treat it as supporting context only.`;
+  return `${plateAppearances} career head-to-head PA provide context, but this is still not a projection.`;
+}
+
+async function copyMatchupAnswer() {
+  if (!matchupAnswerText) {
+    showMatchupCopyStatus("Load a matchup first");
+    return;
+  }
+  try {
+    await copyText(`${matchupAnswerText} ${matchupShareUrl()}`);
+    showMatchupCopyStatus("Answer copied");
+  } catch (error) {
+    showMatchupCopyStatus("Could not copy");
+  }
+}
+
 async function copyMatchupLink() {
   try {
     await Promise.all([
@@ -934,6 +963,17 @@ function renderTeamDecisionLens(rows, pitcherStats) {
     return { ...row, hitterValue, pitcherValue, score, label, note };
   }).sort((a, b) => b.score - a.score);
 
+  const leadingCard = cards[0];
+  if (leadingCard) {
+    setMatchupAnswer({
+      label: "Lineup Answer",
+      title: `${leadingCard.fullName} has the strongest ${metric.label} split context against ${pitcherStats.fullName || pitcher.fullName}.`,
+      value: leadingCard.label,
+      reason: `Hitter ${metric.label}: ${formatDecisionValue(metric, leadingCard.hitterValue)} · Pitcher allows: ${formatDecisionValue(metric, leadingCard.pitcherValue)} · ${parkName} factor ${parkFactor}.`,
+      caution: "This ranks split and park context. It is not a prediction or betting recommendation."
+    });
+  }
+
   document.querySelector("#team-decision-lens").innerHTML = `
     <div class="team-decision-toolbar">
       <label>
@@ -1047,6 +1087,11 @@ function updateTeamOffenseHeaders() {
 
 function renderTeamOffense(rows, teamName, pitcherName) {
   teamOffenseRows = rows;
+  const historyRows = rows
+    .map((row) => ({ row, total: aggregateHeadToHead(row.headToHead) }))
+    .filter((item) => item.total.pa > 0)
+    .sort((a, b) => b.total.pa - a.total.pa);
+  const mostExperienced = historyRows[0];
   document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcherName}`;
   document.querySelector("#team-offense-status").textContent = `${rows.length} ${activeRosterType === "40Man" ? "40-man" : "active"} hitters loaded`;
   updateTeamOffenseHeaders();
@@ -1067,6 +1112,13 @@ function renderTeamOffense(rows, teamName, pitcherName) {
       </tr>
     `;
   }).join("") || `<tr><td colspan="10" class="empty-row">No active hitters found for this team.</td></tr>`;
+  setMatchupAnswer({
+    label: "Roster History Answer",
+    title: mostExperienced ? `${mostExperienced.row.fullName} has the most recorded history against ${pitcherName}.` : `${teamName} has no recorded head-to-head history against ${pitcherName}.`,
+    value: mostExperienced ? `${mostExperienced.total.h}-${mostExperienced.total.ab} · ${mostExperienced.total.hr} HR` : "No recorded history",
+    reason: mostExperienced ? `AVG ${fmt(mostExperienced.total.avg)} · OPS ${fmt(mostExperienced.total.ops)} · ${mostExperienced.total.pa} PA. Open Decision Lens for handedness and park context.` : "Use Decision Lens for split-based context that does not depend on prior meetings.",
+    caution: mostExperienced ? headToHeadSampleNote(mostExperienced.total.pa) : "No prior meetings does not imply a neutral or unfavorable matchup."
+  });
 }
 
 function statLine(stat = {}, keys = []) {
@@ -1340,6 +1392,13 @@ async function updatePlayerVsTeam() {
     `;
     renderPlayerTeamTable(type, history.rows, pitchingRows);
     document.querySelector("#player-team-status").textContent = history.total ? "Loaded" : "No history found";
+    setMatchupAnswer({
+      label: "Historical Answer",
+      title: `${player.fullName} vs ${opponentLabel}`,
+      value: history.total ? (pitchingTotalNote || totalNote) : "No recorded history",
+      reason: seasonRows.length ? `${seasonRows.length} regular-season rows are available for this player-team history.` : "No season-by-season rows were returned.",
+      caution: "Player-versus-team history describes past results and does not predict the next matchup."
+    });
   } catch (error) {
     document.querySelector("#player-team-status").textContent = "Could not load";
     document.querySelector("#player-team-grid").innerHTML = `<div class="empty-state">Could not load this player-vs-team view.</div>`;
@@ -1412,6 +1471,13 @@ function renderMatchup(payload) {
   const battingTeam = document.querySelector("#matchup-batting-team").selectedOptions[0]?.textContent || "Batting team";
   const pitchingTeam = document.querySelector("#matchup-pitching-team").selectedOptions[0]?.textContent || "Pitching team";
 
+  setMatchupAnswer({
+    title: `${payload.batter.fullName} vs ${payload.pitcher.fullName}: ${edge.toLowerCase()}.`,
+    value: edge,
+    reason: `${payload.batter.fullName} has a ${fmt(hitter.splitOps)} OPS in the relevant handedness split; ${sideLabel} have a ${fmt(pitcherProfile.splitOps)} OPS against ${payload.pitcher.fullName}.`,
+    caution: headToHeadSampleNote(careerH2h.pa)
+  });
+
   document.querySelector("#matchup-batter-card").textContent = payload.batter.fullName;
   document.querySelector("#matchup-pitcher-card").textContent = payload.pitcher.fullName;
   document.querySelector("#matchup-edge-card").textContent = edge;
@@ -1460,6 +1526,14 @@ function renderCareerOnlyMatchup(payload) {
   const battingTeam = document.querySelector("#matchup-batting-team").selectedOptions[0]?.textContent || "Batting team";
   const pitchingTeam = document.querySelector("#matchup-pitching-team").selectedOptions[0]?.textContent || "Pitching team";
 
+  setMatchupAnswer({
+    label: "Career History",
+    title: `${payload.batter.fullName} vs ${payload.pitcher.fullName}`,
+    value: payload.headToHead?.length ? `${careerH2h.h}-${careerH2h.ab} · ${careerH2h.hr} HR` : "No recorded matchups",
+    reason: payload.headToHead?.length ? `Career AVG ${fmt(careerH2h.avg)} · OPS ${fmt(careerH2h.ops)} · ${careerH2h.pa} PA.` : "No career head-to-head line was returned.",
+    caution: headToHeadSampleNote(careerH2h.pa)
+  });
+
   document.querySelector("#matchup-batter-card").textContent = payload.batter.fullName;
   document.querySelector("#matchup-pitcher-card").textContent = payload.pitcher.fullName;
   document.querySelector("#matchup-edge-card").textContent = payload.headToHead?.length ? `${careerH2h.pa} PA` : "No H2H";
@@ -1504,6 +1578,7 @@ function syncViewModePanels() {
   const isBatterPitcher = activeMatchupTool === "batter-pitcher";
   const isTeamPitcher = activeMatchupTool === "team-pitcher";
   const isPlayerTeam = activeMatchupTool === "player-team";
+  document.querySelector(".matchup-answer-panel")?.removeAttribute("hidden");
   document.querySelector(".advanced-grid")?.toggleAttribute("hidden", !isBatterPitcher);
   document.querySelector(".matchup-summary")?.toggleAttribute("hidden", !isBatterPitcher);
   document.querySelector(".matchup-offense-panel")?.toggleAttribute("hidden", !isTeamPitcher);
@@ -1681,6 +1756,7 @@ function bindEvents() {
     document.querySelector(".matchup-controls-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   document.querySelector("#run-matchup").addEventListener("click", analyzeMatchup);
+  document.querySelector("#copy-matchup-answer").addEventListener("click", copyMatchupAnswer);
   document.querySelector("#copy-matchup-link").addEventListener("click", copyMatchupLink);
   document.querySelector("#matchup-view-mode").addEventListener("change", (event) => {
     activeViewMode = event.target.value;
