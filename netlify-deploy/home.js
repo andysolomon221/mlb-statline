@@ -62,6 +62,7 @@
   function questionRoute(query) {
     const clean = query.trim();
     const lower = clean.toLowerCase().replace(/[?]/g, "");
+    const currentYear = new Date().getFullYear();
     const comparison = clean.split(/\s+vs\.?\s+/i).map((name) => name.trim()).filter(Boolean);
     if (comparison.length === 2) {
       return `compare.html?playerA=${encodeURIComponent(comparison[0])}&playerB=${encodeURIComponent(comparison[1])}&mode=career`;
@@ -80,6 +81,26 @@
       const metric = /(strikeout)/.test(lower) ? "strikeOuts" : /(save)/.test(lower) ? "saves" : /(hit)/.test(lower) && !/(home run|\bhr\b)/.test(lower) ? "hits" : "homeRuns";
       const rule = lower.includes("through age") ? "through" : "before";
       return `age.html?group=${group}&metric=${metric}&rule=${rule}&age=${age[1]}&start=1901&end=2026&min=auto`;
+    }
+    if (/(current|this season|leader|leaders|most|top)/.test(lower)) {
+      if (/(\bera\b|\bwhip\b|pitching|pitcher|\bsaves?\b|\bwins?\b|\bstrikeouts?\b|\bso\b)/.test(lower)) {
+        const metric = /\bera\b/.test(lower) ? "era"
+          : /\bwhip\b/.test(lower) ? "whip"
+            : /\bsaves?\b/.test(lower) ? "saves"
+              : /\bwins?\b/.test(lower) ? "wins"
+                : "strikeouts";
+        return `pitching.html?mode=single&year=${currentYear}&metric=${metric}`;
+      }
+      if (/(home run|homers?|\bhr\b|batting|hitter|average|\bavg\b|hits?|rbi|runs?|stolen base|\bsb\b|ops)/.test(lower)) {
+        const metric = /(average|\bavg\b)/.test(lower) ? "avg"
+          : /(ops)/.test(lower) ? "ops"
+            : /(stolen base|\bsb\b)/.test(lower) ? "sb"
+              : /(rbi)/.test(lower) ? "rbi"
+                : /(hit)/.test(lower) && !/(home run|homer|\bhr\b)/.test(lower) ? "hits"
+                  : /(runs?)/.test(lower) && !/(home run)/.test(lower) ? "runs"
+                    : "hr";
+        return `batting.html?mode=single&year=${currentYear}&metric=${metric}`;
+      }
     }
     if (/(probable pitcher|today'?s probable|tonight'?s matchup)/.test(lower)) return "probable-pitcher-matchups-today.html";
     if (/(home run|power) matchup/.test(lower)) return "home-run-matchups-today.html";
@@ -133,6 +154,10 @@
     const routedQuestion = questionRoute(query);
     if (routedQuestion) {
       window.location.href = routedQuestion;
+      return;
+    }
+    if (/[?]/.test(query) || /\b(who|what|which|current|leader|leaders|most|top|today|tonight)\b/i.test(query)) {
+      status.textContent = "I couldn't match that question yet. Try a player, team, comparison, current leader, decade, age record, or today's matchups.";
       return;
     }
     const route = destination.value === "splits" ? "splits.html" : destination.value === "compare" ? "compare.html" : "career.html";
