@@ -432,7 +432,7 @@ async function copyStatcastLink() {
 
 async function loadStatcast() {
   document.querySelector("#statcast-status").textContent = "Loading...";
-  document.querySelector("#statcast-chart").innerHTML = `<div class="empty-state">Loading Baseball Savant data...</div>`;
+  document.querySelector("#statcast-chart").innerHTML = `<div class="empty-state loading-state" role="status">Loading Baseball Savant data...</div>`;
   try {
     const response = await fetch(apiUrl());
     if (!response.ok) throw new Error(`Statcast function returned ${response.status}`);
@@ -446,8 +446,8 @@ async function loadStatcast() {
     rows = [];
     renderTeamOptions();
     document.querySelector("#statcast-status").textContent = "Live Statcast feed unavailable";
-    document.querySelector("#statcast-chart").innerHTML = `<div class="empty-state">Live Statcast data loads on the Netlify site. Localhost cannot run this function.</div>`;
-    document.querySelector("#statcast-table").innerHTML = `<tr><td colspan="11" class="empty-row">Live Statcast data loads on the Netlify site.</td></tr>`;
+    document.querySelector("#statcast-chart").innerHTML = `<div class="empty-state">The live Statcast feed is temporarily unavailable.<button type="button" onclick="loadStatcast()">Try again</button></div>`;
+    document.querySelector("#statcast-table").innerHTML = `<tr><td colspan="11" class="empty-row">Statcast results could not be loaded.</td></tr>`;
   }
 }
 

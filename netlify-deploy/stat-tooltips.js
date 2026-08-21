@@ -224,6 +224,39 @@
   function enhanceSiteUi() {
     const rail = document.querySelector(".rail");
     const nav = document.querySelector(".rail-nav");
+    if (nav && !nav.dataset.groupedNavigation) {
+      nav.dataset.groupedNavigation = "true";
+      const primaryHrefs = ["index.html", "matchups.html", "batting.html", "pitching.html", "compare.html", "standings.html"];
+      const existingLinks = [...nav.querySelectorAll(":scope > a")];
+      const primary = document.createElement("div");
+      primary.className = "rail-nav-primary";
+      primaryHrefs.forEach((href) => {
+        const link = existingLinks.find((candidate) => candidate.getAttribute("href") === href);
+        if (link) primary.appendChild(link);
+        if (href === "index.html") {
+          const tonight = document.createElement("a");
+          tonight.href = "probable-pitcher-matchups-today.html";
+          tonight.textContent = "Tonight";
+          if (window.location.pathname.includes("probable-pitcher-matchups-today")) tonight.classList.add("active");
+          primary.appendChild(tonight);
+        }
+      });
+      const history = document.createElement("a");
+      history.href = "batting.html?mode=range&start=1901&end=2026&metric=hr";
+      history.textContent = "History";
+      primary.appendChild(history);
+
+      const more = document.createElement("details");
+      more.className = "rail-nav-more";
+      const summary = document.createElement("summary");
+      summary.textContent = "More Tools";
+      const moreLinks = document.createElement("div");
+      moreLinks.className = "rail-nav-more-links";
+      existingLinks.filter((link) => !primaryHrefs.includes(link.getAttribute("href"))).forEach((link) => moreLinks.appendChild(link));
+      if (moreLinks.querySelector(".active")) more.open = true;
+      more.append(summary, moreLinks);
+      nav.append(primary, more);
+    }
     if (rail && nav && !rail.querySelector(".site-menu-toggle")) {
       if (!nav.id) nav.id = "site-primary-navigation";
       const button = document.createElement("button");

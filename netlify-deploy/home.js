@@ -34,6 +34,11 @@
   ];
   let rabbitIndex = Math.floor(Date.now() / 86400000) % rabbitHoles.length;
 
+  function teamSearchTerms(team) {
+    const words = team.name.toLowerCase().split(" ");
+    return [team.name.toLowerCase(), team.abbr.toLowerCase(), words[words.length - 1], words.slice(-2).join(" ")];
+  }
+
   function renderRabbitHole() {
     const item = rabbitHoles[rabbitIndex];
     if (!item || !rabbitQuestion || !rabbitNote || !rabbitLink) return;
@@ -51,7 +56,38 @@
   function teamMatch(query) {
     const clean = query.trim().toLowerCase();
     if (!clean) return null;
-    return [...normalizedTeams.values()].find((team) => team.name.toLowerCase() === clean || team.abbr.toLowerCase() === clean) || null;
+    return [...normalizedTeams.values()].find((team) => teamSearchTerms(team).includes(clean)) || null;
+  }
+
+  function questionRoute(query) {
+    const clean = query.trim();
+    const lower = clean.toLowerCase().replace(/[?]/g, "");
+    const comparison = clean.split(/\s+vs\.?\s+/i).map((name) => name.trim()).filter(Boolean);
+    if (comparison.length === 2) {
+      return `compare.html?playerA=${encodeURIComponent(comparison[0])}&playerB=${encodeURIComponent(comparison[1])}&mode=career`;
+    }
+    const decade = lower.match(/\b(19|20)(\d)0s\b/);
+    if (decade && /(leader|most|top)/.test(lower)) {
+      const start = Number(`${decade[1]}${decade[2]}0`);
+      const end = start + 9;
+      if (/(strikeout|\bso\b)/.test(lower)) return `pitching.html?mode=range&start=${start}&end=${end}&metric=strikeouts`;
+      const metric = /(average|\bavg\b)/.test(lower) ? "avg" : /(hit)/.test(lower) && !/(home run|\bhr\b)/.test(lower) ? "hits" : "hr";
+      return `batting.html?mode=range&start=${start}&end=${end}&metric=${metric}`;
+    }
+    const age = lower.match(/(?:before|through) age (\d{2})/);
+    if (age && /(most|leader|who)/.test(lower)) {
+      const group = /(strikeout|save|era|whip)/.test(lower) ? "pitching" : "hitting";
+      const metric = /(strikeout)/.test(lower) ? "strikeOuts" : /(save)/.test(lower) ? "saves" : /(hit)/.test(lower) && !/(home run|\bhr\b)/.test(lower) ? "hits" : "homeRuns";
+      const rule = lower.includes("through age") ? "through" : "before";
+      return `age.html?group=${group}&metric=${metric}&rule=${rule}&age=${age[1]}&start=1901&end=2026&min=auto`;
+    }
+    if (/(probable pitcher|today'?s probable|tonight'?s matchup)/.test(lower)) return "probable-pitcher-matchups-today.html";
+    if (/(home run|power) matchup/.test(lower)) return "home-run-matchups-today.html";
+    const matchedTeam = [...normalizedTeams.values()].find((team) => teamSearchTerms(team).some((term) => term.length > 2 && lower.includes(term)));
+    if (matchedTeam && /(team|news|standing|stats)/.test(lower)) return `teams.html?team=${encodeURIComponent(matchedTeam.abbr)}`;
+    if (lower.endsWith(" splits")) return `splits.html?player=${encodeURIComponent(clean.replace(/\s+splits$/i, ""))}`;
+    if (lower.endsWith(" career")) return `career.html?player=${encodeURIComponent(clean.replace(/\s+career$/i, ""))}`;
+    return "";
   }
 
   async function loadSuggestions() {
@@ -94,8 +130,20 @@
       window.location.href = `teams.html?team=${encodeURIComponent(team.abbr)}`;
       return;
     }
+    const routedQuestion = questionRoute(query);
+    if (routedQuestion) {
+      window.location.href = routedQuestion;
+      return;
+    }
     const route = destination.value === "splits" ? "splits.html" : destination.value === "compare" ? "compare.html" : "career.html";
     const parameter = destination.value === "compare" ? "playerA" : "player";
     window.location.href = `${route}?${parameter}=${encodeURIComponent(query)}`;
+  });
+
+  document.querySelectorAll("[data-home-question]").forEach((button) => {
+    button.addEventListener("click", () => {
+      input.value = button.dataset.homeQuestion;
+      form.requestSubmit();
+    });
   });
 })();

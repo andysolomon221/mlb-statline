@@ -482,7 +482,7 @@ async function renderCareer() {
   } catch (error) {
     document.querySelector("#career-status").textContent = "Could not load career data";
     document.querySelector("#career-team-timeline").innerHTML = `<span class="career-team-chip"><strong>No teams found</strong><small>Try another player</small></span>`;
-    document.querySelector("#career-table").innerHTML = `<tr><td colspan="${careerColumns[activeGroup].length}" class="empty-row">Could not load career data. Try another player or stat type.</td></tr>`;
+    document.querySelector("#career-table").innerHTML = `<tr><td colspan="${careerColumns[activeGroup].length}" class="empty-row">Could not load career data.<button type="button" onclick="renderCareer()">Try again</button></td></tr>`;
   }
 }
 

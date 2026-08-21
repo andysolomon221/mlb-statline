@@ -31,7 +31,7 @@
         "url": "https://www.statlinebaseball.com/"
       }
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260821-question-first" />
+    <link rel="stylesheet" href="styles.css?v=20260821-question-discovery" />
     <script>
       const statlineParams = new URLSearchParams(window.location.search);
       if (["mode", "metric", "team", "position", "start", "end", "year"].some((key) => statlineParams.has(key))) {
@@ -96,8 +96,8 @@
             </div>
             <form class="home-finder" id="home-finder" role="search">
               <div>
-                <label for="home-finder-query">Find a player or team</label>
-                <input id="home-finder-query" type="search" list="home-finder-options" autocomplete="off" spellcheck="false" placeholder="Try Aaron Judge or Boston Red Sox" />
+                <label for="home-finder-query">What are you looking for?</label>
+                <input id="home-finder-query" type="search" list="home-finder-options" autocomplete="off" spellcheck="false" placeholder="Search a player, team, or baseball question" />
                 <datalist id="home-finder-options"></datalist>
               </div>
               <label class="home-finder-destination">
@@ -111,6 +111,13 @@
               <button type="submit">Go</button>
               <small id="home-finder-status" aria-live="polite"></small>
             </form>
+            <div class="home-question-examples" aria-label="Example searches">
+              <span>Try:</span>
+              <button type="button" data-home-question="Aaron Judge">Aaron Judge</button>
+              <button type="button" data-home-question="Boston Red Sox">Red Sox</button>
+              <button type="button" data-home-question="1990s HR leaders">1990s HR leaders</button>
+              <button type="button" data-home-question="Judge vs Trout">Judge vs Trout</button>
+            </div>
           </div>
         </header>
 
@@ -147,7 +154,7 @@
         <section class="home-stat-lanes" aria-label="Today and historical baseball stats">
           <article class="home-stat-lane home-stat-lane-live">
             <div class="home-stat-lane-copy">
-              <p class="eyebrow">Today's Stats</p>
+              <p class="eyebrow">Tonight’s Baseball</p>
               <h2>Start with what fans are arguing about tonight.</h2>
               <small>Game-day matchups, current boards, standings, and team pages.</small>
             </div>
@@ -250,6 +257,9 @@
             </div>
           </div>
           <div class="rabbit-hole-links">
+            <a href="most-home-runs-before-age-25.html">Most HR before age 25</a>
+            <a href="most-strikeouts-before-age-25.html">Most strikeouts before age 25</a>
+            <a href="most-hits-through-age-30.html">Most hits through age 30</a>
             <a href="compare.html?playerA=Manny%20Machado&playerB=Mike%20Trout&mode=career">Machado vs Trout</a>
             <a href="career.html?player=Juan%20Soto">Juan Soto career log</a>
             <a href="career.html?player=Pedro%20Mart%C3%ADnez&group=pitching">Pedro Martinez career log</a>
@@ -271,8 +281,8 @@
         </footer>
       </main>
     </div>
-    <script src="home.js?v=20260821-question-first"></script>
-    <script src="stat-tooltips.js?v=20260821-question-first"></script>
+    <script src="home.js?v=20260821-question-discovery"></script>
+    <script src="stat-tooltips.js?v=20260821-question-discovery"></script>
 
 
   </body>

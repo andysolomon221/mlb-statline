@@ -186,7 +186,7 @@ async function loadSplits() {
     else if (!document.querySelector("#split-status").textContent.startsWith("Showing ")) setStatus(`${payload.rows.length} splits loaded for ${currentScopeLabel()}`);
   } catch (error) {
     if (requestId !== activeRequestId) return;
-    document.querySelector("#split-table").innerHTML = `<tr><td colspan="12" class="empty-row">Could not load MLB split data. Check the player, season, or connection and try again.</td></tr>`;
+    document.querySelector("#split-table").innerHTML = `<tr><td colspan="12" class="empty-row">Could not load MLB split data. Check the player or season.<button type="button" onclick="loadSplits()">Try again</button></td></tr>`;
     setStatus("Could not load splits");
   }
 }
