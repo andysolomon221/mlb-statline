@@ -583,7 +583,7 @@ function showMatchupCopyStatus(message) {
   matchupCopyStatusTimer = setTimeout(() => { status.textContent = ""; }, 2200);
 }
 
-function setMatchupAnswer({ label = "Matchup Answer", title, value, reason, caution }) {
+function setMatchupAnswer({ label = "Stat Line Read", title, value, reason, caution }) {
   document.querySelector("#matchup-answer-label").textContent = label;
   document.querySelector("#matchup-answer-title").textContent = title;
   document.querySelector("#matchup-answer-value").textContent = value;
@@ -965,10 +965,15 @@ function renderTeamDecisionLens(rows, pitcherStats) {
 
   const leadingCard = cards[0];
   if (leadingCard) {
+    const readValue = leadingCard.label === "Hitter lean"
+      ? `Slight edge: ${leadingCard.fullName}`
+      : leadingCard.label === "Pitcher lean"
+        ? `Slight edge: ${pitcherStats.fullName || pitcher.fullName}`
+        : "No clear edge";
     setMatchupAnswer({
-      label: "Lineup Answer",
+      label: "Stat Line Read",
       title: `${leadingCard.fullName} has the strongest ${metric.label} split context against ${pitcherStats.fullName || pitcher.fullName}.`,
-      value: leadingCard.label,
+      value: readValue,
       reason: `Hitter ${metric.label}: ${formatDecisionValue(metric, leadingCard.hitterValue)} · Pitcher allows: ${formatDecisionValue(metric, leadingCard.pitcherValue)} · ${parkName} factor ${parkFactor}.`,
       caution: "This ranks split and park context. It is not a prediction or betting recommendation."
     });
@@ -1113,7 +1118,7 @@ function renderTeamOffense(rows, teamName, pitcherName) {
     `;
   }).join("") || `<tr><td colspan="10" class="empty-row">No active hitters found for this team.</td></tr>`;
   setMatchupAnswer({
-    label: "Roster History Answer",
+    label: "Stat Line Read",
     title: mostExperienced ? `${mostExperienced.row.fullName} has the most recorded history against ${pitcherName}.` : `${teamName} has no recorded head-to-head history against ${pitcherName}.`,
     value: mostExperienced ? `${mostExperienced.total.h}-${mostExperienced.total.ab} · ${mostExperienced.total.hr} HR` : "No recorded history",
     reason: mostExperienced ? `AVG ${fmt(mostExperienced.total.avg)} · OPS ${fmt(mostExperienced.total.ops)} · ${mostExperienced.total.pa} PA. Open Decision Lens for handedness and park context.` : "Use Decision Lens for split-based context that does not depend on prior meetings.",
@@ -1393,7 +1398,7 @@ async function updatePlayerVsTeam() {
     renderPlayerTeamTable(type, history.rows, pitchingRows);
     document.querySelector("#player-team-status").textContent = history.total ? "Loaded" : "No history found";
     setMatchupAnswer({
-      label: "Historical Answer",
+      label: "Stat Line Read",
       title: `${player.fullName} vs ${opponentLabel}`,
       value: history.total ? (pitchingTotalNote || totalNote) : "No recorded history",
       reason: seasonRows.length ? `${seasonRows.length} regular-season rows are available for this player-team history.` : "No season-by-season rows were returned.",
@@ -1470,10 +1475,15 @@ function renderMatchup(payload) {
   const sideLabel = battingSideLabel(payload.batter.batSide);
   const battingTeam = document.querySelector("#matchup-batting-team").selectedOptions[0]?.textContent || "Batting team";
   const pitchingTeam = document.querySelector("#matchup-pitching-team").selectedOptions[0]?.textContent || "Pitching team";
+  const readValue = edge === "Batter edge"
+    ? `Slight edge: ${payload.batter.fullName}`
+    : edge === "Pitcher edge"
+      ? `Slight edge: ${payload.pitcher.fullName}`
+      : "No clear edge";
 
   setMatchupAnswer({
     title: `${payload.batter.fullName} vs ${payload.pitcher.fullName}: ${edge.toLowerCase()}.`,
-    value: edge,
+    value: readValue,
     reason: `${payload.batter.fullName} has a ${fmt(hitter.splitOps)} OPS in the relevant handedness split; ${sideLabel} have a ${fmt(pitcherProfile.splitOps)} OPS against ${payload.pitcher.fullName}.`,
     caution: headToHeadSampleNote(careerH2h.pa)
   });
@@ -1527,7 +1537,7 @@ function renderCareerOnlyMatchup(payload) {
   const pitchingTeam = document.querySelector("#matchup-pitching-team").selectedOptions[0]?.textContent || "Pitching team";
 
   setMatchupAnswer({
-    label: "Career History",
+    label: "Stat Line Read",
     title: `${payload.batter.fullName} vs ${payload.pitcher.fullName}`,
     value: payload.headToHead?.length ? `${careerH2h.h}-${careerH2h.ab} · ${careerH2h.hr} HR` : "No recorded matchups",
     reason: payload.headToHead?.length ? `Career AVG ${fmt(careerH2h.avg)} · OPS ${fmt(careerH2h.ops)} · ${careerH2h.pa} PA.` : "No career head-to-head line was returned.",

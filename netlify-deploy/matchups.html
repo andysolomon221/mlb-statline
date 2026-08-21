@@ -48,17 +48,24 @@
     <div class="app-shell">
       <aside class="rail" aria-label="Primary">
         <a class="brand-mark" href="index.html" aria-label="Statline Baseball home"><img src="statline-logo.png" alt="Stat Line Baseball" /></a>
-        <nav class="rail-nav">
+        <nav class="rail-nav" data-grouped-navigation="true">
+  <div class="rail-nav-primary">
           <a href="index.html">Home</a>
+          <a href="probable-pitcher-matchups-today.html">Tonight</a>
+          <a class="active" aria-current="page" href="matchups.html">Matchups</a>
           <a href="batting.html">Batting</a>
           <a href="pitching.html">Pitching</a>
+          <a href="compare.html">Compare</a>
+          <a href="standings.html">Standings</a>
+          <a href="batting.html?mode=range&amp;start=1901&amp;end=2026&amp;metric=hr">History</a>
+  </div>
+  <details class="rail-nav-more">
+    <summary>More Tools</summary>
+    <div class="rail-nav-more-links">
           <a href="advanced.html">Advanced Stats</a>
           <a href="pitch-types.html">Pitch Types</a>
-          <a class="active" href="matchups.html">Matchups</a>
           <a href="damage-board.html">Damage Board</a>
-          <a href="standings.html">Standings</a>
           <a href="trends.html">Trends</a>
-          <a href="compare.html">Compare</a>
           <a href="career.html">Career</a>
           <a href="splits.html">Splits</a>
           <a href="age.html">Age Leaders</a>
@@ -67,7 +74,9 @@
           <a href="fantasy.html">Fantasy</a>
           <a href="news.html">News</a>
           <a href="teams.html">Teams</a>
-        </nav>
+    </div>
+  </details>
+</nav>
       </aside>
 
       <main id="matchups-dashboard">
@@ -130,12 +139,12 @@
 
         <section class="panel matchup-answer-panel matchup-workspace" aria-labelledby="matchup-answer-title" hidden>
           <div>
-            <p class="eyebrow" id="matchup-answer-label">Matchup Answer</p>
+            <p class="eyebrow" id="matchup-answer-label">Stat Line Read</p>
             <h2 id="matchup-answer-title">Choose a matchup to see the clearest supported read.</h2>
             <p id="matchup-answer-reason">The answer combines the relevant split profiles, park context, and available history.</p>
           </div>
           <div class="matchup-answer-read">
-            <span>Evidence-aware read</span>
+            <span>Why this read</span>
             <strong id="matchup-answer-value">Waiting for matchup</strong>
             <small id="matchup-answer-caution">Head-to-head history is context, not a projection.</small>
           </div>
@@ -326,7 +335,7 @@
       </main>
     </div>
 
-    <script src="matchups.js?v=20260821-question-first"></script>
+    <script src="matchups.js?v=20260821-stat-line-read"></script>
     <script src="stat-tooltips.js?v=20260821-question-discovery"></script>
 
   </body>
