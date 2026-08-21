@@ -599,11 +599,11 @@ async function copyMatchupLink() {
 
 async function loadGameDay() {
   const grid = document.querySelector("#game-day-grid");
-  if (grid) grid.innerHTML = `<div class="empty-state">Loading games...</div>`;
+  if (grid) grid.innerHTML = `<div class="empty-state loading-state" role="status">Loading today's games...</div>`;
   try {
     renderGameDay(await scheduleGames(activeGameDayDate));
   } catch (error) {
-    if (grid) grid.innerHTML = `<div class="empty-state">Could not load games for this date.</div>`;
+    if (grid) grid.innerHTML = `<div class="empty-state">Could not load games for this date.<button type="button" onclick="loadGameDay()">Try again</button></div>`;
   }
 }
 
@@ -1352,7 +1352,7 @@ async function updateTeamOffense() {
   document.querySelector("#team-offense-title").textContent = `${teamName} career offense vs ${pitcher.fullName}`;
   document.querySelector("#team-offense-status").textContent = "Loading offense...";
   document.querySelector("#matchup-roster-snapshot").innerHTML = `<div class="empty-state">Loading roster snapshot...</div>`;
-  document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="10" class="empty-row">Loading team offense...</td></tr>`;
+  document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="10" class="empty-row loading-state" role="status">Loading team offense...</td></tr>`;
   try {
     const hitters = await teamRosterHitters(teamAbbr);
     const rows = await Promise.all(hitters.map(async (hitter) => ({
@@ -1372,7 +1372,7 @@ async function updateTeamOffense() {
     if (activeTeamPitcherView === "lens") await updateTeamDecisionLens(rows);
   } catch (error) {
     document.querySelector("#team-offense-status").textContent = "Could not load offense";
-    document.querySelector("#matchup-roster-snapshot").innerHTML = `<div class="empty-state">Could not load this roster snapshot.</div>`;
+    document.querySelector("#matchup-roster-snapshot").innerHTML = `<div class="empty-state">Could not load this roster snapshot.<button type="button" onclick="analyzeMatchup()">Try again</button></div>`;
     document.querySelector("#team-offense-table").innerHTML = `<tr><td colspan="10" class="empty-row">Could not load this team's head-to-head history.</td></tr>`;
   }
 }
@@ -1559,7 +1559,7 @@ async function analyzeMatchup() {
     }
     return;
   }
-  document.querySelector("#matchup-read").innerHTML = `<div class="empty-state">Loading MLB matchup data...</div>`;
+  document.querySelector("#matchup-read").innerHTML = `<div class="empty-state loading-state" role="status">Loading MLB matchup data...</div>`;
   try {
     await Promise.all([resolveTypedPlayer("batter"), resolveTypedPlayer("pitcher")]);
     const [batterDetails, pitcherDetails] = await Promise.all([personDetails(batter.id), personDetails(pitcher.id)]);
@@ -1579,7 +1579,7 @@ async function analyzeMatchup() {
     document.querySelector("#matchup-status").textContent = "Matchup loaded";
   } catch (error) {
     document.querySelector("#matchup-status").textContent = "Could not load matchup";
-    document.querySelector("#matchup-read").innerHTML = `<div class="empty-state">Could not load this matchup. Try another player or season.</div>`;
+    document.querySelector("#matchup-read").innerHTML = `<div class="empty-state">Could not load this matchup. Check the player names and season.<button type="button" onclick="analyzeMatchup()">Try again</button></div>`;
   }
 }
 

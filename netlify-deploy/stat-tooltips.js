@@ -221,6 +221,49 @@
     });
   }
 
+  function enhanceSiteUi() {
+    const rail = document.querySelector(".rail");
+    const nav = document.querySelector(".rail-nav");
+    if (rail && nav && !rail.querySelector(".site-menu-toggle")) {
+      if (!nav.id) nav.id = "site-primary-navigation";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "site-menu-toggle";
+      button.setAttribute("aria-controls", nav.id);
+      button.setAttribute("aria-expanded", "false");
+      button.textContent = "Menu";
+      button.addEventListener("click", () => {
+        const open = !document.body.classList.contains("site-nav-open");
+        document.body.classList.toggle("site-nav-open", open);
+        button.setAttribute("aria-expanded", String(open));
+        button.textContent = open ? "Close menu" : "Menu";
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || !document.body.classList.contains("site-nav-open")) return;
+        document.body.classList.remove("site-nav-open");
+        button.setAttribute("aria-expanded", "false");
+        button.textContent = "Menu";
+        button.focus();
+      });
+      nav.addEventListener("click", (event) => {
+        if (!event.target.closest("a")) return;
+        document.body.classList.remove("site-nav-open");
+        button.setAttribute("aria-expanded", "false");
+        button.textContent = "Menu";
+      });
+      rail.insertBefore(button, nav);
+    }
+
+    document.querySelectorAll(".table-wrap").forEach((wrap) => {
+      if (wrap.dataset.scrollHintReady) return;
+      wrap.dataset.scrollHintReady = "true";
+      const hint = document.createElement("small");
+      hint.className = "table-scroll-hint";
+      hint.textContent = "Swipe table for more →";
+      wrap.parentNode.insertBefore(hint, wrap);
+    });
+  }
+
   let pending = false;
   function scheduleDecorate() {
     if (pending) return;
@@ -228,6 +271,7 @@
     window.requestAnimationFrame(() => {
       pending = false;
       decorateStatTooltips(document.body || document);
+      enhanceSiteUi();
     });
   }
 

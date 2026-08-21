@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MLB Player Stats Splits | Stat Line Baseball</title>
+    <title>MLB Split Stats by Player, Team &amp; Situation | Stat Line Baseball</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="icon" href="favicon-48.png" sizes="48x48" type="image/png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="manifest" href="site.webmanifest" />
     <link rel="canonical" href="https://www.statlinebaseball.com/splits" />
-    <meta name="description" content="Explore MLB player stats splits by season range, home and away, handedness, day or night, batting, pitching, and game context." />
-    <meta property="og:title" content="MLB Player Stats Splits" />
+    <meta name="description" content="Explore MLB split stats for hitters and pitchers by season, home or away, opposing handedness, day or night, and custom year ranges." />
+    <meta property="og:title" content="MLB Split Stats by Player, Team &amp; Situation" />
     <meta property="og:description" content="Explore MLB player stats splits by season range, home and away, handedness, day or night, batting, pitching, and game context." />
     <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
@@ -19,10 +19,10 @@
     <meta property="og:url" content="https://www.statlinebaseball.com/splits" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="MLB Player Stats Splits" />
+    <meta name="twitter:title" content="MLB Split Stats by Player, Team &amp; Situation" />
     <meta name="twitter:description" content="Explore MLB player stats splits by season range, home and away, handedness, day or night, batting, pitching, and game context." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260710-trends-historic-seasons" />
+    <link rel="stylesheet" href="styles.css?v=20260821-site-usability" />
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -74,7 +74,7 @@
         <header class="topbar splits-hero">
           <div>
             <p class="eyebrow">Player Splits</p>
-            <h1>MLB player stats splits by season and situation.</h1>
+            <h1>MLB player and team split stats.</h1>
           </div>
           <div class="season-control split-search-card" aria-label="Player split search">
             <label for="player-query">Player</label>
@@ -82,6 +82,13 @@
             <datalist id="split-player-options"></datalist>
           </div>
         </header>
+
+        <section class="panel trust-panel" aria-labelledby="splits-intro-title">
+          <h2 id="splits-intro-title">Explore MLB split stats by season and situation</h2>
+          <p>Search a hitter or pitcher to compare performance at home and on the road, against left- and right-handed opponents, and in day or night games. Choose one MLB season or combine years into a custom range.</p>
+          <p>Batting splits include plate appearances, hits, home runs, walks, strikeouts, average, on-base percentage, slugging percentage, and OPS. Pitching splits include innings, ERA, WHIP, strikeouts, walks, home runs allowed, and opponent results.</p>
+          <p class="data-note">Split stats describe performance in a specific context. Consider the number of plate appearances or innings before drawing conclusions from a small sample.</p>
+        </section>
 
         <section class="score-strip split-summary" aria-label="Selected player summary">
           <article>
@@ -182,7 +189,7 @@
     </div>
 
     <script src="splits.js?v=20260618-hitter-strikeouts"></script>
-    <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
+    <script src="stat-tooltips.js?v=20260821-site-usability"></script>
 
   </body>
 </html>

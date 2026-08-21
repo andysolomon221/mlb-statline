@@ -313,7 +313,7 @@ function renderWildCard(rows) {
 
 async function renderStandings() {
   statusText.textContent = "Loading MLB standings...";
-  grid.innerHTML = `<div class="panel empty-state">Loading standings...</div>`;
+  grid.innerHTML = `<div class="panel empty-state loading-state" role="status">Loading standings...</div>`;
   setActiveButtons();
   syncUrl();
   try {
@@ -326,7 +326,7 @@ async function renderStandings() {
   } catch (error) {
     console.error(error);
     statusText.textContent = "Could not load MLB standings.";
-    grid.innerHTML = `<div class="panel empty-state">Could not load MLB standings. Try another date.</div>`;
+    grid.innerHTML = `<div class="panel empty-state">Could not load MLB standings for this date.<button type="button" onclick="renderStandings()">Try again</button></div>`;
   }
 }
 

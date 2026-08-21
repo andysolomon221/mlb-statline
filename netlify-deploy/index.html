@@ -22,7 +22,16 @@
     <meta name="twitter:title" content="MLB Stats, Leaders, Splits & Matchups" />
     <meta name="twitter:description" content="Explore MLB stats, leaders, splits, matchups, team trends, and player comparisons by season, team, league, year range, or custom dates." />
     <meta name="twitter:image" content="https://www.statlinebaseball.com/og-image.png" />
-    <link rel="stylesheet" href="styles.css?v=20260710-trends-historic-seasons" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Stat Line Baseball",
+        "alternateName": "Statline Baseball",
+        "url": "https://www.statlinebaseball.com/"
+      }
+    </script>
+    <link rel="stylesheet" href="styles.css?v=20260821-site-usability" />
     <script>
       const statlineParams = new URLSearchParams(window.location.search);
       if (["mode", "metric", "team", "position", "start", "end", "year"].some((key) => statlineParams.has(key))) {
@@ -80,10 +89,27 @@
             <p class="eyebrow">Statline Baseball</p>
             <h1>MLB stats by season, team, player, and matchup.</h1>
             <div class="home-hero-actions">
-              <a href="matchups.html?mode=probables">Today's Probables</a>
+              <a href="probable-pitcher-matchups-today.html">Today's Probables</a>
               <a href="matchups.html?tool=team-pitcher">Check Matchups</a>
               <a href="pitching.html?mode=single&year=2026&metric=era&position=SP&qualifier=150">Starter ERA</a>
             </div>
+            <form class="home-finder" id="home-finder" role="search">
+              <div>
+                <label for="home-finder-query">Find a player or team</label>
+                <input id="home-finder-query" type="search" list="home-finder-options" autocomplete="off" spellcheck="false" placeholder="Try Aaron Judge or Boston Red Sox" />
+                <datalist id="home-finder-options"></datalist>
+              </div>
+              <label class="home-finder-destination">
+                <span>Open</span>
+                <select id="home-finder-destination">
+                  <option value="career">Career</option>
+                  <option value="splits">Splits</option>
+                  <option value="compare">Compare</option>
+                </select>
+              </label>
+              <button type="submit">Go</button>
+              <small id="home-finder-status" aria-live="polite"></small>
+            </form>
           </div>
         </header>
 
@@ -94,7 +120,7 @@
             <small>Daily matchups, batting leaders, pitching leaders, and shareable baseball boards.</small>
           </div>
           <div class="daily-board-actions">
-            <a href="matchups.html?mode=probables">
+            <a href="probable-pitcher-matchups-today.html">
               <span>Tonight</span>
               <strong>Probable Pitcher Matchups</strong>
               <small>Start from today's games and open a roster-vs-starter board.</small>
@@ -125,7 +151,7 @@
               <small>Game-day matchups, current boards, standings, and team pages.</small>
             </div>
             <div class="home-stat-links">
-              <a href="matchups.html?mode=probables">
+              <a href="probable-pitcher-matchups-today.html">
                 <span>Game Day</span>
                 <strong>Lineup vs Starter</strong>
                 <small>Build a team-vs-pitcher board for tonight.</small>
@@ -139,6 +165,11 @@
                 <span>Current Leaders</span>
                 <strong>2026 Batting Boards</strong>
                 <small>HR, OPS, hits, RBI, steals, and more.</small>
+              </a>
+              <a href="home-run-matchups-today.html">
+                <span>Power Matchups</span>
+                <strong>Home Run Matchups Today</strong>
+                <small>Research which pitches and pitcher profiles could create power opportunities.</small>
               </a>
               <a href="pitching.html?mode=single&year=2026&metric=era">
                 <span>Pitching</span>
@@ -184,27 +215,7 @@
           </article>
         </section>
 
-        <section class="quick-jump-panel" aria-label="Explore more tools">
-          <a class="quick-jump-card" href="compare.html?playerA=Aaron%20Judge&playerB=Shohei%20Ohtani&mode=single&season=2026">
-            <span>Compare</span>
-            <strong>Put Two Players Side By Side</strong>
-            <small>Full careers, single years, custom ranges, or career seasons.</small>
-          </a>
-          <a class="quick-jump-card" href="matchups.html?tool=team-pitcher">
-            <span>Lineup vs Pitcher</span>
-            <strong>Test A Team Offense Against A Starter</strong>
-            <small>Roster context, career head-to-head history, and ballpark notes.</small>
-          </a>
-          <a class="quick-jump-card" href="matchups.html?tool=team-pitcher">
-            <span>Roster vs Pitcher</span>
-            <strong>Research Active Hitters Against A Pitcher</strong>
-            <small>Career batter-vs-pitcher history plus a split-based decision lens.</small>
-          </a>
-          <a class="quick-jump-card" href="pitching.html?mode=single&year=2026&metric=era&position=SP&qualifier=150">
-            <span>Pitching Leaders</span>
-            <strong>Starter ERA Leaders, Minimum 50 IP</strong>
-            <small>Jump straight to the 2026 starting pitcher ERA board.</small>
-          </a>
+        <section class="quick-jump-panel" aria-label="Explore deeper baseball tools">
           <a class="quick-jump-card" href="career.html?player=Juan%20Soto">
             <span>Career</span>
             <strong>View A Player Year By Year</strong>
@@ -215,10 +226,15 @@
             <strong>Who Led Before Age 25?</strong>
             <small>Pick hitters or pitchers, an age cutoff, stat, and season range.</small>
           </a>
-          <a class="quick-jump-card" href="batting.html?mode=range&start=1990&end=1999&metric=hr">
-            <span>History</span>
-            <strong>Who Led MLB In HR In The 1990s?</strong>
-            <small>Jump straight into a historical leaderboard.</small>
+          <a class="quick-jump-card" href="span.html">
+            <span>Span Finder</span>
+            <strong>Find A Player's Best Rolling Stretch</strong>
+            <small>Search home runs, hits, strikeouts, and more across custom game spans.</small>
+          </a>
+          <a class="quick-jump-card" href="teams.html">
+            <span>Teams</span>
+            <strong>Open A Club Research Hub</strong>
+            <small>Jump to team stats, trends, news, communities, and official links.</small>
           </a>
         </section>
 
@@ -248,7 +264,9 @@
           <a href="contact.html">Contact</a>
         </footer>
       </main>
-    </div>    <script src="stat-tooltips.js?v=20260720-stat-tooltips-2"></script>
+    </div>
+    <script src="home.js?v=20260821-site-usability"></script>
+    <script src="stat-tooltips.js?v=20260821-site-usability"></script>
 
 
   </body>

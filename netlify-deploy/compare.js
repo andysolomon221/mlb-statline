@@ -731,6 +731,7 @@ function renderYearByYearBoard(rows) {
 async function runYearByYearComparison() {
   const status = document.querySelector("#compare-yby-status");
   status.textContent = "Loading seasons...";
+  document.querySelector("#compare-yby-board").innerHTML = '<div class="empty-state loading-state" role="status">Loading season comparison...</div>';
   try {
     await hydrateYearByYearPlayer();
     let start = Number(document.querySelector("#compare-yby-start").value);
@@ -754,7 +755,7 @@ async function runYearByYearComparison() {
     status.textContent = rows.length ? "Comparison loaded" : "No seasons found";
   } catch (error) {
     status.textContent = "Could not load player";
-    document.querySelector("#compare-yby-board").innerHTML = '<p class="empty-note">Could not load that player. Try another name or season range.</p>';
+    document.querySelector("#compare-yby-board").innerHTML = '<div class="empty-state">Could not load that player or season range.<button type="button" onclick="runYearByYearComparison()">Try again</button></div>';
   }
 }
 
@@ -865,6 +866,7 @@ function renderComparison(statsA, statsB) {
 async function runComparison() {
   document.querySelector("#compare-status").textContent = "Loading comparison...";
   document.querySelector("#compare-status-card").textContent = "Loading";
+  document.querySelector("#compare-table").innerHTML = '<tr><td colspan="4" class="empty-row loading-state" role="status">Loading player comparison...</td></tr>';
   try {
     await Promise.all([hydratePlayer("a"), hydratePlayer("b")]);
     updateShareUrl();
@@ -884,7 +886,7 @@ async function runComparison() {
   } catch (error) {
     document.querySelector("#compare-status").textContent = "Could not load comparison";
     document.querySelector("#compare-status-card").textContent = "Error";
-    document.querySelector("#compare-table").innerHTML = `<tr><td colspan="4" class="empty-row">Could not load those players. Try another name or season.</td></tr>`;
+    document.querySelector("#compare-table").innerHTML = `<tr><td colspan="4" class="empty-row">Could not load those players or seasons.<button type="button" onclick="runComparison()">Try again</button></td></tr>`;
   }
 }
 

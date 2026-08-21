@@ -976,16 +976,17 @@ function statusFilteredRows(rows) {
 }
 
 function renderLoadingLeaders() {
-  document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">Loading real MLB leader data...</div>`;
+  document.querySelector("#bar-chart").innerHTML = `<div class="empty-state loading-state" role="status">Loading MLB leader data...</div>`;
   document.querySelector("#player-table").innerHTML = `
-    <tr><td colspan="${config.columns.length + 2}" class="empty-row">Loading real MLB leader data...</td></tr>
+    <tr><td colspan="${config.columns.length + 2}" class="empty-row loading-state" role="status">Loading MLB leader data...</td></tr>
   `;
 }
 
 function renderLeaderError(message) {
-  document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">${message}</div>`;
+  const retry = `<button type="button" onclick="updateLeaders()">Try again</button>`;
+  document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">${message}${retry}</div>`;
   document.querySelector("#player-table").innerHTML = `
-    <tr><td colspan="${config.columns.length + 2}" class="empty-row">${message}</td></tr>
+    <tr><td colspan="${config.columns.length + 2}" class="empty-row">${message}${retry}</td></tr>
   `;
 }
 
