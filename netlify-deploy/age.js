@@ -797,17 +797,20 @@ async function runAgeSearch() {
   document.querySelector("#age-progress-note").textContent = `${years.length} seasons requested`;
   status.textContent = `Loading ${years.length} seasons from MLB Stats API...`;
   document.querySelector("#age-answer-kicker").textContent = "Finding the answer";
-  document.querySelector("#age-answer-name").textContent = "Loading…";
+  document.querySelector("#age-answer-name").textContent = `Loading 0 of ${years.length} seasons…`;
   document.querySelector("#age-answer-value").textContent = "—";
+  document.querySelector("#age-answer-detail").textContent = "Combining season-level records into one age leaderboard.";
   renderHead();
   document.querySelector("#age-table").innerHTML = `<tr><td colspan="${metricConfig[activeGroup].columns.length}" class="empty-row">Loading age leaders...</td></tr>`;
   document.querySelector("#age-bar-chart").innerHTML = `<div class="empty-state">Loading age leaders...</div>`;
 
   try {
-    const payloads = await fetchInBatches(years, fetchSeason, 4, (done, total) => {
+    const payloads = await fetchInBatches(years, fetchSeason, 8, (done, total) => {
       if (requestId !== activeRequestId) return;
       document.querySelector("#age-progress").textContent = `${done}/${total}`;
       status.textContent = `Loaded ${done} of ${total} seasons...`;
+      document.querySelector("#age-answer-name").textContent = `Loaded ${done} of ${total} seasons…`;
+      document.querySelector("#age-answer-value").textContent = `${Math.round((done / total) * 100)}%`;
     });
     if (requestId !== activeRequestId) return;
     const allRows = aggregateRows(payloads);
