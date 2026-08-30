@@ -45,7 +45,9 @@
     { question: "Juan Soto or Ronald Acuña Jr.: who has the stronger career line?", note: "Compare two superstar outfielders side by side across their careers and individual seasons.", href: "compare.html?playerA=Juan%20Soto&playerB=Ronald%20Acu%C3%B1a%20Jr.&mode=career" },
     { question: "How dominant was Pedro Martínez across his career?", note: "Open Pedro’s pitching career log, rate statistics, and season-by-season totals.", href: "career.html?player=Pedro%20Mart%C3%ADnez&group=pitching" },
     { question: "Barry Bonds or Babe Ruth: how do their career numbers compare?", note: "Put two historic offensive giants on the same career comparison board.", href: "compare.html?playerA=Barry%20Bonds&playerB=Babe%20Ruth&mode=career" },
-    { question: "What can I explore about the Boston Red Sox?", note: "Open the Red Sox research hub for team stats, trends, news, and useful links.", href: "teams.html?team=BOS" }
+    { question: "What can I explore about the Boston Red Sox?", note: "Open the Red Sox research hub for team stats, trends, news, and useful links.", href: "teams.html?team=BOS" },
+    { question: `Who has MLB’s fastest bat in ${currentSeason}?`, note: "Compare average bat speed measured at the sweet spot by Statcast.", href: `bat-tracking.html?season=${currentSeason}&type=batter&metric=avgBatSpeed` },
+    { question: `Which pitcher has generated the most swords in ${currentSeason}?`, note: "Find the pitchers who force the most awkward, noncompetitive swings.", href: `bat-tracking.html?season=${currentSeason}&type=pitcher&metric=swords` }
   ];
   let rabbitIndex = Math.floor(Date.now() / 86400000) % rabbitHoles.length;
 
@@ -96,6 +98,18 @@
       const metric = /(strikeout)/.test(lower) ? "strikeOuts" : /(save)/.test(lower) ? "saves" : /(hit)/.test(lower) && !/(home run|\bhr\b)/.test(lower) ? "hits" : "homeRuns";
       const rule = lower.includes("through age") ? "through" : "before";
       return `age.html?group=${group}&metric=${metric}&rule=${rule}&age=${age[1]}&start=1901&end=2026&min=auto`;
+    }
+    if (/(bat speed|fastest bat|fast swing|squared[- ]up|blast rate|swing length|attack angle|swing path|\bswords?\b)/.test(lower)) {
+      const type = /\bswords?\b/.test(lower) ? "pitcher" : "batter";
+      const metric = /\bswords?\b/.test(lower) ? "swords"
+        : /squared[- ]up/.test(lower) ? "squaredUpRate"
+          : /blast/.test(lower) ? "blastRate"
+            : /swing length/.test(lower) ? "swingLength"
+              : /attack angle/.test(lower) ? "attackAngle"
+                : /swing path/.test(lower) ? "swingPathTilt"
+                  : /fast swing/.test(lower) ? "fastSwingRate"
+                    : "avgBatSpeed";
+      return `bat-tracking.html?season=${currentYear}&type=${type}&metric=${metric}`;
     }
     if (/(current|this season|leader|leaders|most|top)/.test(lower)) {
       if (/(\bera\b|\bwhip\b|pitching|pitcher|\bsaves?\b|\bwins?\b|\bstrikeouts?\b|\bso\b)/.test(lower)) {

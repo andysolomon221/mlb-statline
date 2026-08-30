@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Bat Tracking Leaders | Stat Line Baseball</title>
+    <meta name="description" content="Explore MLB Statcast bat speed, fast swings, squared-up contact, blasts, swing length, attack angle, and pitcher swords from 2023 to today." />
+    <link rel="canonical" href="https://www.statlinebaseball.com/bat-tracking" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css?v=20260821-question-discovery" />
+  </head>
+  <body data-board="bat-tracking">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <a class="brand-mark" href="index.html" aria-label="Statline Baseball home"><img src="statline-logo.png" alt="Stat Line Baseball" /></a>
+        <nav class="rail-nav" data-grouped-navigation="true">
+          <div class="rail-nav-primary"><a href="index.html">Home</a><a href="probable-pitcher-matchups-today.html">Tonight</a><a href="matchups.html">Matchups</a><a href="batting.html">Batting</a><a href="pitching.html">Pitching</a><a href="compare.html">Compare</a><a href="standings.html">Standings</a><a href="batting.html?mode=range&amp;start=1901&amp;end=2026&amp;metric=hr">History</a></div>
+          <details class="rail-nav-more" open><summary>More Tools</summary><div class="rail-nav-more-links"><a class="active" aria-current="page" href="advanced.html">Advanced Stats</a><a href="pitch-types.html">Pitch Types</a><a href="damage-board.html">Damage Board</a><a href="trends.html">Trends</a><a href="career.html">Career</a><a href="splits.html">Splits</a><a href="age.html">Age Leaders</a><a href="starts.html">First Seasons</a><a href="span.html">Span Finder</a><a href="fantasy.html">Fantasy</a><a href="news.html">News</a><a href="teams.html">Teams</a></div></details>
+        </nav>
+      </aside>
+      <main id="bat-tracking-dashboard">
+        <header class="topbar"><div><p class="eyebrow">Advanced Stats · Statcast</p><h1>How fast, direct, and dangerous is the swing?</h1><p class="home-positioning">Compare MLB bat speed, squared-up contact, blasts, swing paths, and pitcher-generated swords.</p></div><div class="season-control"><label for="bat-tracking-season">Season</label><select id="bat-tracking-season"></select></div></header>
+        <noscript><section class="panel static-fallback"><h2>Bat Tracking needs JavaScript</h2><p>Enable JavaScript to load the live Baseball Savant leaderboard.</p></section></noscript>
+        <nav class="page-tabs" aria-label="Advanced stats sections"><a href="advanced.html">Advanced</a><a href="statcast.html">Statcast</a><a class="active" href="bat-tracking.html">Bat Tracking</a><a href="pitch-types.html">Pitch Types</a></nav>
+        <section class="score-strip news-summary" aria-label="Bat tracking summary">
+          <article><span>Leader</span><strong id="bat-tracking-leader">Loading</strong><small id="bat-tracking-leader-note">Baseball Savant</small></article>
+          <article><span>Metric</span><strong id="bat-tracking-metric-card">Bat Speed</strong><small>Selected bat-tracking field</small></article>
+          <article><span>Season</span><strong id="bat-tracking-scope-card">2026</strong><small>Regular season</small></article>
+          <article><span>Players</span><strong id="bat-tracking-count">0</strong><small id="bat-tracking-count-note">Qualified swings</small></article>
+        </section>
+        <section class="panel news-controls-panel" aria-label="Bat tracking controls">
+          <div class="section-head"><div><p class="eyebrow">Board Controls</p><h2>Choose player type and metric</h2></div><select id="bat-tracking-metric"></select></div>
+          <div class="league-toggle news-topic-toggle" role="group" aria-label="Player type"><button class="active" data-bat-tracking-type="batter">Hitters</button><button data-bat-tracking-type="pitcher">Pitchers</button></div>
+          <div class="qualifier-filter"><label for="bat-tracking-min">Minimum competitive swings</label><select id="bat-tracking-min"></select></div>
+        </section>
+        <section class="data-grid advanced-grid">
+          <section class="panel leaderboard"><div class="section-head"><div><p class="eyebrow">Leaderboard</p><h2 id="bat-tracking-chart-title">Bat Speed leaders</h2></div><div class="leaderboard-head-controls"><select id="bat-tracking-metric-board"></select><div class="split-status" id="bat-tracking-status">Loading…</div></div></div><div class="bar-chart" id="bat-tracking-chart"></div></section>
+          <section class="panel leaderboard"><div class="section-head"><div><p class="eyebrow">Player Board</p><h2 id="bat-tracking-table-title">Bat Tracking players</h2></div><div class="search-action board-search-action"><input id="bat-tracking-search" type="search" placeholder="Search player or team" aria-label="Search bat tracking board" /></div></div><div class="table-wrap"><table><thead id="bat-tracking-head"></thead><tbody id="bat-tracking-table"></tbody></table></div></section>
+        </section>
+        <section class="panel"><div class="section-head"><div><p class="eyebrow">How to Read It</p><h2>Measured by Statcast beginning in 2023</h2></div></div><p class="data-note">Bat speed is measured at the sweet spot. A fast swing is 75+ mph. Squared-up rate measures realized exit velocity versus the maximum possible; blasts combine strong contact with fast bat speed. Swords credit pitchers for awkward, noncompetitive swings. Public coverage begins in the second half of 2023, so these are modern-era leaderboards rather than all-time records.</p></section>
+        <footer class="site-footer"><a href="about.html">About</a><a href="data-sources.html">Data Sources</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a></footer>
+      </main>
+    </div>
+    <script src="bat-tracking.js?v=20260830-bat-tracking"></script>
+    <script src="stat-tooltips.js?v=20260821-question-discovery"></script>
+  </body>
+</html>
