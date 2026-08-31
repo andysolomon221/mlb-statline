@@ -5,6 +5,7 @@ let batTrackingType = batTrackingParams.get("type") === "pitcher" ? "pitcher" : 
 let batTrackingSeason = String(Math.min(lastBatTrackingSeason, Math.max(firstBatTrackingSeason, Number(batTrackingParams.get("season")) || lastBatTrackingSeason)));
 let batTrackingMetric = batTrackingParams.get("metric") || (batTrackingType === "pitcher" ? "swords" : "avgBatSpeed");
 let batTrackingMinimum = batTrackingParams.get("min") || "auto";
+let batTrackingTeam = String(batTrackingParams.get("team") || "all").toUpperCase();
 let batTrackingRows = [];
 let batTrackingSort = { key: batTrackingMetric, dir: -1 };
 
@@ -59,6 +60,7 @@ function batTrackingFilteredRows() {
   const minimum = batTrackingMinimumValue();
   return batTrackingRows
     .filter((row) => Number(row.swings) >= minimum)
+    .filter((row) => batTrackingTeam === "ALL" || batTrackingTeam === "all" || row.team === batTrackingTeam)
     .filter((row) => !query || `${row.name} ${row.team}`.toLowerCase().includes(query))
     .sort((a, b) => {
       if (batTrackingSort.key === "name" || batTrackingSort.key === "team") return String(a[batTrackingSort.key]).localeCompare(String(b[batTrackingSort.key])) * batTrackingSort.dir;
@@ -88,6 +90,25 @@ function batTrackingRenderControls() {
   document.querySelector("#bat-tracking-min").value = batTrackingMinimum;
 }
 
+function batTrackingRenderTeams() {
+  const teams = [...new Set(batTrackingRows.map((row) => row.team).filter((team) => team && team !== "MLB"))].sort();
+  const select = document.querySelector("#bat-tracking-team");
+  select.innerHTML = `<option value="all">All Teams</option>${teams.map((team) => `<option value="${team}">${team}</option>`).join("")}`;
+  if (batTrackingTeam !== "all" && !teams.includes(batTrackingTeam)) batTrackingTeam = "all";
+  select.value = batTrackingTeam;
+}
+
+function syncBatTrackingUrl() {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.searchParams.set("season", batTrackingSeason);
+  url.searchParams.set("type", batTrackingType);
+  url.searchParams.set("metric", batTrackingMetric);
+  if (batTrackingMinimum !== "auto") url.searchParams.set("min", batTrackingMinimum);
+  if (batTrackingTeam !== "all") url.searchParams.set("team", batTrackingTeam);
+  window.history.replaceState({}, "", url);
+}
+
 function batTrackingRender() {
   const rows = batTrackingFilteredRows();
   const leader = rows[0];
@@ -95,6 +116,7 @@ function batTrackingRender() {
   document.querySelector("#bat-tracking-leader-note").textContent = leader ? `${leader.team} · ${batMetricLabel()} ${batFormat(batTrackingMetric, leader[batTrackingMetric])}` : "Try another filter";
   document.querySelector("#bat-tracking-metric-card").textContent = batMetricLabel();
   document.querySelector("#bat-tracking-scope-card").textContent = batTrackingSeason;
+  document.querySelector("#bat-tracking-scope-note").textContent = batTrackingTeam === "all" ? "All MLB" : batTrackingTeam;
   document.querySelector("#bat-tracking-count").textContent = rows.length;
   document.querySelector("#bat-tracking-count-note").textContent = `${batTrackingMinimumValue()}+ competitive swings`;
   document.querySelector("#bat-tracking-chart-title").textContent = `${batMetricLabel()} ${batTrackingType === "pitcher" ? "pitcher" : "hitter"} leaders`;
@@ -130,6 +152,7 @@ async function loadBatTracking() {
     if (!response.ok) throw new Error(`Bat tracking returned ${response.status}`);
     const data = await response.json();
     batTrackingRows = data.rows || [];
+    batTrackingRenderTeams();
     batTrackingSort = { key: batTrackingMetric, dir: batMetricDirection(batTrackingMetric) };
     batTrackingRender();
     document.querySelector("#bat-tracking-status").textContent = `${batTrackingRows.length} players loaded`;
@@ -141,17 +164,18 @@ async function loadBatTracking() {
   }
 }
 
-document.querySelector("#bat-tracking-season").addEventListener("change", (event) => { batTrackingSeason = event.target.value; batTrackingRenderControls(); loadBatTracking(); });
+document.querySelector("#bat-tracking-season").addEventListener("change", (event) => { batTrackingSeason = event.target.value; batTrackingRenderControls(); syncBatTrackingUrl(); loadBatTracking(); });
 document.querySelectorAll("[data-bat-tracking-type]").forEach((button) => button.addEventListener("click", () => {
   batTrackingType = button.dataset.batTrackingType;
   batTrackingMetric = batTrackingType === "pitcher" ? "swords" : "avgBatSpeed";
-  batTrackingRenderControls(); loadBatTracking();
+  batTrackingTeam = "all"; batTrackingRenderControls(); syncBatTrackingUrl(); loadBatTracking();
 }));
 document.querySelectorAll("#bat-tracking-metric, #bat-tracking-metric-board").forEach((select) => select.addEventListener("change", (event) => {
   batTrackingMetric = event.target.value; batTrackingSort = { key: batTrackingMetric, dir: batMetricDirection(batTrackingMetric) };
-  document.querySelectorAll("#bat-tracking-metric, #bat-tracking-metric-board").forEach((other) => { other.value = batTrackingMetric; }); batTrackingRender();
+  document.querySelectorAll("#bat-tracking-metric, #bat-tracking-metric-board").forEach((other) => { other.value = batTrackingMetric; }); syncBatTrackingUrl(); batTrackingRender();
 }));
-document.querySelector("#bat-tracking-min").addEventListener("change", (event) => { batTrackingMinimum = event.target.value; batTrackingRender(); });
+document.querySelector("#bat-tracking-min").addEventListener("change", (event) => { batTrackingMinimum = event.target.value; syncBatTrackingUrl(); batTrackingRender(); });
+document.querySelector("#bat-tracking-team").addEventListener("change", (event) => { batTrackingTeam = event.target.value; syncBatTrackingUrl(); batTrackingRender(); });
 document.querySelector("#bat-tracking-search").addEventListener("input", batTrackingRender);
 
 batTrackingRenderControls();
