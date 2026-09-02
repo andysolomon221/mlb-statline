@@ -25,6 +25,7 @@
   const normalizedTeams = new Map(Object.entries(teamNames).map(([name, abbr]) => [name.toLowerCase(), { name, abbr }]));
   const currentSeason = new Date().getFullYear();
   let timer = 0;
+  let playerSuggestions = [];
   const rabbitHoles = [
     { question: "Who hit the most home runs before age 25?", note: "Rank every qualifying hitter by career production accumulated before his age-25 season.", href: "age.html?group=hitting&metric=homeRuns&rule=before&age=25&start=1901&end=2026&min=auto" },
     { question: "Who hit the most home runs in his first two MLB seasons?", note: "Compare early-career production across eras, then switch between hitters and pitchers.", href: "starts.html?example=mlb-hr-2" },
@@ -54,6 +55,49 @@
   function teamSearchTerms(team) {
     const words = team.name.toLowerCase().split(" ");
     return [team.name.toLowerCase(), team.abbr.toLowerCase(), words[words.length - 1], words.slice(-2).join(" ")];
+  }
+
+  function normalizeSearchText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function playerRank(person) {
+    let rank = 0;
+    if (person.active) rank += 100;
+    if (person.currentTeam?.id) rank += 40;
+    if (person.mlbDebutDate) rank += 20;
+    return rank;
+  }
+
+  function uniquePlayerSuggestions(people) {
+    const players = new Map();
+    (people || []).filter((person) => person.id && person.fullName).forEach((person) => {
+      const key = normalizeSearchText(person.fullName);
+      const current = players.get(key);
+      if (!current || playerRank(person) > playerRank(current)) players.set(key, person);
+    });
+    return [...players.values()];
+  }
+
+  function playerOptionMarkup(person) {
+    const position = person.primaryPosition?.abbreviation || "MLB";
+    const exact = `<option value="${person.fullName}">${position} · Player</option>`;
+    const folded = String(person.fullName).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (folded === person.fullName) return exact;
+    return `${exact}<option value="${folded}">${person.fullName} · ${position} · Player</option>`;
+  }
+
+  async function searchPlayers(query) {
+    const response = await fetch(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(query)}&sportIds=1`);
+    if (!response.ok) throw new Error("Player search unavailable");
+    const data = await response.json();
+    return uniquePlayerSuggestions(data.people).sort((a, b) => playerRank(b) - playerRank(a));
   }
 
   function renderRabbitHole() {
@@ -150,14 +194,13 @@
       return;
     }
     try {
-      const response = await fetch(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(query)}&sportIds=1`);
-      if (!response.ok) throw new Error("Player search unavailable");
-      const data = await response.json();
+      playerSuggestions = await searchPlayers(query);
       options.innerHTML = [
         ...teamSuggestions.map((team) => `<option value="${team.name}">${team.abbr} · Team hub</option>`),
-        ...(data.people || []).slice(0, 10).map((person) => `<option value="${person.fullName}">${person.primaryPosition?.abbreviation || "MLB"} · Player</option>`)
+        ...playerSuggestions.slice(0, 10).map(playerOptionMarkup)
       ].join("");
     } catch (error) {
+      playerSuggestions = [];
       options.innerHTML = teamSuggestions.map((team) => `<option value="${team.name}">${team.abbr} · Team hub</option>`).join("");
     }
   }
@@ -167,7 +210,7 @@
     timer = window.setTimeout(loadSuggestions, 180);
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const query = input.value.trim();
     if (!query) {
@@ -189,9 +232,19 @@
       status.textContent = "I couldn't match that question yet. Try a player, team, comparison, current leader, decade, age record, or today's matchups.";
       return;
     }
+    let resolvedPlayer = playerSuggestions.find((person) => normalizeSearchText(person.fullName) === normalizeSearchText(query));
+    if (!resolvedPlayer) {
+      try {
+        const people = await searchPlayers(query);
+        resolvedPlayer = people.find((person) => normalizeSearchText(person.fullName) === normalizeSearchText(query)) || people[0];
+      } catch (error) {
+        // The destination page can still attempt the lookup using the typed value.
+      }
+    }
+    const resolvedQuery = resolvedPlayer?.fullName || query;
     const route = destination.value === "splits" ? "splits.html" : destination.value === "compare" ? "compare.html" : "career.html";
     const parameter = destination.value === "compare" ? "playerA" : "player";
-    window.location.href = `${route}?${parameter}=${encodeURIComponent(query)}`;
+    window.location.href = `${route}?${parameter}=${encodeURIComponent(resolvedQuery)}`;
   });
 
   document.querySelectorAll("[data-home-question]").forEach((button) => {
