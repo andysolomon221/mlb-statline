@@ -1,4 +1,37 @@
 (function () {
+  const themeStorageKey = "statline-theme";
+
+  function storedTheme() {
+    try {
+      const value = window.localStorage.getItem(themeStorageKey);
+      return value === "dark" || value === "light" ? value : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function preferredTheme() {
+    return storedTheme() || (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  }
+
+  function applyTheme(theme, remember = false) {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    if (remember) {
+      try { window.localStorage.setItem(themeStorageKey, theme); } catch (error) { /* Preference storage is optional. */ }
+    }
+    const button = document.querySelector(".site-theme-toggle");
+    if (button) {
+      const isDark = theme === "dark";
+      button.textContent = isDark ? "☀ Light" : "◐ Dark";
+      button.setAttribute("aria-pressed", String(isDark));
+      button.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+      button.title = isDark ? "Switch to light mode" : "Switch to dark mode";
+    }
+  }
+
+  applyTheme(preferredTheme());
+
   const STAT_TOOLTIPS = new Map([
     ["AB", "At-bats"],
     ["AVG", "Batting average"],
@@ -224,6 +257,17 @@
   function enhanceSiteUi() {
     const rail = document.querySelector(".rail");
     const nav = document.querySelector(".rail-nav");
+    if (!document.querySelector(".site-theme-toggle")) {
+      const themeButton = document.createElement("button");
+      themeButton.type = "button";
+      themeButton.className = "site-theme-toggle";
+      themeButton.addEventListener("click", () => {
+        const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        applyTheme(nextTheme, true);
+      });
+      document.body.appendChild(themeButton);
+      applyTheme(document.documentElement.dataset.theme || preferredTheme());
+    }
     if (nav && !nav.dataset.groupedNavigation) {
       nav.dataset.groupedNavigation = "true";
       const primaryHrefs = ["index.html", "matchups.html", "batting.html", "pitching.html", "compare.html", "standings.html"];
