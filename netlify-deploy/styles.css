@@ -811,11 +811,14 @@ h2 {
   display: none;
 }
 
+.rail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .site-theme-toggle {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 100;
+  width: 100%;
   min-height: 40px;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
@@ -931,15 +934,6 @@ html[data-theme="dark"] :where(.bar-track, .loading-state::after) {
 
 html[data-theme="dark"] a:not(.brand-mark):not(.rail-nav a):not(.home-hero-actions a):not(.page-tabs a) {
   text-decoration-color: rgba(114, 169, 214, 0.5);
-}
-
-@media (max-width: 680px) {
-  .site-theme-toggle {
-    right: 10px;
-    bottom: 10px;
-    min-height: 36px;
-    padding: 0 11px;
-  }
 }
 
 .search-action {
@@ -4884,6 +4878,16 @@ body.compare-card-view .compare-history-panel {
     background: rgba(255, 255, 255, 0.1);
     font-weight: 900;
     cursor: pointer;
+  }
+
+  .rail-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .site-theme-toggle {
+    width: auto;
+    min-height: 42px;
   }
 
   body.site-nav-open .rail-nav {

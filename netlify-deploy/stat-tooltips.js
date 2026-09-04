@@ -257,6 +257,12 @@
   function enhanceSiteUi() {
     const rail = document.querySelector(".rail");
     const nav = document.querySelector(".rail-nav");
+    let railActions = rail?.querySelector(".rail-actions");
+    if (rail && nav && !railActions) {
+      railActions = document.createElement("div");
+      railActions.className = "rail-actions";
+      rail.insertBefore(railActions, nav);
+    }
     if (!document.querySelector(".site-theme-toggle")) {
       const themeButton = document.createElement("button");
       themeButton.type = "button";
@@ -265,7 +271,7 @@
         const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
         applyTheme(nextTheme, true);
       });
-      document.body.appendChild(themeButton);
+      (railActions || document.body).appendChild(themeButton);
       applyTheme(document.documentElement.dataset.theme || preferredTheme());
     }
     if (nav && !nav.dataset.groupedNavigation) {
@@ -328,7 +334,7 @@
         button.setAttribute("aria-expanded", "false");
         button.textContent = "Menu";
       });
-      rail.insertBefore(button, nav);
+      (railActions || rail).appendChild(button);
     }
 
     document.querySelectorAll(".table-wrap").forEach((wrap) => {
