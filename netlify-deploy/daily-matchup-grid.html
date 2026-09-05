@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Today's MLB Batter vs Pitcher Matchup Grid | Statline Baseball</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" /><link rel="apple-touch-icon" href="apple-touch-icon.png" /><link rel="manifest" href="site.webmanifest" />
+  <link rel="canonical" href="https://www.statlinebaseball.com/daily-matchup-grid" />
+  <meta name="description" content="View every active MLB hitter against today's probable starting pitcher in one sortable fantasy baseball matchup grid." />
+  <meta property="og:title" content="Today's MLB Batter vs Pitcher Matchup Grid" /><meta property="og:description" content="Sort every active hitter by team, opposing probable pitcher, and career batter-vs-pitcher results." />
+  <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" /><meta property="og:url" content="https://www.statlinebaseball.com/daily-matchup-grid" /><meta property="og:type" content="website" />
+  <link rel="stylesheet" href="styles.css?v=20260901-roster-import" />
+</head>
+<body data-board="fantasy"><div class="app-shell">
+  <aside class="rail" aria-label="Primary"><a class="brand-mark" href="index.html" aria-label="Statline Baseball home"><img src="statline-logo.png" alt="Stat Line Baseball" /></a>
+    <nav class="rail-nav" data-grouped-navigation="true"><div class="rail-nav-primary"><a href="index.html">Home</a><a href="probable-pitcher-matchups-today.html">Tonight</a><a href="matchups.html">Matchups</a><a href="batting.html">Batting</a><a href="pitching.html">Pitching</a><a href="compare.html">Compare</a><a href="standings.html">Standings</a></div>
+      <details class="rail-nav-more" open><summary>More Tools</summary><div class="rail-nav-more-links"><a href="advanced.html">Advanced Stats</a><a href="pitch-types.html">Pitch Types</a><a href="damage-board.html">Damage Board</a><a href="trends.html">Trends</a><a class="active" aria-current="page" href="fantasy.html">Fantasy</a><a href="news.html">News</a><a href="teams.html">Teams</a></div></details>
+    </nav>
+  </aside>
+  <main id="daily-matchup-dashboard">
+    <header class="topbar"><div><p class="eyebrow">Fantasy Matchup Board</p><h1>Today's complete batter vs. probable pitcher grid.</h1></div></header>
+    <section class="panel range-panel" aria-label="Daily matchup controls">
+      <div class="daily-grid-controls">
+        <label>Date<input id="grid-date" type="date" /></label>
+        <label>Team<select id="grid-team"><option value="all">All teams</option></select></label>
+        <label>Probable pitcher<select id="grid-pitcher"><option value="all">All pitchers</option></select></label>
+        <label>History<select id="grid-history"><option value="all">All hitters</option><option value="history">Has matchup history</option><option value="none">No matchup history</option></select></label>
+        <label>Search<input id="grid-search" type="search" placeholder="Hitter, team, or pitcher" /></label>
+        <label>Roster view<select id="grid-roster-view"><option value="all">All hitters</option><option value="mine">My players only</option></select></label>
+        <div class="daily-grid-actions"><button class="primary-action" id="grid-load" type="button">Load matchups</button><button id="grid-export" type="button">Export CSV</button></div>
+      </div>
+      <div class="my-player-panel"><label>My fantasy players<textarea id="grid-my-players" placeholder="Paste names separated by commas or new lines"></textarea></label><button id="grid-save-players" type="button">Save player list</button></div>
+      <details class="fantasy-import-panel">
+        <summary>Import a fantasy roster</summary>
+        <div class="fantasy-import-grid">
+          <section class="fantasy-import-card" aria-labelledby="espn-import-title">
+            <div><p class="eyebrow">ESPN Fantasy Baseball</p><h3 id="espn-import-title">Import a public-league roster</h3><p>Find the league ID and team ID in your ESPN fantasy league URL. Private leagues can still use the player-name box above.</p></div>
+            <div class="fantasy-import-fields">
+              <label>League ID<input id="espn-league-id" inputmode="numeric" placeholder="12345678" /></label>
+              <label>Team ID<input id="espn-team-id" inputmode="numeric" placeholder="1" /></label>
+              <label>Season<input id="espn-season" inputmode="numeric" /></label>
+            </div>
+            <button class="fantasy-import-action" id="espn-import" type="button">Import ESPN roster</button>
+          </section>
+          <section class="fantasy-import-card" aria-labelledby="yahoo-import-title">
+            <div><p class="eyebrow">Yahoo Fantasy Baseball</p><h3 id="yahoo-import-title">Connect your Yahoo roster</h3><p id="yahoo-import-copy">Checking whether Yahoo connection is available…</p></div>
+            <div id="yahoo-team-wrap" hidden><label>Yahoo team<select id="yahoo-team"><option value="">Choose a team</option></select></label></div>
+            <a class="fantasy-import-action primary-link" id="yahoo-connect" href="/.netlify/functions/yahoo-auth" hidden>Connect Yahoo</a>
+            <button class="fantasy-import-action" id="yahoo-import" type="button" hidden>Import Yahoo roster</button>
+          </section>
+        </div>
+        <p class="fantasy-import-status" id="fantasy-import-status" aria-live="polite"></p>
+      </details>
+      <p class="daily-grid-status" id="grid-status" aria-live="polite">Choose a date and load the board.</p>
+    </section>
+    <section class="panel leaderboard daily-matchup-table"><div class="section-head"><div><p class="eyebrow">Daily Grid</p><h2 id="grid-title">Active hitters vs. probable starters</h2><small class="data-note">Career batter-vs-pitcher results. Use alongside role, lineup spot, park, recent form, and pitcher quality—not as a projection by itself.</small></div></div><div class="table-wrap"><table><thead id="grid-head"></thead><tbody id="grid-body"></tbody></table></div></section>
+    <footer class="site-footer"><a href="about.html">About</a><a href="data-sources.html">Data Sources</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a></footer>
+  </main>
+</div><script src="daily-matchup-grid.js?v=20260901-roster-import"></script><script src="stat-tooltips.js?v=20260821-site-usability"></script></body>
+</html>
