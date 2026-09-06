@@ -1671,7 +1671,7 @@ function renderChart() {
   const direction = defaultSortDir(activeMetric);
   const query = currentPlayerSearchQuery();
   const sourceRows = query && manualQualifierThreshold() === null ? statusFilteredRows(positionFilteredRows(leaderRows)) : qualifiedRows(leaderRows);
-  const data = sourceRows.filter((player) => matchesPlayerSearch(player, query)).slice().sort((a, b) => (a[activeMetric] - b[activeMetric]) * direction).slice(0, 7);
+  const data = sourceRows.filter((player) => matchesPlayerSearch(player, query)).slice().sort((a, b) => (a[activeMetric] - b[activeMetric]) * direction).slice(0, 10);
   if (!data.length) {
     document.querySelector("#bar-chart").innerHTML = `<div class="empty-state">No players found for this filter.</div>`;
     return;
