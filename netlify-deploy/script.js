@@ -1061,21 +1061,21 @@ async function fetchStandings(year) {
   return rows;
 }
 
-function scheduleUrlForDateRange() {
-  const range = normalizeDateRange();
+function scheduleUrlForDateRange(range = normalizeDateRange()) {
   const params = new URLSearchParams({
     sportId: "1",
+    gameType: "R",
     startDate: range.start,
     endDate: range.end
   });
   return `https://statsapi.mlb.com/api/v1/schedule?${params.toString()}`;
 }
 
-async function fetchDateRangeTeamRecords() {
-  activeDateRange = normalizeDateRange();
-  const cacheKey = `${activeLeague}:${activeDateRange.start}:${activeDateRange.end}`;
+async function fetchDateRangeTeamRecords(requestedRange = normalizeDateRange()) {
+  const range = normalizeDateRange(requestedRange.start, requestedRange.end);
+  const cacheKey = `${activeLeague}:${range.start}:${range.end}`;
   if (scheduleRecordCache.has(cacheKey)) return scheduleRecordCache.get(cacheKey);
-  const response = await fetch(scheduleUrlForDateRange());
+  const response = await fetch(scheduleUrlForDateRange(range));
   if (!response.ok) throw new Error(`MLB schedule returned ${response.status}`);
   const data = await response.json();
   const records = new Map();
@@ -1117,7 +1117,7 @@ async function fetchDateRangeTeamRecords() {
   });
   let rows = Array.from(records.values());
   if (activeLeague !== "all") {
-    const standings = await fetchStandings(Number(activeDateRange.end.slice(0, 4)) || Number(activeSeason));
+    const standings = await fetchStandings(Number(range.end.slice(0, 4)) || Number(activeSeason));
     const allowedIds = new Set(standings.map((team) => String(team.id)));
     rows = rows.filter((team) => allowedIds.has(String(team.id)));
   }
@@ -1135,8 +1135,7 @@ function teamStatsUrl(year) {
   return `https://statsapi.mlb.com/api/v1/teams/stats?${params.toString()}`;
 }
 
-function teamDateRangeStatsUrl(group = config.group) {
-  const range = normalizeDateRange();
+function teamDateRangeStatsUrl(group = config.group, range = normalizeDateRange()) {
   const params = new URLSearchParams({
     season: range.end.slice(0, 4),
     group,
@@ -1199,11 +1198,11 @@ async function fetchTeamStats(year) {
   return rows;
 }
 
-async function fetchDateRangeTeamStats() {
-  activeDateRange = normalizeDateRange();
-  const cacheKey = `${boardType}:${activeDateRange.start}:${activeDateRange.end}`;
+async function fetchDateRangeTeamStats(requestedRange = normalizeDateRange()) {
+  const range = normalizeDateRange(requestedRange.start, requestedRange.end);
+  const cacheKey = `${boardType}:${range.start}:${range.end}`;
   if (teamStatsCache.has(cacheKey)) return teamStatsCache.get(cacheKey);
-  const response = await fetch(teamDateRangeStatsUrl());
+  const response = await fetch(teamDateRangeStatsUrl(config.group, range));
   if (!response.ok) throw new Error(`MLB team stats returned ${response.status}`);
   const data = await response.json();
   const rows = (data.stats?.[0]?.splits || []).map(mapTeamStat);
@@ -1232,11 +1231,11 @@ async function fetchTeamPitchingSummary(year) {
   return rows;
 }
 
-async function fetchDateRangeTeamPitchingSummary() {
-  activeDateRange = normalizeDateRange();
-  const cacheKey = `pitching-summary:${activeDateRange.start}:${activeDateRange.end}`;
+async function fetchDateRangeTeamPitchingSummary(requestedRange = normalizeDateRange()) {
+  const range = normalizeDateRange(requestedRange.start, requestedRange.end);
+  const cacheKey = `pitching-summary:${range.start}:${range.end}`;
   if (teamPitchingSummaryCache.has(cacheKey)) return teamPitchingSummaryCache.get(cacheKey);
-  const response = await fetch(teamDateRangeStatsUrl("pitching"));
+  const response = await fetch(teamDateRangeStatsUrl("pitching", range));
   if (!response.ok) throw new Error(`MLB pitching stats returned ${response.status}`);
   const data = await response.json();
   const rows = (data.stats?.[0]?.splits || []).map((split) => ({
@@ -1255,8 +1254,8 @@ async function teamRowsForYear(year) {
   return standings.map((team) => ({ ...team, ...(statsById.get(String(team.id)) || {}), ...(pitchingById.get(String(team.id)) || {}) }));
 }
 
-async function teamRowsForDateRange() {
-  const [standings, stats, pitchingSummary] = await Promise.all([fetchDateRangeTeamRecords(), fetchDateRangeTeamStats(), fetchDateRangeTeamPitchingSummary()]);
+async function teamRowsForDateRange(range = normalizeDateRange()) {
+  const [standings, stats, pitchingSummary] = await Promise.all([fetchDateRangeTeamRecords(range), fetchDateRangeTeamStats(range), fetchDateRangeTeamPitchingSummary(range)]);
   const statsById = new Map(stats.map((team) => [String(team.id), team]));
   const pitchingById = new Map(pitchingSummary.map((team) => [String(team.id), team]));
   return standings.map((team) => ({ ...team, ...(statsById.get(String(team.id)) || {}), ...(pitchingById.get(String(team.id)) || {}) }));
@@ -1267,13 +1266,18 @@ function teamMetricWeight(team) {
   return Math.max(1, Number(team.pa) || 1);
 }
 
-async function currentTeams() {
-  if (activeMode === "single") return (await teamRowsForYear(Number(activeSeason))).slice();
-  if (activeMode === "date") return (await teamRowsForDateRange()).slice();
+function yearlyDateRanges(range = normalizeDateRange()) {
+  const startYear = Number(range.start.slice(0, 4));
+  const endYear = Number(range.end.slice(0, 4));
+  return yearList(startYear, endYear).map((year) => ({
+    start: year === startYear ? range.start : `${year}-01-01`,
+    end: year === endYear ? range.end : `${year}-12-31`
+  }));
+}
 
+function aggregateTeamRows(rowGroups) {
   const byTeam = new Map();
-  const years = await fetchInBatches(yearList(activeRange.start, activeRange.end), teamRowsForYear, 4);
-  years.flat().forEach((team) => {
+  rowGroups.flat().forEach((team) => {
     const existing = byTeam.get(team.id) || {
       ...team,
       wins: 0,
@@ -1299,11 +1303,11 @@ async function currentTeams() {
       seasons: 0
     };
     const weight = teamMetricWeight(team);
-    existing.wins += team.wins;
-    existing.losses += team.losses;
-    existing.runs += team.runs;
-    existing.runsAllowed += team.runsAllowed;
-    existing.runDifferential += team.runDifferential;
+    existing.wins += team.wins || 0;
+    existing.losses += team.losses || 0;
+    existing.runs += team.runs || 0;
+    existing.runsAllowed += team.runsAllowed || 0;
+    existing.runDifferential += team.runDifferential || 0;
     existing.hits += team.hits || 0;
     existing.earnedRuns += team.earnedRuns || 0;
     existing.walks += team.walks || 0;
@@ -1329,6 +1333,18 @@ async function currentTeams() {
     byTeam.set(team.id, existing);
   });
   return Array.from(byTeam.values());
+}
+
+async function currentTeams() {
+  if (activeMode === "single") return (await teamRowsForYear(Number(activeSeason))).slice();
+  if (activeMode === "date") {
+    const ranges = yearlyDateRanges();
+    const rows = await fetchInBatches(ranges, teamRowsForDateRange, 4);
+    return ranges.length === 1 ? rows[0].slice() : aggregateTeamRows(rows);
+  }
+
+  const years = await fetchInBatches(yearList(activeRange.start, activeRange.end), teamRowsForYear, 4);
+  return aggregateTeamRows(years);
 }
 
 function renderTeamLoading() {
@@ -1653,7 +1669,9 @@ function renderSummary() {
   document.querySelector("#save-rate").textContent = boardType === "pitching" ? `${summary.saves}%` : summary.power.toFixed(2);
   const scaleNote = showMetricBars() ? ` <span class="chart-scale-note">bars scaled to leader</span>` : "";
   document.querySelector("#chart-title").innerHTML = `${label} ${config.chartNoun} leaders${scaleNote}`;
-  document.querySelector("#compare-title").textContent = `${teamScopeLabel()} club comparison`;
+  document.querySelector("#compare-title").textContent = activeMode === "single"
+    ? `${teamScopeLabel()} club comparison`
+    : `${teamScopeLabel()} club comparison · period totals and rates`;
   const tableNoun = activeTeamId === "all" ? "leaders" : "players";
   document.querySelector("#table-title").textContent = activeMode === "single"
     ? `${label} ${config.label} ${tableNoun}`
