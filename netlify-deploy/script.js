@@ -746,13 +746,23 @@ function mapApiPlayer(split) {
   };
 }
 
+function filterPlayersToActiveTeam(rows) {
+  if (activeTeamId === "all") return rows;
+  const selectedTeam = teamRows.find((team) => String(team.id) === String(activeTeamId));
+  const selectedAbbr = selectedTeam?.abbr || abbreviationFor(currentTeamNamesById[Number(activeTeamId)] || activeTeamName);
+  if (!selectedAbbr) return rows;
+  return rows.filter((player) => String(player.team).toUpperCase() === String(selectedAbbr).toUpperCase());
+}
+
 async function fetchSeasonLeaders(year) {
   const cacheKey = `${boardType}:${activeLeague}:${activeTeamId}:${year}`;
   if (seasonLeaderCache.has(cacheKey)) return seasonLeaderCache.get(cacheKey);
   const response = await fetch(mlbStatsUrl(year));
   if (!response.ok) throw new Error(`MLB Stats API returned ${response.status}`);
   const data = await response.json();
-  const rows = (data.stats?.[0]?.splits || []).map(mapApiPlayer).filter((player) => playerWeight(player) > 0);
+  const rows = filterPlayersToActiveTeam(
+    (data.stats?.[0]?.splits || []).map(mapApiPlayer).filter((player) => playerWeight(player) > 0)
+  );
   seasonLeaderCache.set(cacheKey, rows);
   return rows;
 }
@@ -789,7 +799,9 @@ async function fetchDateRangeLeaders() {
   const response = await fetch(mlbDateRangeStatsUrl());
   if (!response.ok) throw new Error(`MLB Stats API returned ${response.status}`);
   const data = await response.json();
-  const rows = (data.stats?.[0]?.splits || []).map(mapApiPlayer).filter((player) => playerWeight(player) > 0);
+  const rows = filterPlayersToActiveTeam(
+    (data.stats?.[0]?.splits || []).map(mapApiPlayer).filter((player) => playerWeight(player) > 0)
+  );
   dateLeaderCache.set(cacheKey, rows);
   return rows;
 }
