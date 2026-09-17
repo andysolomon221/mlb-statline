@@ -174,8 +174,8 @@ async function fetchJson(url) {
   return response.json();
 }
 
-async function scheduleGames(date) {
-  if (scheduleCache.has(date)) return scheduleCache.get(date);
+async function scheduleGames(date, refresh = false) {
+  if (!refresh && scheduleCache.has(date)) return scheduleCache.get(date);
   const params = new URLSearchParams({ sportId: "1", date, hydrate: "probablePitcher" });
   const data = await fetchJson(`https://statsapi.mlb.com/api/v1/schedule?${params.toString()}`);
   const games = data.dates?.[0]?.games || [];
@@ -430,14 +430,15 @@ async function resolveTypedPlayer(role) {
   const input = document.querySelector(role === "batter" ? "#batter-autocomplete" : "#pitcher-autocomplete");
   const current = role === "batter" ? batter : pitcher;
   const cleanValue = cleanPlayerInput(input.value);
-  if (!cleanValue || cleanValue.toLowerCase() === current.fullName.toLowerCase()) return current;
+  if (!cleanValue) throw new Error(`Choose a ${role}`);
+  if (cleanValue.toLowerCase() === current.fullName.toLowerCase()) return current;
   const candidates = role === "batter" ? batterCandidates : pitcherCandidates;
   let selected = candidates.find((person) => person.fullName.toLowerCase() === cleanValue.toLowerCase() || displayPlayerOption(person).toLowerCase() === input.value.trim().toLowerCase());
   if (!selected) {
     const searched = await searchPeople(cleanValue, role === "pitcher" ? "pitching" : "hitting");
     selected = searched[0];
   }
-  if (!selected) return current;
+  if (!selected) throw new Error(`Choose a valid ${role}`);
   if (role === "batter") {
     batter = selected;
     batterCandidates = uniquePeople([selected, ...batterCandidates]);
@@ -479,6 +480,8 @@ function renderGameDay(games) {
     const homeTeam = teamFromScheduleTeam(game.teams?.home?.team);
     const awayPitcher = game.teams?.away?.probablePitcher?.fullName || "TBA";
     const homePitcher = game.teams?.home?.probablePitcher?.fullName || "TBA";
+    const awayStarterConfirmed = Boolean(game.teams?.away?.probablePitcher?.id);
+    const homeStarterConfirmed = Boolean(game.teams?.home?.probablePitcher?.id);
     const venue = game.venue?.name || "Ballpark";
     return `
       <article class="game-day-card">
@@ -492,14 +495,19 @@ function renderGameDay(games) {
           <span>${escapeHtml(homeTeam.abbr)} starter: ${escapeHtml(homePitcher)}</span>
         </div>
         <div class="game-day-actions">
-          <button type="button" data-game-pick="${game.gamePk}" data-batting-side="away">${escapeHtml(awayTeam.abbr)} hitters vs ${escapeHtml(homeTeam.abbr)} starter</button>
-          <button type="button" data-game-pick="${game.gamePk}" data-batting-side="home">${escapeHtml(homeTeam.abbr)} hitters vs ${escapeHtml(awayTeam.abbr)} starter</button>
+          <button type="button" data-game-pick="${game.gamePk}" data-batting-side="away"${homeStarterConfirmed ? "" : " disabled"}>${homeStarterConfirmed ? `${escapeHtml(awayTeam.abbr)} hitters vs ${escapeHtml(homeTeam.abbr)} starter` : `${escapeHtml(homeTeam.abbr)} starter TBA`}</button>
+          ${homeStarterConfirmed ? "" : `<button type="button" data-game-manual="${game.gamePk}" data-batting-side="away">Choose pitcher manually for ${escapeHtml(awayTeam.abbr)}</button>`}
+          <button type="button" data-game-pick="${game.gamePk}" data-batting-side="home"${awayStarterConfirmed ? "" : " disabled"}>${awayStarterConfirmed ? `${escapeHtml(homeTeam.abbr)} hitters vs ${escapeHtml(awayTeam.abbr)} starter` : `${escapeHtml(awayTeam.abbr)} starter TBA`}</button>
+          ${awayStarterConfirmed ? "" : `<button type="button" data-game-manual="${game.gamePk}" data-batting-side="home">Choose pitcher manually for ${escapeHtml(homeTeam.abbr)}</button>`}
         </div>
       </article>
     `;
   }).join("");
   grid.querySelectorAll("[data-game-pick]").forEach((button) => {
     button.addEventListener("click", () => applyGameDayMatchup(Number(button.dataset.gamePick), button.dataset.battingSide));
+  });
+  grid.querySelectorAll("[data-game-manual]").forEach((button) => {
+    button.addEventListener("click", () => applyGameDayMatchup(Number(button.dataset.gameManual), button.dataset.battingSide, true));
   });
 }
 
@@ -630,13 +638,13 @@ async function loadGameDay() {
   const grid = document.querySelector("#game-day-grid");
   if (grid) grid.innerHTML = `<div class="empty-state loading-state" role="status">Loading today's games...</div>`;
   try {
-    renderGameDay(await scheduleGames(activeGameDayDate));
+    renderGameDay(await scheduleGames(activeGameDayDate, true));
   } catch (error) {
     if (grid) grid.innerHTML = `<div class="empty-state">Could not load games for this date.<button type="button" onclick="loadGameDay()">Try again</button></div>`;
   }
 }
 
-async function applyGameDayMatchup(gamePk, battingSide) {
+async function applyGameDayMatchup(gamePk, battingSide, manual = false) {
   const games = await scheduleGames(activeGameDayDate);
   const game = games.find((row) => Number(row.gamePk) === Number(gamePk));
   if (!game) return;
@@ -647,6 +655,7 @@ async function applyGameDayMatchup(gamePk, battingSide) {
   const probable = battingSide === "home"
     ? probablePitcherFromSchedule(game.teams?.away?.probablePitcher, pitchingTeam)
     : probablePitcherFromSchedule(game.teams?.home?.probablePitcher, pitchingTeam);
+  if (!probable && !manual) return;
 
   activeMatchupTool = "team-pitcher";
   setMatchupWorkspaceOpen(true);
@@ -655,8 +664,22 @@ async function applyGameDayMatchup(gamePk, battingSide) {
   document.querySelector("#matchup-batting-team").value = battingTeam.abbr;
   document.querySelector("#matchup-pitching-team").value = pitchingTeam.abbr;
   document.querySelector("#matchup-park").value = parks.some(([abbr]) => abbr === homeTeam.abbr) ? homeTeam.abbr : "neutral";
-  if (probable) pitcher = probable;
-  await populateTeamPlayerDropdowns({ selectFirst: !probable });
+  if (probable && !manual) pitcher = probable;
+  if (manual) {
+    document.querySelector("#matchup-status").textContent = "Starter TBA · choose a pitcher for a hypothetical matchup";
+    matchupAnswerText = "";
+    document.querySelector(".matchup-answer-panel").hidden = true;
+    document.querySelector(".matchup-offense-panel").hidden = true;
+  }
+  await populateTeamPlayerDropdowns();
+  if (manual) {
+    document.querySelector("#pitcher-autocomplete").value = "";
+    const url = new URL(window.location.href);
+    url.search = "mode=probables";
+    window.history.replaceState({}, "", url);
+    document.querySelector(".matchup-controls-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
   if (probable) {
     pitcherCandidates = uniquePeople([probable, ...pitcherCandidates]);
     setPlayerInput("pitcher", probable);

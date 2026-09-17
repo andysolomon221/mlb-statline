@@ -3283,6 +3283,15 @@ td {
   background: var(--surface);
 }
 
+.game-day-actions button:disabled,
+.game-day-actions button:disabled:hover {
+  color: var(--muted);
+  background: var(--surface-soft);
+  border-color: var(--line);
+  cursor: not-allowed;
+  opacity: .7;
+}
+
 .matchup-form-grid,
 .matchup-setup-grid {
   display: grid;
