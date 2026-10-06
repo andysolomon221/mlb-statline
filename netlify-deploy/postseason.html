@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="styles.css?v=20261005-postseason" />
-    <link rel="stylesheet" href="postseason.css?v=20261005-postseason" />
+    <link rel="stylesheet" href="postseason.css?v=20261005-postseason-career" />
   </head>
   <body data-board="postseason">
     <div class="app-shell">
@@ -72,6 +72,19 @@
               <h2 id="postseason-scope">Combined postseason leaders</h2>
               <small class="data-note">Statistics come from the MLB Stats API and include only the selected postseason games.</small>
             </div>
+          </div>
+          <div class="mode-toggle postseason-mode-toggle" role="group" aria-label="Postseason scope">
+            <button class="active" type="button" data-postseason-mode="single">Single year</button>
+            <button type="button" data-postseason-mode="range">Year range</button>
+            <button type="button" data-postseason-mode="career">Career</button>
+          </div>
+          <div class="postseason-range-years" id="postseason-range-years">
+            <label>From
+              <select id="postseason-start" aria-label="Postseason range start year"></select>
+            </label>
+            <label>To
+              <select id="postseason-end" aria-label="Postseason range end year"></select>
+            </label>
           </div>
           <div class="postseason-filter-grid">
             <label>Player Type
@@ -132,6 +145,6 @@
         </footer>
       </main>
     </div>
-    <script src="postseason.js?v=20261005-postseason"></script>
+    <script src="postseason.js?v=20261005-postseason-career-v2"></script>
   </body>
 </html>

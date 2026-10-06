@@ -32,6 +32,9 @@ const definitions = {
 let rows = [];
 let group = query.get("group") === "pitching" ? "pitching" : "hitting";
 let season = clampSeason(query.get("season"));
+let mode = ["single", "range", "career"].includes(query.get("mode")) ? query.get("mode") : "single";
+let rangeStart = clampSeason(query.get("start") || Math.max(1903, season - 4));
+let rangeEnd = clampSeason(query.get("end") || season);
 let round = roundNames[query.get("round")] ? query.get("round") : "P";
 let team = query.get("team") || "all";
 let minimum = Math.max(0, Number(query.get("min")) || 0);
@@ -59,8 +62,34 @@ function formatStat(key, value) {
 
 function populateYears() {
   const select = document.querySelector("#postseason-year");
-  for (let year = currentYear; year >= 1903; year -= 1) select.add(new Option(String(year), String(year)));
+  const startSelect = document.querySelector("#postseason-start");
+  const endSelect = document.querySelector("#postseason-end");
+  for (let year = currentYear; year >= 1903; year -= 1) {
+    select.add(new Option(String(year), String(year)));
+    startSelect.add(new Option(String(year), String(year)));
+    endSelect.add(new Option(String(year), String(year)));
+  }
   select.value = String(season);
+  startSelect.value = String(rangeStart);
+  endSelect.value = String(rangeEnd);
+}
+
+function scopeLabel() {
+  if (mode === "career") return "Career";
+  if (mode === "range") return rangeStart === rangeEnd ? String(rangeStart) : `${rangeStart}–${rangeEnd}`;
+  return String(season);
+}
+
+function scopeGamesLabel() {
+  if (mode === "career") return "career postseason";
+  if (mode === "range") return `${rangeStart}–${rangeEnd} postseason`;
+  return `${season} postseason`;
+}
+
+function updateModeControls() {
+  document.querySelectorAll("[data-postseason-mode]").forEach(button => button.classList.toggle("active", button.dataset.postseasonMode === mode));
+  document.querySelector("#postseason-range-years").classList.toggle("is-visible", mode === "range");
+  document.querySelector(".postseason-hero .season-control").hidden = mode !== "single";
 }
 
 function configureGroup() {
@@ -78,11 +107,17 @@ function configureGroup() {
   sort = { key: metric, direction: config.lowerBetter?.has(metric) ? 1 : -1 };
 }
 
-function endpoint() {
+function endpoint(offset = 0) {
   const params = new URLSearchParams({
-    stats: "season", group, season: String(season), gameType: round, playerPool: "ALL", limit: "5000", hydrate: "team",
+    stats: mode === "career" ? "career" : mode === "range" ? "byDateRange" : "season",
+    group, gameType: round, playerPool: "ALL", limit: "1000", offset: String(offset), hydrate: "team",
     sortStat: metric
   });
+  if (mode === "single") params.set("season", String(season));
+  if (mode === "range") {
+    params.set("startDate", `09/01/${rangeStart}`);
+    params.set("endDate", `12/01/${rangeEnd}`);
+  }
   return `${MLB_STATS}?${params}`;
 }
 
@@ -94,7 +129,21 @@ async function loadRows() {
     if (!response.ok) throw new Error(`MLB Stats API returned ${response.status}`);
     const data = await response.json();
     if (activeRequest !== requestId) return;
-    rows = data.stats?.[0]?.splits || [];
+    const firstStat = data.stats?.[0] || {};
+    rows = firstStat.splits || [];
+    const total = number(firstStat.totalSplits);
+    if (total > rows.length) {
+      const offsets = [];
+      for (let offset = rows.length; offset < total; offset += 1000) offsets.push(offset);
+      const pages = await Promise.all(offsets.map(async offset => {
+        const pageResponse = await fetch(endpoint(offset));
+        if (!pageResponse.ok) throw new Error(`MLB Stats API returned ${pageResponse.status}`);
+        const page = await pageResponse.json();
+        return page.stats?.[0]?.splits || [];
+      }));
+      if (activeRequest !== requestId) return;
+      rows = rows.concat(...pages);
+    }
     populateTeams();
     render();
   } catch (error) {
@@ -115,6 +164,14 @@ function setLoading() {
 
 function populateTeams() {
   const select = document.querySelector("#postseason-team");
+  if (mode === "career") {
+    team = "all";
+    select.innerHTML = `<option value="all">All teams · career totals</option>`;
+    select.value = "all";
+    select.disabled = true;
+    return;
+  }
+  select.disabled = false;
   const found = new Map(rows.map(row => [String(row.team?.id || row.team?.name), row.team?.name || "Unknown Team"]));
   const teams = Array.from(found.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   select.innerHTML = `<option value="all">All teams</option>${teams.map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join("")}`;
@@ -143,10 +200,11 @@ function render() {
   const visible = size === "all" ? allFiltered : allFiltered.slice(0, 20);
   const teamName = team === "all" ? "MLB" : document.querySelector("#postseason-team").selectedOptions[0]?.textContent;
   const roundName = roundNames[round];
-  document.querySelector("#postseason-scope").textContent = `${season} ${roundName} leaders`;
+  const scope = scopeLabel();
+  document.querySelector("#postseason-scope").textContent = `${scope} ${roundName} leaders`;
   document.querySelector("#postseason-eyebrow").textContent = `Postseason ${config.label}`;
-  document.querySelector("#postseason-title").textContent = `${season} ${teamName} ${config.label.toLowerCase()} leaders · ${roundName}`;
-  document.querySelector("#postseason-note").textContent = `${allFiltered.length} players match the current filters. Totals include only ${roundName.toLowerCase()} games.`;
+  document.querySelector("#postseason-title").textContent = `${scope} ${teamName} ${config.label.toLowerCase()} leaders · ${roundName}`;
+  document.querySelector("#postseason-note").textContent = `${allFiltered.length} players match the current filters. Totals include only ${scopeGamesLabel()} games in the selected round.`;
   document.querySelector("#postseason-head").innerHTML = `<tr><th>Player</th><th>Team</th>${config.metrics.map(([key, label]) => `<th><button type="button" data-sort="${key}" aria-sort="${sort.key === key ? (sort.direction === 1 ? "ascending" : "descending") : "none"}">${label}</button></th>`).join("")}</tr>`;
   document.querySelector("#postseason-body").innerHTML = visible.length ? visible.map(row => `
     <tr>
@@ -174,7 +232,9 @@ function changeSort(key) {
 }
 
 function syncUrl() {
-  const params = new URLSearchParams({ season: String(season), round, group, metric, min: String(minimum) });
+  const params = new URLSearchParams({ mode, round, group, metric, min: String(minimum) });
+  if (mode === "single") params.set("season", String(season));
+  if (mode === "range") { params.set("start", String(rangeStart)); params.set("end", String(rangeEnd)); }
   if (team !== "all") params.set("team", team);
   if (size === "all") params.set("size", "all");
   history.replaceState(null, "", `${location.pathname}?${params}`);
@@ -183,6 +243,24 @@ function syncUrl() {
 function bind() {
   document.querySelector("#postseason-year").addEventListener("change", event => { season = number(event.target.value); team = "all"; loadRows(); });
   document.querySelector("#postseason-round").addEventListener("change", event => { round = event.target.value; team = "all"; loadRows(); });
+  document.querySelectorAll("[data-postseason-mode]").forEach(button => button.addEventListener("click", () => {
+    mode = button.dataset.postseasonMode;
+    team = "all";
+    updateModeControls();
+    loadRows();
+  }));
+  document.querySelector("#postseason-start").addEventListener("change", event => {
+    rangeStart = number(event.target.value);
+    if (rangeStart > rangeEnd) { rangeEnd = rangeStart; document.querySelector("#postseason-end").value = String(rangeEnd); }
+    team = "all";
+    loadRows();
+  });
+  document.querySelector("#postseason-end").addEventListener("change", event => {
+    rangeEnd = number(event.target.value);
+    if (rangeEnd < rangeStart) { rangeStart = rangeEnd; document.querySelector("#postseason-start").value = String(rangeStart); }
+    team = "all";
+    loadRows();
+  });
   document.querySelector("#postseason-group").addEventListener("change", event => { group = event.target.value; metric = definitions[group].defaultMetric; minimum = 0; team = "all"; configureGroup(); loadRows(); });
   document.querySelector("#postseason-team").addEventListener("change", event => { team = event.target.value; render(); });
   document.querySelector("#postseason-min").addEventListener("change", event => { minimum = number(event.target.value); render(); });
@@ -204,6 +282,7 @@ function bind() {
 populateYears();
 document.querySelector("#postseason-round").value = round;
 configureGroup();
+updateModeControls();
 document.querySelectorAll("[data-postseason-size]").forEach(button => button.classList.toggle("active", button.dataset.postseasonSize === size));
 bind();
 loadRows();
