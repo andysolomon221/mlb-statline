@@ -144,6 +144,7 @@ async function loadRows() {
       if (activeRequest !== requestId) return;
       rows = rows.concat(...pages);
     }
+    rows = Array.from(new Map(rows.map(row => [String(row.player?.id || row.player?.fullName), row])).values());
     populateTeams();
     render();
   } catch (error) {
