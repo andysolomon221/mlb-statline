@@ -42,11 +42,13 @@ let rangeStart = clampSeason(query.get("start") || Math.max(1903, season - 4));
 let rangeEnd = clampSeason(query.get("end") || season);
 let round = roundNames[query.get("round")] ? query.get("round") : "P";
 let team = query.get("team") || "all";
+let playerStatus = query.get("status") === "active" ? "active" : "all";
 let minimum = Math.max(0, Number(query.get("min")) || 0);
 let metric = query.get("metric") || definitions[group].defaultMetric;
 let size = query.get("size") === "all" ? "all" : "20";
 let sort = { key: metric, direction: definitions[group].lowerBetter?.has(metric) ? 1 : -1 };
 let requestId = 0;
+const activePlayerIdsByGroup = new Map();
 
 function number(value) { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : 0; }
 function clampSeason(value) { const parsed = Number(value); return Number.isFinite(parsed) && parsed >= 1903 && parsed <= currentYear ? parsed : currentYear; }
@@ -127,6 +129,21 @@ function endpoint(offset = 0) {
   return `${MLB_STATS}?${params}`;
 }
 
+async function activePlayerIds() {
+  if (activePlayerIdsByGroup.has(group)) return activePlayerIdsByGroup.get(group);
+  const params = new URLSearchParams({
+    stats: "season", group, season: String(currentYear), gameType: "R", playerPool: "ALL", limit: "5000"
+  });
+  const response = await fetch(`${MLB_STATS}?${params}`);
+  if (!response.ok) throw new Error(`MLB Stats API returned ${response.status}`);
+  const data = await response.json();
+  const ids = new Set((data.stats?.[0]?.splits || [])
+    .map(row => String(row.player?.id || row.player?.fullName || ""))
+    .filter(Boolean));
+  activePlayerIdsByGroup.set(group, ids);
+  return ids;
+}
+
 async function loadRows() {
   const activeRequest = ++requestId;
   setLoading();
@@ -151,6 +168,8 @@ async function loadRows() {
       rows = rows.concat(...pages);
     }
     rows = Array.from(new Map(rows.map(row => [String(row.player?.id || row.player?.fullName), row])).values());
+    if (playerStatus === "active") await activePlayerIds();
+    if (activeRequest !== requestId) return;
     populateTeams();
     render();
   } catch (error) {
@@ -189,11 +208,13 @@ function populateTeams() {
 function filteredRows() {
   const search = document.querySelector("#postseason-search").value.trim().toLowerCase();
   const config = definitions[group];
+  const activeIds = activePlayerIdsByGroup.get(group);
   return rows.filter(row => {
     const matchesTeam = team === "all" || String(row.team?.id || row.team?.name) === String(team);
+    const matchesStatus = playerStatus === "all" || activeIds?.has(String(row.player?.id || row.player?.fullName));
     const matchesMinimum = config.weight(row) >= minimum;
     const matchesSearch = !search || String(row.player?.fullName || "").toLowerCase().includes(search);
-    return matchesTeam && matchesMinimum && matchesSearch;
+    return matchesTeam && matchesStatus && matchesMinimum && matchesSearch;
   }).sort((a, b) => {
     const aValue = sort.key === "inningsPitched" ? inningsOuts(a.stat?.[sort.key]) : number(a.stat?.[sort.key]);
     const bValue = sort.key === "inningsPitched" ? inningsOuts(b.stat?.[sort.key]) : number(b.stat?.[sort.key]);
@@ -215,7 +236,7 @@ function renderTopTen() {
   const scope = scopeLabel();
   const roundName = roundNames[round];
   document.querySelector("#postseason-top10-title").textContent = `${scope} ${definitions[group].label.toLowerCase()} Top 10s`;
-  document.querySelector("#postseason-top10-note").textContent = `${roundName}. Each list follows the active team and minimum-sample filters.`;
+  document.querySelector("#postseason-top10-note").textContent = `${roundName}. Each list follows the player-status, team, and minimum-sample filters.`;
   document.querySelector("#postseason-top10-grid").innerHTML = topTenMetrics[group].map(([key, label]) => {
     const leaders = sortedForMetric(source, key).slice(0, 10);
     return `<article class="postseason-top10-card"><h3>${escapeHtml(label)}</h3>${leaders.length ? `<ol class="postseason-top10-list">${leaders.map((row, index) => `
@@ -237,7 +258,8 @@ function render() {
   document.querySelector("#postseason-scope").textContent = `${scope} ${roundName} leaders`;
   document.querySelector("#postseason-eyebrow").textContent = `Postseason ${config.label}`;
   document.querySelector("#postseason-title").textContent = `${scope} ${teamName} ${config.label.toLowerCase()} leaders · ${roundName}`;
-  document.querySelector("#postseason-note").textContent = `${allFiltered.length} players match the current filters. Totals include only ${scopeGamesLabel()} games in the selected round.`;
+  const activeNote = playerStatus === "active" ? ` Active means the player appeared during the ${currentYear} MLB regular season.` : "";
+  document.querySelector("#postseason-note").textContent = `${allFiltered.length} players match the current filters. Totals include only ${scopeGamesLabel()} games in the selected round.${activeNote}`;
   renderTopTen();
   document.querySelector("#postseason-head").innerHTML = `<tr><th>Player</th><th>Team</th>${config.metrics.map(([key, label]) => `<th><button type="button" data-sort="${key}" aria-sort="${sort.key === key ? (sort.direction === 1 ? "ascending" : "descending") : "none"}">${label}</button></th>`).join("")}</tr>`;
   document.querySelector("#postseason-body").innerHTML = visible.length ? visible.map(row => `
@@ -270,6 +292,7 @@ function syncUrl() {
   if (mode === "single") params.set("season", String(season));
   if (mode === "range") { params.set("start", String(rangeStart)); params.set("end", String(rangeEnd)); }
   if (team !== "all") params.set("team", team);
+  if (playerStatus === "active") params.set("status", "active");
   if (size === "all") params.set("size", "all");
   history.replaceState(null, "", `${location.pathname}?${params}`);
 }
@@ -297,6 +320,15 @@ function bind() {
   });
   document.querySelector("#postseason-group").addEventListener("change", event => { group = event.target.value; metric = definitions[group].defaultMetric; minimum = 0; team = "all"; configureGroup(); loadRows(); });
   document.querySelector("#postseason-team").addEventListener("change", event => { team = event.target.value; render(); });
+  document.querySelector("#postseason-status").addEventListener("change", async event => {
+    playerStatus = event.target.value;
+    if (playerStatus === "active" && !activePlayerIdsByGroup.has(group)) {
+      event.target.disabled = true;
+      try { await activePlayerIds(); }
+      finally { event.target.disabled = false; }
+    }
+    render();
+  });
   document.querySelector("#postseason-min").addEventListener("change", event => { minimum = number(event.target.value); render(); });
   document.querySelector("#postseason-metric").addEventListener("change", event => { metric = event.target.value; sort = { key: metric, direction: definitions[group].lowerBetter?.has(metric) ? 1 : -1 }; render(); });
   document.querySelector("#postseason-search").addEventListener("input", render);
@@ -315,6 +347,7 @@ function bind() {
 
 populateYears();
 document.querySelector("#postseason-round").value = round;
+document.querySelector("#postseason-status").value = playerStatus;
 configureGroup();
 updateModeControls();
 document.querySelectorAll("[data-postseason-size]").forEach(button => button.classList.toggle("active", button.dataset.postseasonSize === size));
