@@ -59,7 +59,8 @@ function formatStat(key, value) {
   if (value === undefined || value === null || value === "") return "—";
   if (definitions[group].rateMetrics.has(key)) {
     const places = key === "era" || key === "whip" ? 2 : 3;
-    return number(value).toFixed(places).replace(/^0(?=\.)/, "");
+    const formatted = number(value).toFixed(places);
+    return key === "era" ? formatted : formatted.replace(/^0(?=\.)/, "");
   }
   if (key === "inningsPitched") return String(value);
   return Math.round(number(value)).toLocaleString("en-US");
