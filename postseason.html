@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB Postseason Player Statistics | Stat Line Baseball</title>
+    <meta name="description" content="Explore MLB postseason batting and pitching leaders by year, round, team, and statistic." />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://www.statlinebaseball.com/postseason" />
+    <meta property="og:title" content="MLB Postseason Player Statistics" />
+    <meta property="og:description" content="Explore MLB playoff leaders by year, round, team, and statistic." />
+    <meta property="og:image" content="https://www.statlinebaseball.com/og-image.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="styles.css?v=20261005-postseason" />
+    <link rel="stylesheet" href="postseason.css?v=20261007-postseason-top10" />
+  </head>
+  <body data-board="postseason">
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary">
+        <a class="brand-mark" href="index.html" aria-label="Stat Line Baseball home"><img src="statline-logo.png" alt="Stat Line Baseball" /></a>
+        <nav class="rail-nav" data-grouped-navigation="true">
+          <div class="rail-nav-primary">
+            <a href="index.html">Home</a>
+            <a href="probable-pitcher-matchups-today.html">Tonight</a>
+            <a href="matchups.html">Matchups</a>
+            <a href="batting.html">Batting</a>
+            <a href="pitching.html">Pitching</a>
+            <a class="active" aria-current="page" href="postseason.html">Postseason</a>
+            <a href="compare.html">Compare</a>
+            <a href="standings.html">Standings</a>
+          </div>
+          <details class="rail-nav-more">
+            <summary>More Tools</summary>
+            <div class="rail-nav-more-links">
+              <a href="advanced.html">Advanced Stats</a>
+              <a href="pitch-types.html">Pitch Types</a>
+              <a href="damage-board.html">Damage Board</a>
+              <a href="trends.html">Trends</a>
+              <a href="career.html">Career</a>
+              <a href="splits.html">Splits</a>
+              <a href="age.html">Age Leaders</a>
+              <a href="starts.html">First Seasons</a>
+              <a href="span.html">Span Finder</a>
+              <a href="fantasy.html">Fantasy</a>
+              <a href="news.html">News</a>
+              <a href="teams.html">Teams</a>
+            </div>
+          </details>
+        </nav>
+      </aside>
+
+      <main>
+        <header class="topbar postseason-hero">
+          <div>
+            <p class="eyebrow">October Baseball</p>
+            <h1>MLB postseason statistics, round by round.</h1>
+            <p class="data-note">Playoff totals stay separate from regular-season statistics. Choose an entire postseason or isolate one round.</p>
+          </div>
+          <div class="season-control">
+            <label for="postseason-year">Choose Postseason</label>
+            <select id="postseason-year" aria-label="Choose postseason year"></select>
+          </div>
+        </header>
+
+        <noscript><section class="panel static-fallback"><h2>Postseason boards need JavaScript</h2><p>Enable JavaScript to load MLB playoff statistics.</p></section></noscript>
+
+        <section class="panel postseason-controls" aria-label="Postseason filters">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Refine Playoff Stats</p>
+              <h2 id="postseason-scope">Combined postseason leaders</h2>
+              <small class="data-note">Statistics come from the MLB Stats API and include only the selected postseason games.</small>
+            </div>
+          </div>
+          <div class="mode-toggle postseason-mode-toggle" role="group" aria-label="Postseason scope">
+            <button class="active" type="button" data-postseason-mode="single">Single year</button>
+            <button type="button" data-postseason-mode="range">Year range</button>
+            <button type="button" data-postseason-mode="career">Career</button>
+          </div>
+          <div class="postseason-range-years" id="postseason-range-years">
+            <label>From
+              <select id="postseason-start" aria-label="Postseason range start year"></select>
+            </label>
+            <label>To
+              <select id="postseason-end" aria-label="Postseason range end year"></select>
+            </label>
+          </div>
+          <div class="postseason-filter-grid">
+            <label>Player Type
+              <select id="postseason-group"><option value="hitting">Batting</option><option value="pitching">Pitching</option></select>
+            </label>
+            <label>Round
+              <select id="postseason-round">
+                <option value="P">All postseason rounds</option>
+                <option value="F">Wild Card</option>
+                <option value="D">Division Series</option>
+                <option value="L">League Championship Series</option>
+                <option value="W">World Series</option>
+              </select>
+            </label>
+            <label>Team
+              <select id="postseason-team"><option value="all">All teams</option></select>
+            </label>
+            <label>Player Status
+              <select id="postseason-status">
+                <option value="all">All players</option>
+                <option value="active">Active players</option>
+              </select>
+            </label>
+            <label id="postseason-min-label">Minimum PA
+              <select id="postseason-min"></select>
+            </label>
+            <label>Sort By
+              <select id="postseason-metric"></select>
+            </label>
+            <label>Search Player
+              <input id="postseason-search" type="search" placeholder="Try Shohei Ohtani..." />
+            </label>
+          </div>
+          <div class="league-toggle board-size-toggle" role="group" aria-label="Board size">
+            <button class="active" type="button" data-postseason-size="20">Top 20</button>
+            <button type="button" data-postseason-size="all">All players</button>
+          </div>
+          <div class="share-action-row">
+            <span class="share-action-label">Share this view</span>
+            <button id="postseason-copy-link" class="secondary-action" type="button">Copy Link</button>
+            <span class="copy-status" id="postseason-copy-status" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section class="panel postseason-top10" aria-labelledby="postseason-top10-title">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Postseason Leaderboards</p>
+              <h2 id="postseason-top10-title">Top 10 across the October categories</h2>
+              <small class="data-note" id="postseason-top10-note">Leaderboards follow the filters selected above.</small>
+            </div>
+          </div>
+          <div class="postseason-top10-grid" id="postseason-top10-grid"></div>
+        </section>
+
+        <section class="panel leaderboard postseason-board" id="postseason-leaders">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="postseason-eyebrow">Postseason Batting</p>
+              <h2 id="postseason-title">Loading playoff leaders…</h2>
+              <small class="data-note" id="postseason-note" aria-live="polite"></small>
+            </div>
+          </div>
+          <div class="postseason-highlight" id="postseason-highlight" aria-label="Postseason leader"></div>
+          <div class="table-wrap">
+            <table class="player-board-table">
+              <thead id="postseason-head"></thead>
+              <tbody id="postseason-body"><tr><td class="empty-row">Loading MLB postseason statistics…</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="site-footer">
+          <a href="about.html">About</a><a href="data-sources.html">Data Sources</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a>
+        </footer>
+      </main>
+    </div>
+  <script src="postseason.js?v=20261007-active-players"></script>
+  </body>
+</html>
