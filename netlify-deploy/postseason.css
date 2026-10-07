@@ -10,6 +10,20 @@
 .postseason-filter-grid select, .postseason-filter-grid input { width: 100%; min-height: 46px; }
 .postseason-board { min-width: 0; margin: 0 clamp(18px, 4vw, 54px) 38px; overflow: hidden; }
 .postseason-board .table-wrap { width: 100%; max-width: 100%; overflow-x: auto; }
+.postseason-top10 { margin: 0 clamp(18px, 4vw, 54px) 28px; }
+.postseason-top10-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 20px; }
+.postseason-top10-card { min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-muted); }
+.postseason-top10-card h3 { margin: 0 0 14px; font-size: 19px; }
+.postseason-top10-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.postseason-top10-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.postseason-top10-row:first-child { border-top: 0; }
+.postseason-top10-rank { color: var(--red); font-size: 12px; font-weight: 1000; }
+.postseason-top10-player { min-width: 0; }
+.postseason-top10-player a { display: block; overflow: hidden; color: var(--ink); font-weight: 900; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.postseason-top10-player a:hover { color: var(--red); }
+.postseason-top10-player small { color: var(--muted); font-weight: 800; }
+.postseason-top10-value { color: var(--navy); font-size: 17px; font-weight: 1000; }
+.postseason-top10-empty { margin: 0; color: var(--muted); }
 .postseason-highlight { display: none; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; margin: 18px 0 24px; padding: 22px 24px; color: white; border-radius: 14px; background: linear-gradient(120deg, #102a45, #174b72); }
 .postseason-highlight.is-visible { display: grid; }
 .postseason-highlight p { margin: 0 0 5px; color: #f6bd4f; font-size: 11px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; }
@@ -31,4 +45,5 @@
 .postseason-board .player-link { min-width: 0; white-space: nowrap; }
 .postseason-board .player-link span:last-child { overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 900px) { .postseason-filter-grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); } }
+@media (max-width: 760px) { .postseason-top10-grid { grid-template-columns: 1fr; } }
 @media (max-width: 620px) { .postseason-filter-grid, .postseason-range-years { grid-template-columns: 1fr; } .postseason-highlight { grid-template-columns: 1fr; } }
