@@ -1,4 +1,5 @@
 const MLB_STATS = "https://statsapi.mlb.com/api/v1/stats";
+const MLB_TEAMS = "https://statsapi.mlb.com/api/v1/teams";
 const currentYear = new Date().getFullYear();
 const query = new URLSearchParams(window.location.search);
 const roundNames = { P: "Combined Postseason", F: "Wild Card", D: "Division Series", L: "League Championship Series", W: "World Series" };
@@ -50,6 +51,7 @@ let sort = { key: metric, direction: definitions[group].lowerBetter?.has(metric)
 let topTenMetric = topTenMetrics[group].some(([key]) => key === query.get("top")) ? query.get("top") : topTenMetrics[group][0][0];
 let requestId = 0;
 const activePlayerIdsByGroup = new Map();
+let currentTeamOptions = null;
 
 function number(value) { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : 0; }
 function clampSeason(value) { const parsed = Number(value); return Number.isFinite(parsed) && parsed >= 1903 && parsed <= currentYear ? parsed : currentYear; }
@@ -123,11 +125,24 @@ function endpoint(offset = 0) {
     sortStat: metric
   });
   if (mode === "single") params.set("season", String(season));
+  if (mode === "career" && team !== "all") params.set("teamIds", team);
   if (mode === "range") {
     params.set("startDate", `09/01/${rangeStart}`);
     params.set("endDate", `12/01/${rangeEnd}`);
   }
   return `${MLB_STATS}?${params}`;
+}
+
+async function loadCurrentTeamOptions() {
+  if (currentTeamOptions) return currentTeamOptions;
+  const params = new URLSearchParams({ sportId: "1", season: String(currentYear) });
+  const response = await fetch(`${MLB_TEAMS}?${params}`);
+  if (!response.ok) throw new Error(`MLB teams API returned ${response.status}`);
+  const data = await response.json();
+  currentTeamOptions = (data.teams || [])
+    .map(item => [String(item.id), item.name])
+    .sort((a, b) => a[1].localeCompare(b[1]));
+  return currentTeamOptions;
 }
 
 async function activePlayerIds() {
@@ -171,7 +186,8 @@ async function loadRows() {
     rows = Array.from(new Map(rows.map(row => [String(row.player?.id || row.player?.fullName), row])).values());
     if (playerStatus === "active") await activePlayerIds();
     if (activeRequest !== requestId) return;
-    populateTeams();
+    await populateTeams();
+    if (activeRequest !== requestId) return;
     render();
   } catch (error) {
     if (activeRequest !== requestId) return;
@@ -189,13 +205,14 @@ function setLoading() {
   document.querySelector("#postseason-body").innerHTML = `<tr><td class="empty-row">Loading MLB postseason statistics…</td></tr>`;
 }
 
-function populateTeams() {
+async function populateTeams() {
   const select = document.querySelector("#postseason-team");
   if (mode === "career") {
-    team = "all";
-    select.innerHTML = `<option value="all">All teams · career totals</option>`;
-    select.value = "all";
-    select.disabled = true;
+    const teams = await loadCurrentTeamOptions();
+    select.innerHTML = `<option value="all">All teams</option>${teams.map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join("")}`;
+    if (team !== "all" && !teams.some(([id]) => id === String(team))) team = "all";
+    select.value = team;
+    select.disabled = false;
     return;
   }
   select.disabled = false;
@@ -332,7 +349,7 @@ function bind() {
     loadRows();
   });
   document.querySelector("#postseason-group").addEventListener("change", event => { group = event.target.value; metric = definitions[group].defaultMetric; topTenMetric = topTenMetrics[group][0][0]; minimum = 0; team = "all"; configureGroup(); loadRows(); });
-  document.querySelector("#postseason-team").addEventListener("change", event => { team = event.target.value; render(); });
+  document.querySelector("#postseason-team").addEventListener("change", event => { team = event.target.value; mode === "career" ? loadRows() : render(); });
   document.querySelector("#postseason-status").addEventListener("change", async event => {
     playerStatus = event.target.value;
     if (playerStatus === "active" && !activePlayerIdsByGroup.has(group)) {
