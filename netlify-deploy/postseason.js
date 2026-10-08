@@ -47,6 +47,7 @@ let minimum = Math.max(0, Number(query.get("min")) || 0);
 let metric = query.get("metric") || definitions[group].defaultMetric;
 let size = query.get("size") === "all" ? "all" : "20";
 let sort = { key: metric, direction: definitions[group].lowerBetter?.has(metric) ? 1 : -1 };
+let topTenMetric = topTenMetrics[group].some(([key]) => key === query.get("top")) ? query.get("top") : topTenMetrics[group][0][0];
 let requestId = 0;
 const activePlayerIdsByGroup = new Map();
 
@@ -235,17 +236,28 @@ function renderTopTen() {
   const source = filteredRows();
   const scope = scopeLabel();
   const roundName = roundNames[round];
-  document.querySelector("#postseason-top10-title").textContent = `${scope} ${definitions[group].label.toLowerCase()} Top 10s`;
-  document.querySelector("#postseason-top10-note").textContent = `${roundName}. Each list follows the player-status, team, and minimum-sample filters.`;
-  document.querySelector("#postseason-top10-grid").innerHTML = topTenMetrics[group].map(([key, label]) => {
-    const leaders = sortedForMetric(source, key).slice(0, 10);
-    return `<article class="postseason-top10-card"><h3>${escapeHtml(label)}</h3>${leaders.length ? `<ol class="postseason-top10-list">${leaders.map((row, index) => `
-      <li class="postseason-top10-row">
-        <span class="postseason-top10-rank">${String(index + 1).padStart(2, "0")}</span>
-        <span class="postseason-top10-player"><a href="${statlineUrl("career.html", row.player?.fullName)}">${escapeHtml(row.player?.fullName || "Unknown Player")}</a><small>${escapeHtml(row.team?.abbreviation || row.team?.teamName || "MLB")}</small></span>
-        <strong class="postseason-top10-value">${formatStat(key, row.stat?.[key])}</strong>
-      </li>`).join("")}</ol>` : `<p class="postseason-top10-empty">No qualifying players.</p>`}</article>`;
-  }).join("");
+  const metricSelect = document.querySelector("#postseason-top10-metric");
+  metricSelect.innerHTML = topTenMetrics[group].map(([key, label]) => `<option value="${key}">${escapeHtml(label)}</option>`).join("");
+  metricSelect.value = topTenMetric;
+  const metricLabel = topTenMetrics[group].find(([key]) => key === topTenMetric)?.[1] || topTenMetric;
+  const leaders = sortedForMetric(source, topTenMetric).slice(0, 10);
+  const values = leaders.map(row => number(row.stat?.[topTenMetric]));
+  const max = Math.max(...values, 0);
+  const min = Math.min(...values, 0);
+  document.querySelector("#postseason-top10-title").textContent = `${scope} ${metricLabel} Top 10`;
+  document.querySelector("#postseason-top10-note").textContent = `${roundName}. This board follows the player-status, team, and minimum-sample filters.`;
+  document.querySelector("#postseason-top10-chart").innerHTML = leaders.length ? leaders.map(row => {
+    const value = number(row.stat?.[topTenMetric]);
+    const score = definitions[group].lowerBetter?.has(topTenMetric) ? max + min - value : value;
+    const scoreMax = definitions[group].lowerBetter?.has(topTenMetric) ? max : max;
+    const width = scoreMax > 0 ? Math.max(8, (score / scoreMax) * 100) : 100;
+    const name = row.player?.fullName || "Unknown Player";
+    return `<div class="bar-row">
+      <div class="bar-label"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(row.team?.abbreviation || row.team?.teamName || "MLB")}</span><div class="player-row-actions chart-player-actions" aria-label="Statline player links"><a href="${statlineUrl("career.html", name)}">Career</a><a href="${statlineUrl("splits.html", name)}">Splits</a></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+      <div class="bar-value">${formatStat(topTenMetric, row.stat?.[topTenMetric])}</div>
+    </div>`;
+  }).join("") : `<div class="empty-state">No qualifying players.</div>`;
 }
 
 function render() {
@@ -294,6 +306,7 @@ function syncUrl() {
   if (team !== "all") params.set("team", team);
   if (playerStatus === "active") params.set("status", "active");
   if (size === "all") params.set("size", "all");
+  params.set("top", topTenMetric);
   history.replaceState(null, "", `${location.pathname}?${params}`);
 }
 
@@ -318,7 +331,7 @@ function bind() {
     team = "all";
     loadRows();
   });
-  document.querySelector("#postseason-group").addEventListener("change", event => { group = event.target.value; metric = definitions[group].defaultMetric; minimum = 0; team = "all"; configureGroup(); loadRows(); });
+  document.querySelector("#postseason-group").addEventListener("change", event => { group = event.target.value; metric = definitions[group].defaultMetric; topTenMetric = topTenMetrics[group][0][0]; minimum = 0; team = "all"; configureGroup(); loadRows(); });
   document.querySelector("#postseason-team").addEventListener("change", event => { team = event.target.value; render(); });
   document.querySelector("#postseason-status").addEventListener("change", async event => {
     playerStatus = event.target.value;
@@ -331,6 +344,7 @@ function bind() {
   });
   document.querySelector("#postseason-min").addEventListener("change", event => { minimum = number(event.target.value); render(); });
   document.querySelector("#postseason-metric").addEventListener("change", event => { metric = event.target.value; sort = { key: metric, direction: definitions[group].lowerBetter?.has(metric) ? 1 : -1 }; render(); });
+  document.querySelector("#postseason-top10-metric").addEventListener("change", event => { topTenMetric = event.target.value; render(); });
   document.querySelector("#postseason-search").addEventListener("input", render);
   document.querySelectorAll("[data-postseason-size]").forEach(button => button.addEventListener("click", () => {
     size = button.dataset.postseasonSize;

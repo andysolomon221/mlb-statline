@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="styles.css?v=20261005-postseason" />
-    <link rel="stylesheet" href="postseason.css?v=20261007-postseason-top10" />
+    <link rel="stylesheet" href="postseason.css?v=20261008-standard-top10" />
   </head>
   <body data-board="postseason">
     <div class="app-shell">
@@ -136,8 +136,11 @@
               <h2 id="postseason-top10-title">Top 10 across the October categories</h2>
               <small class="data-note" id="postseason-top10-note">Leaderboards follow the filters selected above.</small>
             </div>
+            <div class="leaderboard-head-controls">
+              <select id="postseason-top10-metric" aria-label="Top 10 statistic"></select>
+            </div>
           </div>
-          <div class="postseason-top10-grid" id="postseason-top10-grid"></div>
+          <div class="bar-chart postseason-top10-chart" id="postseason-top10-chart"></div>
         </section>
 
         <section class="panel leaderboard postseason-board" id="postseason-leaders">
@@ -162,6 +165,6 @@
         </footer>
       </main>
     </div>
-  <script src="postseason.js?v=20261007-active-players"></script>
+  <script src="postseason.js?v=20261008-standard-top10"></script>
   </body>
 </html>
